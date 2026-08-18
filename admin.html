@@ -202,10 +202,14 @@ table.stab .na{color:#b9c2c8}
 
     <section class="panel" style="border-color:#e6ccc8">
       <div class="panel-head"><h2 style="color:var(--danger)">年度重置</h2><span class="hint">新學年開始前清空上一屆資料</span></div>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除：所有組長角色與分組、指導老師成績、校外委員評分、公告；並把入選名單與分組登錄關閉。</p>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、上傳表單網址，以及指導教授／校外委員／管理員帳號。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除：所有組長角色與分組、各組上傳檔案中繼、指導老師成績、校外委員評分、公告；並把入選名單與分組登錄關閉。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、規定文件，以及指導教授／校外委員／管理員帳號與其個人資料。</p>
       <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。登入帳號記錄不會被刪除（無害，可另用清除腳本移除）。</p>
-      <button class="btn btn-danger" id="resetYear">執行年度重置</button><span class="msg" id="resetMsg" style="display:block"></span>
+      <button class="btn btn-danger" id="resetYear">執行年度重置</button><span class="msg" id="resetMsg" style="display:block;margin-bottom:14px"></span>
+      <div style="border-top:1px solid var(--line);padding-top:12px">
+        <p style="font-size:13px;color:var(--muted);margin:0 0 8px">另外：Firebase Storage 內的實體檔案（各組上傳檔）不會隨上方按鈕刪除。若要一併清空儲存空間，按下方（也需輸入 RESET 確認）。委員個人資料檔案不受影響。</p>
+        <button class="btn btn-sm btn-danger" id="wipeStorage">清空所有各組上傳檔案（Storage）</button><span class="msg" id="wipeMsg" style="margin-left:10px"></span>
+      </div>
     </section>
   </div>
 
@@ -308,12 +312,9 @@ table.stab .na{color:#b9c2c8}
       <div id="committeeAccList" style="margin-top:10px"></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>委員檔案雲端連結</h2><span class="hint">顯示於委員入口對應階段</span></div>
-      <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="cf1Open"> 顯示第一階段總檔案雲端硬碟連結</label>
-      <input id="cf1" type="text" placeholder="https://drive.google.com/...">
-      <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="cf2Open"> 顯示第二階段總檔案雲端硬碟連結</label>
-      <input id="cf2" type="text" placeholder="https://drive.google.com/...">
-      <div class="actions"><button class="btn btn-primary" id="saveCFiles">儲存連結</button><span class="msg ok" id="cfMsg"></span></div>
+      <div class="panel-head"><h2>委員個人資料（匯款用）</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadCDocs">重新整理</button><button class="btn btn-sm" id="csvCDocs">下載 CSV</button></div></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">委員於委員入口自行上傳。此區僅系辦可見。CSV 僅含文字欄位；證件與存簿為檔案連結。</p>
+      <div id="cdocsHost"></div>
     </section>
   </div>
 
@@ -396,10 +397,10 @@ $("#pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click(
 $("#denySignOut").onclick=()=>auth.signOut();
 
 async function loadAll(){
-  const [site,flow,fin,reg,up,sc,cf,ag]=await Promise.all([
+  const [site,flow,fin,reg,up,sc,ag]=await Promise.all([
     db.doc("settings/site").get(), db.doc("settings/flow").get(), db.doc("settings/finalists").get(),
     db.doc("settings/registration").get(), db.doc("settings/uploads").get(),
-    db.doc("settings/scoring").get(), db.doc("settings/committeeFiles").get(), db.doc("settings/agenda").get()
+    db.doc("settings/scoring").get(), db.doc("settings/agenda").get()
   ]);
   if(site.exists){$("#fSchool").value=site.data().school||"";$("#fYear").value=site.data().academicYear||"";}
   state.stages=flow.exists&&Array.isArray(flow.data().stages)?flow.data().stages:[];
@@ -412,8 +413,6 @@ async function loadAll(){
   renderRulesCurrent(upd);
   const s=sc.exists?sc.data():{};
   $("#t1open").checked=s.t1open!==false;$("#t2open").checked=s.t2open!==false;$("#c1open").checked=s.c1open!==false;$("#c2open").checked=s.c2open!==false;
-  if(cf.exists){$("#cf1").value=cf.data().stage1Url||"";$("#cf2").value=cf.data().stage2Url||"";}
-  const cfd=cf.exists?cf.data():{}; $("#cf1Open").checked=!!cfd.stage1Open; $("#cf2Open").checked=!!cfd.stage2Open;
   if(ag.exists){const d=ag.data();agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
   $("#agPublished").checked=agenda.published; $("#agTitle").value=agenda.title; $("#agDate").value=agenda.date; $("#agPlace").value=agenda.place; renderAgenda();
   await loadAnnouncements();
@@ -421,6 +420,7 @@ async function loadAll(){
   await loadGroups();
   renderFinalists(); renderAgenda();
   await loadLeaders();
+  await loadCommitteeDocs();
   startCommitteeListener();
   startGradesListener();
 }
@@ -428,7 +428,42 @@ async function loadAll(){
 /* 網站設定 */
 $("#saveSite").onclick=async()=>{try{await db.doc("settings/site").set({school:$("#fSchool").value.trim(),academicYear:$("#fYear").value.trim()},{merge:true});flash("siteMsg","已儲存。");}catch(e){flash("siteMsg","儲存失敗："+(e.code||e.message),false);}};
 $("#saveScoring").onclick=async()=>{try{await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
-$("#saveCFiles").onclick=async()=>{try{await db.doc("settings/committeeFiles").set({stage1Url:$("#cf1").value.trim(),stage2Url:$("#cf2").value.trim(),stage1Open:$("#cf1Open").checked,stage2Open:$("#cf2Open").checked},{merge:true});flash("cfMsg","已儲存。");}catch(e){flash("cfMsg","儲存失敗："+(e.code||e.message),false);}};
+/* 委員個人資料（匯款用） */
+let CDOCS={};
+async function loadCommitteeDocs(){
+  CDOCS={};
+  try{ const snap=await db.collection("committeeDocs").get(); snap.docs.forEach(d=>CDOCS[d.id]=d.data()); }catch(e){}
+  renderCommitteeDocs();
+}
+function renderCommitteeDocs(){
+  const host=$("#cdocsHost"); if(!host) return;
+  const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  if(!list.length){ host.innerHTML='<p class="empty-note">尚無委員帳號。</p>'; return; }
+  const fileLink=(f,label)=> f&&f.url ? '<a href="'+esc(f.url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+label+'</a>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
+  host.innerHTML=list.map(c=>{
+    const d=CDOCS[c.uid]||{};
+    const bank=[d.bankCode,d.bankBranch,d.bankAccount].filter(Boolean).join(" / ")||'<span style="color:var(--muted)">未填</span>';
+    const addr=d.householdAddr?esc(d.householdAddr):'<span style="color:var(--muted)">未填</span>';
+    return '<div class="acc-item" style="cursor:default"><div class="acc-head" style="cursor:default">'+
+        '<span class="acc-leader">'+esc(c.name||"（未命名）")+'</span>'+
+        '<span style="font-size:12px;color:var(--muted)">'+esc(c.email||"")+'</span></div>'+
+      '<div style="padding:0 14px 14px">'+
+        '<div style="margin:6px 0;font-size:14px"><span style="color:var(--muted);font-size:12px;margin-right:8px">戶籍地址</span>'+addr+'</div>'+
+        '<div style="margin:6px 0;font-size:14px"><span style="color:var(--muted);font-size:12px;margin-right:8px">銀行 代碼/分行/帳號</span>'+bank+'</div>'+
+        '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">'+
+          fileLink(d.idFront,"身分證正面")+fileLink(d.idBack,"身分證反面")+fileLink(d.passbook,"存簿封面")+
+        '</div></div></div>';
+  }).join("");
+}
+document.addEventListener("click",e=>{
+  if(e.target&&e.target.id==="reloadCDocs"){ loadCommitteeDocs(); }
+  if(e.target&&e.target.id==="csvCDocs"){
+    const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+    const headers=["姓名","電子郵件","戶籍地址","銀行代碼","分行","帳號","身分證正面","身分證反面","存簿封面"];
+    const rows=list.map(c=>{ const d=CDOCS[c.uid]||{}; return [c.name||"",c.email||"",d.householdAddr||"",d.bankCode||"",d.bankBranch||"",d.bankAccount||"",(d.idFront&&d.idFront.url)||"",(d.idBack&&d.idBack.url)||"",(d.passbook&&d.passbook.url)||""]; });
+    download("委員個人資料.csv", toCSV(headers,rows));
+  }
+});
 
 /* 流程與日程 */
 function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
@@ -591,9 +626,10 @@ async function loadAccounts(){
   const snap=await db.collection("users").get();
   const all=snap.docs.map(d=>({uid:d.id,...d.data()}));
   TEACHERS=all.filter(u=>u.role==="teacher").map(u=>({uid:u.uid,name:u.name||u.email||u.uid})).sort((a,b)=>a.name.localeCompare(b.name));
-  COMMITTEE=all.filter(u=>u.role==="committee").map(u=>({uid:u.uid,name:u.name||u.email||u.uid})).sort((a,b)=>a.name.localeCompare(b.name));
+  COMMITTEE=all.filter(u=>u.role==="committee").map(u=>({uid:u.uid,name:u.name||u.email||u.uid,email:u.email||""})).sort((a,b)=>a.name.localeCompare(b.name));
   renderAccList("teacherAccList", all.filter(u=>u.role==="teacher"));
   renderAccList("committeeAccList", all.filter(u=>u.role==="committee"));
+  if(typeof renderCommitteeDocs==="function") renderCommitteeDocs();
 }
 function renderAccList(hostId,rows){
   const host=$("#"+hostId);
@@ -948,6 +984,25 @@ $("#resetYear").onclick=async()=>{
     await loadAnnouncements(); await loadAccounts(); await loadGroups(); await loadLeaders(); await loadTeacherScores();
   }catch(e){ msg.textContent="重置失敗："+(e.code||e.message); msg.className="msg err"; }
   finally{ $("#resetYear").disabled=false; }
+};
+
+/* 清空 Storage 內各組上傳檔案 */
+async function deleteFolderDeep(ref){
+  const res=await ref.listAll();
+  await Promise.all(res.items.map(it=>it.delete().catch(()=>{})));
+  for(const p of res.prefixes){ await deleteFolderDeep(p); }
+}
+$("#wipeStorage").onclick=async()=>{
+  const msg=$("#wipeMsg");
+  const typed=prompt("此操作會刪除 Storage 內【所有各組上傳的實體檔案】（groups/ 資料夾），無法復原。\\n委員個人資料與規定文件不受影響。\\n確定請輸入大寫 RESET：");
+  if(typed===null) return;
+  if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
+  $("#wipeStorage").disabled=true; msg.textContent="清除中…"; msg.className="msg";
+  try{
+    await deleteFolderDeep(storage.ref("groups"));
+    msg.textContent="已清空各組上傳檔案。"; msg.className="msg ok";
+  }catch(e){ msg.textContent="清除失敗："+(e.code||e.message); msg.className="msg err"; }
+  finally{ $("#wipeStorage").disabled=false; }
 };
 </script>
 </body>
