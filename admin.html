@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理員後台 · 實務專題系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;
+  --primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;
+  --primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--radius:12px;
+  --shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+.topbar{background:var(--primary);color:#fff;padding:14px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px}
+.topbar .r{display:flex;align-items:center;gap:14px;font-size:13px}
+.topbar a{color:#cfe0e8;text-decoration:none}.topbar a:hover{color:#fff}
+.link-btn{background:none;border:0;color:#cfe0e8;font:inherit;cursor:pointer;padding:0}.link-btn:hover{color:#fff}
+
+.center{min-height:70vh;display:grid;place-items:center;padding:40px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:28px}
+.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 4px}
+.card .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=date],textarea,select{
+  width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;transition:.15s}
+input:disabled{background:#f2f5f7;color:var(--muted)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{min-height:74px;resize:vertical;line-height:1.6}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn-primary:hover{background:#0e364a}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-ghost{background:transparent}
+.btn-danger{color:var(--danger);border-color:#e6ccc8}.btn-danger:hover{background:#faf0ee;border-color:var(--danger)}
+.btn-block{width:100%;justify-content:center;margin-top:18px}
+.btn-sm{padding:6px 11px;font-size:13px}
+
+.msg{font-size:13px;margin-top:10px;min-height:18px}
+.msg.err{color:var(--danger)}.msg.ok{color:var(--accent)}
+
+.hidden{display:none!important}
+main{padding:22px 0 60px}
+.tabbar{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:10;padding-top:10px}
+.tabbtn{padding:10px 16px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none}
+.tabbtn.on{color:var(--primary);border-bottom-color:var(--primary)}
+.tabpane{display:none}.tabpane.on{display:block}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0}
+.panel-head .hint{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.spacer{flex:1}
+
+.item{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fafcfd}
+.item .item-grid{display:grid;grid-template-columns:130px 1fr;gap:10px}
+.item .full{grid-column:1/-1}
+.item-foot{display:flex;align-items:center;gap:14px;margin-top:10px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--ink);cursor:pointer;margin:6px 0}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.rowline{display:grid;grid-template-columns:120px 1fr 160px auto;gap:10px;align-items:center;margin-bottom:10px}
+.empty-note{color:var(--muted);font-size:14px;padding:6px 0}
+
+.accrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.accrow .ac-email{color:var(--muted);font-size:13px}
+
+.gsummary{font-size:13px;color:var(--muted);margin-bottom:10px}
+.acc-item{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fff}
+.acc-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+.acc-head:hover{background:#f7fafb}
+.acc-no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:64px}
+.acc-leader{font-weight:500;min-width:80px}
+.acc-adv{font-size:13px}.acc-adv.none{color:var(--muted)}.acc-adv.set{color:var(--accent)}
+.acc-chev{margin-left:auto;color:var(--muted);transition:transform .15s}
+.acc-item.open .acc-chev{transform:rotate(180deg)}
+.acc-body{display:none;padding:4px 14px 16px;border-top:1px solid var(--line);background:#fafcfd}
+.acc-item.open .acc-body{display:block}
+
+#adminView.wide{max-width:1400px}
+.score-controls{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.score-controls input[type=text]{max-width:240px;margin:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--primary);color:#fff}
+.scoretable{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:10px}
+table.stab{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;background:#fff}
+table.stab th,table.stab td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+table.stab thead th{position:sticky;top:0;background:#eef2f5;color:var(--ink);font-weight:600;z-index:2}
+table.stab th.sortable{cursor:pointer;user-select:none}
+table.stab th.sortable:hover{color:var(--primary)}
+table.stab td.num,table.stab th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.stab td.mono{font-family:"IBM Plex Mono",monospace}
+table.stab td.ellip{max-width:220px;overflow:hidden;text-overflow:ellipsis}
+table.stab tbody tr:nth-child(even) td{background:#f6f9fb}
+table.stab tbody tr:hover td{background:#e7eff2}
+table.stab td.sticky-c,table.stab th.sticky-c{position:sticky;background:#fff;z-index:1;overflow:hidden;text-overflow:ellipsis}
+table.stab thead th.sticky-c{z-index:3;background:#eef2f5}
+table.stab tbody tr:nth-child(even) td.sticky-c{background:#eef2f4}
+table.stab tbody tr:hover td.sticky-c{background:#e0eaee}
+table.stab .sticky-last{box-shadow:6px 0 6px -5px rgba(16,34,46,.25)}
+table.stab .grp{border-left:2px solid #c7d2d9}
+table.stab tbody tr.top td{background:#F7EBD8}
+table.stab tbody tr.top td.sticky-c{background:#f3e4cf}
+table.stab tbody tr.top:hover td{background:#f0dfc2}
+table.stab .na{color:#b9c2c8}
+
+@media (max-width:640px){.grid2{grid-template-columns:1fr}.item .item-grid{grid-template-columns:1fr}.rowline{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap"><span class="t">管理員後台</span><div class="r" id="topRight"><a href="index.html">回首頁</a></div></div></div>
+
+<div id="bootView" class="center"><div class="card" style="text-align:center;color:var(--muted)">載入中…</div></div>
+
+<div id="loginView" class="center hidden">
+  <div class="card">
+    <h1>管理員登入</h1><p class="sub">請以系辦管理員帳號登入。</p>
+    <label for="email">電子郵件</label><input id="email" type="email" autocomplete="username" placeholder="admin@example.com">
+    <label for="pw">密碼</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
+    <div style="text-align:right;margin-top:8px"><a href="#" id="forgotPw" style="font-size:13px;color:var(--primary)">忘記密碼？</a></div>
+    <div class="msg err" id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="denyView" class="center hidden">
+  <div class="card"><h1>無管理員權限</h1><p class="sub">此帳號沒有管理員權限。若需開通，請由系辦於資料庫設定角色。</p>
+  <button class="btn btn-block" id="denySignOut">登出</button></div>
+</div>
+
+<main id="adminView" class="wrap hidden">
+  <div class="tabbar">
+    <button class="tabbtn on" data-tab="site">網站設定</button>
+    <button class="tabbtn" data-tab="contest">競賽發表</button>
+    <button class="tabbtn" data-tab="student">學生</button>
+    <button class="tabbtn" data-tab="teacher">教師</button>
+    <button class="tabbtn" data-tab="committee">校外委員</button>
+    <button class="tabbtn" data-tab="score">評分</button>
+  </div>
+
+  <!-- 網站設定 -->
+  <div class="tabpane on" data-pane="site">
+    <section class="panel">
+      <div class="panel-head"><h2>網站設定</h2><span class="hint">顯示於首頁頁首與標題列</span></div>
+      <div class="grid2">
+        <div><label for="fSchool">學校名稱</label><input id="fSchool" type="text" placeholder="例如：國立○○大學"></div>
+        <div><label for="fYear">學年度標籤</label><input id="fYear" type="text" placeholder="例如：115 學年度"></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="saveSite">儲存網站設定</button><span class="msg ok" id="siteMsg"></span></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>開放評分設定</h2><span class="hint">避免分數填錯學期或階段</span></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 8px">關閉後，該次評分對教授／委員仍可檢視但無法儲存。請在對應時間開放。</p>
+      <div class="grid2">
+        <div style="border-right:1px solid var(--line);padding-right:16px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px">指導教授</div>
+          <label class="chk" style="margin:0 0 22px"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
+          <label class="chk" style="margin:0"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px">校外委員</div>
+          <label class="chk" style="margin:0 0 22px"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
+          <label class="chk" style="margin:0"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
+        </div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>流程與日程</h2><span class="hint">首頁時間軸的各階段與日期</span></div>
+      <label for="fCurrent">目前進行到</label><select id="fCurrent"></select>
+      <div id="stagesHost" style="margin-top:16px"></div>
+      <div class="actions">
+        <button class="btn btn-sm" id="addStage">＋ 新增階段</button>
+        <button class="btn btn-sm btn-ghost" id="seedStages">載入預設流程</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" id="saveFlow">儲存流程與日程</button><span class="msg ok" id="flowMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>公告</h2><span class="hint">新增後即顯示於首頁</span></div>
+      <div id="annHost"></div>
+      <div class="actions"><button class="btn btn-accent btn-sm" id="addAnn">＋ 新增公告</button><span class="msg ok" id="annMsg"></span></div>
+    </section>
+
+    <section class="panel" style="border-color:#e6ccc8">
+      <div class="panel-head"><h2 style="color:var(--danger)">年度重置</h2><span class="hint">新學年開始前清空上一屆資料</span></div>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除：所有組長角色與分組、指導老師成績、校外委員評分、公告；並把入選名單與分組登錄關閉。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、上傳表單網址，以及指導教授／校外委員／管理員帳號。</p>
+      <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。登入帳號記錄不會被刪除（無害，可另用清除腳本移除）。</p>
+      <button class="btn btn-danger" id="resetYear">執行年度重置</button><span class="msg" id="resetMsg" style="display:block"></span>
+    </section>
+  </div>
+
+  <!-- 競賽發表 -->
+  <div class="tabpane" data-pane="contest">
+    <section class="panel">
+      <div class="panel-head"><h2>入選第二階段名單</h2><span class="hint">未勾選發布時，首頁顯示「尚未公布」</span></div>
+      <label class="chk"><input type="checkbox" id="fPublished"> 發布名單至首頁</label>
+      <label for="fIntro">名單上方說明（可換行，顯示於表格上方）</label>
+      <textarea id="fIntro" placeholder="例如：&#10;1. 依據本系實務專題競賽辦法，下列 N 組進入第二階段：口頭發表競賽。&#10;2. 第二階段舉辦日期為 114年12月8日（星期一），未進入第二階段之組別仍需出席當天活動。"></textarea>
+      <label for="fFoot">名單下方附註</label>
+      <input id="fFoot" type="text" placeholder="※此排序非第一階段成績排序。">
+      <div class="score-controls" style="margin:12px 0 0">
+        <span style="font-size:13px;color:var(--muted)">由第一階段排名帶入前</span>
+        <input type="number" id="topN" min="1" style="width:80px;margin:0" placeholder="N">
+        <span style="font-size:13px;color:var(--muted)">組（依平均由高到低）</span>
+        <button class="btn btn-sm" id="fillFromRank">帶入</button>
+      </div>
+      <div id="finalHost" style="margin-top:14px"></div>
+      <div class="actions"><button class="btn btn-sm" id="addFinal">＋ 新增組別</button><span class="spacer"></span>
+        <button class="btn btn-primary" id="saveFinal">儲存名單</button><span class="msg ok" id="finalMsg"></span></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>口頭發表當天議程</h2><span class="hint">勾選顯示後置頂於首頁</span></div>
+      <label class="chk"><input type="checkbox" id="agPublished"> 顯示於首頁（置頂）</label>
+      <div class="grid2" style="margin-top:8px">
+        <div><label for="agTitle">標題</label><input id="agTitle" type="text" placeholder="例如：114 學年度實務專題第二階段口頭發表競賽"></div>
+        <div><label for="agDate">日期</label><input id="agDate" type="text" placeholder="例如：114/12/08（一）"></div>
+      </div>
+      <label for="agPlace">地點</label><input id="agPlace" type="text" placeholder="例如：管理學院 CM101">
+      <div id="agendaHost" style="margin-top:14px"></div>
+      <div class="actions"><button class="btn btn-sm" id="addAgenda">＋ 新增項目</button><span class="spacer"></span><button class="btn btn-primary" id="saveAgenda">儲存議程</button><span class="msg ok" id="agMsg"></span></div>
+    </section>
+
+  </div>
+
+  <!-- 學生 -->
+  <div class="tabpane" data-pane="student">
+    <section class="panel">
+      <div class="panel-head"><h2>登錄與上傳設定</h2><span class="hint">控制學生登錄與三輪上傳表單</span></div>
+      <label class="chk"><input type="checkbox" id="fRegOpen"> 開放組長註冊與分組登錄</label>
+      <div style="margin-top:8px">
+        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm1Open"> 開放第一次上傳（每組：報告／簡報／補充資料）</label>
+        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm2Open"> 開放第二次上傳（入選組別：發表簡報）</label>
+        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm3Open"> 開放第三次上傳（每組：最終成果）</label>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:6px 0 0">學生改為直接在系統上傳檔案（Firebase Storage），不再使用 Google 表單連結。</p>
+      <div class="actions"><button class="btn btn-primary" id="saveUploads">儲存登錄與上傳設定</button><span class="msg ok" id="upMsg"></span></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">內嵌顯示於學生入口</span></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 10px">支援 PDF 或圖片（PNG／JPG），單檔上限 20MB；上傳新檔會取代舊檔。</p>
+      <div id="rulesCurrent" style="margin-bottom:10px"></div>
+      <label class="btn"><input type="file" id="rulesFile" accept=".pdf,.png,.jpg,.jpeg" style="display:none">選擇檔案並上傳</label>
+      <button class="btn btn-sm btn-danger" id="rulesRemove" style="margin-left:8px">移除目前文件</button>
+      <span class="msg ok" id="rulesMsg" style="margin-left:10px"></span>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開，可編輯名單、專題題目與指導老師</span></div>
+      <div class="gsummary" id="gsummary"></div>
+      <div class="score-controls" style="margin-bottom:12px">
+        <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師…">
+        <button class="btn btn-sm" id="expandAll">展開全部</button>
+        <button class="btn btn-sm" id="collapseAll">收合全部</button>
+      </div>
+      <div id="groupsHost"></div>
+      <div class="actions"><button class="btn btn-sm btn-ghost" id="reloadGroups">重新整理</button><span class="msg ok" id="asgMsg"></span></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>組長帳號</h2><span class="hint">重設密碼或刪除組長帳號</span></div>
+      <div id="leaderHost"></div>
+    </section>
+  </div>
+
+  <!-- 教師 -->
+  <div class="tabpane" data-pane="teacher">
+    <section class="panel">
+      <div class="panel-head"><h2>指導教授帳號</h2><span class="hint">建立、修改或刪除指導教授帳號</span></div>
+      <div class="grid2">
+        <div><label for="tName">姓名</label><input id="tName" type="text"></div>
+        <div><label for="tEmail">電子郵件</label><input id="tEmail" type="email"></div>
+        <div class="full"><label for="tPw">初始密碼（至少 6 碼）</label><input id="tPw" type="text"></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="createTeacher">建立指導教授帳號</button><span class="msg ok" id="tAccMsg"></span></div>
+      <div id="teacherAccList" style="margin-top:10px"></div>
+    </section>
+  </div>
+
+  <!-- 校外委員 -->
+  <div class="tabpane" data-pane="committee">
+    <section class="panel">
+      <div class="panel-head"><h2>校外委員帳號</h2><span class="hint">建立、修改或刪除校外委員帳號</span></div>
+      <div class="grid2">
+        <div><label for="cName">姓名</label><input id="cName" type="text"></div>
+        <div><label for="cEmail">電子郵件</label><input id="cEmail" type="email"></div>
+        <div class="full"><label for="cPw">初始密碼（至少 6 碼）</label><input id="cPw" type="text"></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="createCommittee">建立校外委員帳號</button><span class="msg ok" id="cAccMsg"></span></div>
+      <div id="committeeAccList" style="margin-top:10px"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>委員檔案雲端連結</h2><span class="hint">顯示於委員入口對應階段</span></div>
+      <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="cf1Open"> 顯示第一階段總檔案雲端硬碟連結</label>
+      <input id="cf1" type="text" placeholder="https://drive.google.com/...">
+      <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="cf2Open"> 顯示第二階段總檔案雲端硬碟連結</label>
+      <input id="cf2" type="text" placeholder="https://drive.google.com/...">
+      <div class="actions"><button class="btn btn-primary" id="saveCFiles">儲存連結</button><span class="msg ok" id="cfMsg"></span></div>
+    </section>
+  </div>
+
+  <!-- 評分 -->
+  <div class="tabpane" data-pane="score">
+    <section class="panel">
+      <div class="panel-head"><h2>指導教授　第一次成績</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadTG">重新整理</button><button class="btn btn-sm" data-csv="t1">下載 CSV</button></div></div>
+      <div id="tg1Host"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>指導教授　第二次成績</h2><button class="btn btn-sm" data-csv="t2">下載 CSV</button></div>
+      <div id="tg2Host"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>校外委員　第一階段成績</h2><button class="btn btn-sm" data-csv="c1">下載 CSV</button></div>
+      <div id="cs1Host"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>校外委員　第二階段成績</h2><button class="btn btn-sm" data-csv="c2">下載 CSV</button></div>
+      <div id="cs2Host"></div>
+    </section>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+function flash(id,msg,ok=true){const e=$("#"+id);if(!e)return;e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2800);}
+
+if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
+const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
+
+const DEFAULT_STAGES=[
+  {id:"group",  term:"大三下學期",name:"分組與洽詢指導老師",date:"",desc:"每組 3–4 人，推派組長登錄組員名單，並洽詢指導老師。"},
+  {id:"exec",   term:"大三下學期",name:"專題執行",         date:"",desc:"定期與指導老師討論，進行資料蒐集、分析與系統建置。"},
+  {id:"grade1", term:"大三下學期",name:"第一次成績評定",   date:"",desc:"由指導老師依執行情形評定第一次專題成績。"},
+  {id:"review1",term:"大四上學期",name:"第一階段 · 書面評審",date:"",desc:"各組上傳報告與簡報，由校外委員書面審查，取約半數晉級。"},
+  {id:"announce",term:"大四上學期",name:"公告第二階段名單", date:"",desc:"由系辦公告進入口頭發表的組別。"},
+  {id:"review2",term:"大四上學期",name:"第二階段 · 口頭發表",date:"",desc:"每組 15 分鐘（簡報 12＋問答 3），委員現場評分後即時排名。"},
+  {id:"final",  term:"大四上學期",name:"成果繳交與第二次評定",date:"",desc:"繳交完整成果，由指導老師評定第二次專題成績。"}
+];
+
+let state={stages:[],currentStageId:"",finalists:{published:false,groups:[],intro:"",foot:"※此排序非第一階段成績排序。"}};
+let TEACHERS=[], COMMITTEE=[], GROUPMAP={}, GRADES={}, CSCORES=[], GFILES={};
+
+/* 分頁 */
+$$(".tabbtn").forEach(b=>b.onclick=()=>{
+  $$(".tabbtn").forEach(x=>x.classList.toggle("on",x===b));
+  $$(".tabpane").forEach(p=>p.classList.toggle("on",p.dataset.pane===b.dataset.tab));
+  $("#adminView").classList.toggle("wide", b.dataset.tab==="score");
+  if(b.dataset.tab==="score") refreshScores();
+});
+
+function show(view){["bootView","loginView","denyView","adminView"].forEach(v=>$("#"+v).classList.toggle("hidden",v!==view));}
+auth.onAuthStateChanged(async user=>{
+  if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }
+  try{
+    const u=await db.doc("users/"+user.uid).get();
+    if(u.exists && u.data().role==="admin"){
+      $("#topRight").innerHTML='<a href="index.html">回首頁</a><button class="link-btn" id="signOut">登出（'+esc(user.email)+'）</button>';
+      $("#signOut").onclick=()=>auth.signOut();
+      show("adminView"); await loadAll();
+    }else{ show("denyView"); }
+  }catch(e){ show("denyView"); }
+});
+$("#loginBtn").onclick=()=>{
+  const em=$("#email").value.trim(), pw=$("#pw").value;
+  if(!em||!pw){flash("loginMsg","請輸入電子郵件與密碼。",false);return;}
+  const btn=$("#loginBtn"); btn.disabled=true; btn.textContent="登入中…";
+  auth.signInWithEmailAndPassword(em,pw).catch(err=>flash("loginMsg","登入失敗："+(err.code||err.message),false)).finally(()=>{btn.disabled=false;btn.textContent="登入";});
+};
+$("#pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click();});
+$("#denySignOut").onclick=()=>auth.signOut();
+
+async function loadAll(){
+  const [site,flow,fin,reg,up,sc,cf,ag]=await Promise.all([
+    db.doc("settings/site").get(), db.doc("settings/flow").get(), db.doc("settings/finalists").get(),
+    db.doc("settings/registration").get(), db.doc("settings/uploads").get(),
+    db.doc("settings/scoring").get(), db.doc("settings/committeeFiles").get(), db.doc("settings/agenda").get()
+  ]);
+  if(site.exists){$("#fSchool").value=site.data().school||"";$("#fYear").value=site.data().academicYear||"";}
+  state.stages=flow.exists&&Array.isArray(flow.data().stages)?flow.data().stages:[];
+  state.currentStageId=flow.exists?(flow.data().currentStageId||""):"";
+  renderStages();
+  if(fin.exists){const d=fin.data();state.finalists={published:!!d.published,groups:Array.isArray(d.groups)?d.groups:[],intro:d.intro||"",foot:(d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。")};}
+  $("#fPublished").checked=state.finalists.published; $("#fIntro").value=state.finalists.intro||""; $("#fFoot").value=state.finalists.foot||""; renderFinalists();
+  $("#fRegOpen").checked = reg.exists ? !!reg.data().open : false;
+  const upd=up.exists?up.data():{}; $("#fForm1Open").checked=!!upd.round1Open; $("#fForm2Open").checked=!!upd.round2Open; $("#fForm3Open").checked=!!upd.round3Open;
+  renderRulesCurrent(upd);
+  const s=sc.exists?sc.data():{};
+  $("#t1open").checked=s.t1open!==false;$("#t2open").checked=s.t2open!==false;$("#c1open").checked=s.c1open!==false;$("#c2open").checked=s.c2open!==false;
+  if(cf.exists){$("#cf1").value=cf.data().stage1Url||"";$("#cf2").value=cf.data().stage2Url||"";}
+  const cfd=cf.exists?cf.data():{}; $("#cf1Open").checked=!!cfd.stage1Open; $("#cf2Open").checked=!!cfd.stage2Open;
+  if(ag.exists){const d=ag.data();agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
+  $("#agPublished").checked=agenda.published; $("#agTitle").value=agenda.title; $("#agDate").value=agenda.date; $("#agPlace").value=agenda.place; renderAgenda();
+  await loadAnnouncements();
+  await loadAccounts();
+  await loadGroups();
+  renderFinalists(); renderAgenda();
+  await loadLeaders();
+  startCommitteeListener();
+  startGradesListener();
+}
+
+/* 網站設定 */
+$("#saveSite").onclick=async()=>{try{await db.doc("settings/site").set({school:$("#fSchool").value.trim(),academicYear:$("#fYear").value.trim()},{merge:true});flash("siteMsg","已儲存。");}catch(e){flash("siteMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveScoring").onclick=async()=>{try{await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveCFiles").onclick=async()=>{try{await db.doc("settings/committeeFiles").set({stage1Url:$("#cf1").value.trim(),stage2Url:$("#cf2").value.trim(),stage1Open:$("#cf1Open").checked,stage2Open:$("#cf2Open").checked},{merge:true});flash("cfMsg","已儲存。");}catch(e){flash("cfMsg","儲存失敗："+(e.code||e.message),false);}};
+
+/* 流程與日程 */
+function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
+function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));state.currentStageId=$("#fCurrent").value;}
+function renderStages(){
+  const host=$("#stagesHost");
+  host.innerHTML=state.stages.map(s=>`<div class="item" data-id="${esc(s.id||stageId())}"><div class="item-grid">
+    <div><label>學期</label><input class="f-term" type="text" value="${esc(s.term)}" placeholder="大三下學期"></div>
+    <div><label>階段名稱</label><input class="f-name" type="text" value="${esc(s.name)}"></div>
+    <div><label>日期</label><input class="f-date" type="text" value="${esc(s.date)}" placeholder="例如：2026 · 10月"></div>
+    <div><label>說明</label><input class="f-desc" type="text" value="${esc(s.desc)}"></div>
+    </div><div class="item-foot"><button class="btn btn-sm btn-danger" data-act="del-stage">刪除此階段</button></div></div>`).join("")
+    || '<p class="empty-note">尚無階段。可按「載入預設流程」帶入標準七階段，再修改日期。</p>';
+  const sel=$("#fCurrent"); sel.innerHTML='<option value="">（未指定）</option>'+state.stages.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(""); sel.value=state.currentStageId||"";
+}
+$("#addStage").onclick=()=>{syncStagesFromDOM();state.stages.push({id:stageId(),term:"",name:"",date:"",desc:""});renderStages();};
+$("#seedStages").onclick=()=>{state.stages=DEFAULT_STAGES.map(s=>({...s}));state.currentStageId="";renderStages();};
+$("#stagesHost").addEventListener("click",e=>{const b=e.target.closest("[data-act=del-stage]");if(!b)return;syncStagesFromDOM();const id=b.closest(".item").dataset.id;state.stages=state.stages.filter(s=>s.id!==id);renderStages();});
+$("#saveFlow").onclick=async()=>{syncStagesFromDOM();try{await db.doc("settings/flow").set({currentStageId:state.currentStageId,stages:state.stages});flash("flowMsg","已儲存。");}catch(e){flash("flowMsg","儲存失敗："+(e.code||e.message),false);}};
+
+/* 公告 */
+async function loadAnnouncements(){
+  const snap=await db.collection("announcements").get();
+  const list=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("#annHost").innerHTML=list.map(a=>`<div class="item" data-id="${esc(a.id)}"><div class="item-grid">
+    <div><label>日期</label><input class="a-date" type="date" value="${esc(a.date)}"></div>
+    <div><label>標題</label><input class="a-title" type="text" value="${esc(a.title)}"></div>
+    <div class="full"><label>內容</label><textarea class="a-body">${esc(a.body)}</textarea></div>
+    </div><div class="item-foot"><label class="chk"><input type="checkbox" class="a-pin" ${a.pinned?"checked":""}> 置頂</label>
+    <span class="spacer" style="flex:1"></span><button class="btn btn-sm btn-primary" data-act="save-ann">儲存這則</button>
+    <button class="btn btn-sm btn-danger" data-act="del-ann">刪除</button></div></div>`).join("") || '<p class="empty-note">目前沒有公告。</p>';
+}
+$("#addAnn").onclick=async()=>{try{await db.collection("announcements").add({date:today(),title:"",body:"",pinned:false});await loadAnnouncements();flash("annMsg","已新增，請填寫後儲存。");}catch(e){flash("annMsg","新增失敗："+(e.code||e.message),false);}};
+$("#annHost").addEventListener("click",async e=>{
+  const item=e.target.closest(".item"); if(!item)return; const id=item.dataset.id;
+  if(e.target.closest("[data-act=save-ann]")){try{await db.doc("announcements/"+id).set({date:$(".a-date",item).value,title:$(".a-title",item).value.trim(),body:$(".a-body",item).value.trim(),pinned:$(".a-pin",item).checked});flash("annMsg","已儲存。");}catch(err){flash("annMsg","儲存失敗："+(err.code||err.message),false);}}
+  if(e.target.closest("[data-act=del-ann]")){if(!confirm("確定刪除這則公告？"))return;try{await db.doc("announcements/"+id).delete();await loadAnnouncements();flash("annMsg","已刪除。");}catch(err){flash("annMsg","刪除失敗："+(err.code||err.message),false);}}
+});
+
+/* 入選名單 */
+function groupOptions(sel){
+  return '<option value="">（選擇小組）</option>'+Object.values(GROUPMAP).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))).map(g=>'<option value="'+esc(g.id)+'"'+(g.id===sel?' selected':'')+'>'+esc((g.groupNo||"未編號")+" · "+(g.leaderName||""))+'</option>').join("");
+}
+function syncFinalFromDOM(){
+  state.finalists.groups=$$("#finalHost .acc-item").map(it=>({gid:$(".f-gid",it).value,no:$(".f-no",it).value.trim(),title:$(".f-title",it).value.trim(),leader:$(".f-leader",it).value.trim(),m1:$(".f-m1",it).value.trim(),m2:$(".f-m2",it).value.trim(),m3:$(".f-m3",it).value.trim()}));
+  state.finalists.published=$("#fPublished").checked;
+  state.finalists.intro=$("#fIntro").value; state.finalists.foot=$("#fFoot").value;
+}
+function renderFinalists(){
+  $("#finalHost").innerHTML=state.finalists.groups.map((g,idx)=>`<div class="acc-item" data-idx="${idx}">
+    <div class="acc-head"><span class="acc-no mono fh-no">${esc(g.no||"未編號")}</span><span class="acc-leader fh-title">${esc(g.title||"（未帶入）")}</span><span class="acc-chev">▾</span></div>
+    <div class="acc-body">
+      <div class="grid2"><div><label>選擇小組（自動帶入編號／題目／組員）</label><select class="f-gid">${groupOptions(g.gid||"")}</select></div>
+      <div><label>組別編號</label><input class="f-no" type="text" value="${esc(g.no||"")}"></div></div>
+      <label>專題題目</label><input class="f-title" type="text" value="${esc(g.title||"")}">
+      <div class="grid2"><div><label>組長</label><input class="f-leader" type="text" value="${esc(g.leader||"")}"></div>
+      <div><label>組員1</label><input class="f-m1" type="text" value="${esc(g.m1||"")}"></div></div>
+      <div class="grid2"><div><label>組員2</label><input class="f-m2" type="text" value="${esc(g.m2||"")}"></div>
+      <div><label>組員3</label><input class="f-m3" type="text" value="${esc(g.m3||"")}"></div></div>
+      <div class="item-foot"><button class="btn btn-sm btn-danger" data-act="del-final">刪除</button></div>
+    </div></div>`).join("") || '<p class="empty-note">尚無組別。用上方「帶入」或下方「新增組別」，並用下拉選小組自動帶入資料。</p>';
+}
+function updateFinalHeader(it){const hn=$(".fh-no",it),ht=$(".fh-title",it);if(hn)hn.textContent=$(".f-no",it).value.trim()||"未編號";if(ht)ht.textContent=$(".f-title",it).value.trim()||"（未帶入）";}
+$("#addFinal").onclick=()=>{syncFinalFromDOM();state.finalists.groups.push({gid:"",no:"",title:"",leader:"",m1:"",m2:"",m3:""});renderFinalists();};
+$("#finalHost").addEventListener("change",e=>{const sel=e.target.closest(".f-gid");if(!sel)return;const it=sel.closest(".acc-item");const g=GROUPMAP[sel.value];if(g){const m=g.members||[];$(".f-no",it).value=g.groupNo||"";$(".f-title",it).value=g.topic||"";$(".f-leader",it).value=g.leaderName||"";$(".f-m1",it).value=(m[0]||{}).name||"";$(".f-m2",it).value=(m[1]||{}).name||"";$(".f-m3",it).value=(m[2]||{}).name||"";}updateFinalHeader(it);});
+$("#finalHost").addEventListener("input",e=>{const it=e.target.closest(".acc-item");if(it)updateFinalHeader(it);});
+$("#finalHost").addEventListener("click",e=>{const head=e.target.closest(".acc-head");if(head){head.parentElement.classList.toggle("open");return;}const b=e.target.closest("[data-act=del-final]");if(!b)return;syncFinalFromDOM();const idx=+b.closest(".acc-item").dataset.idx;state.finalists.groups.splice(idx,1);renderFinalists();});
+$("#saveFinal").onclick=async()=>{syncFinalFromDOM();try{await db.doc("settings/finalists").set({published:state.finalists.published,groups:state.finalists.groups,intro:state.finalists.intro||"",foot:state.finalists.foot||""});flash("finalMsg","已儲存。");renderCommitteeTables();}catch(e){flash("finalMsg","儲存失敗："+(e.code||e.message),false);}};
+
+/* 當天議程 */
+let agenda={published:false,title:"",date:"",place:"",rows:[]};
+function renderAgenda(){
+  $("#agendaHost").innerHTML=agenda.rows.map((r,idx)=>{const g=GROUPMAP[r.gid];const sumI=(r.gid&&g)?(g.topic||g.groupNo||"小組發表"):(r.text||"（未填內容）");return `<div class="acc-item" data-idx="${idx}">
+    <div class="acc-head"><span class="acc-no mono ah-time">${esc(r.time||"（未填時間）")}</span><span class="acc-leader ah-item">${esc(sumI)}</span><span class="acc-chev">▾</span></div>
+    <div class="acc-body">
+      <div class="grid2"><div><label>時間</label><input class="ag-time" type="text" value="${esc(r.time||"")}" placeholder="13:30–13:45"></div>
+      <div><label>選擇小組（發表項目）</label><select class="ag-gid">${groupOptions(r.gid||"")}</select></div></div>
+      <label>自訂文字（未選小組時顯示，如：主任致詞、中場休息、頒獎）</label><input class="ag-text" type="text" value="${esc(r.text||"")}" placeholder="未選小組時填此欄">
+      <div class="item-foot"><button class="btn btn-sm" data-act="ag-up">↑</button><button class="btn btn-sm" data-act="ag-down">↓</button><span class="spacer" style="flex:1"></span><button class="btn btn-sm btn-danger" data-act="ag-del">刪除</button></div>
+    </div></div>`;}).join("") || '<p class="empty-note">尚無議程項目。按「新增項目」：填時間，選小組（發表）或填自訂文字（致詞、休息、頒獎等）。</p>';
+}
+function updateAgendaHeader(it){const gid=$(".ag-gid",it).value;const g=GROUPMAP[gid];const item=(gid&&g)?(g.topic||g.groupNo||"小組發表"):($(".ag-text",it).value.trim()||"（未填內容）");const ht=$(".ah-time",it),hi=$(".ah-item",it);if(ht)ht.textContent=$(".ag-time",it).value.trim()||"（未填時間）";if(hi)hi.textContent=item;}
+function syncAgendaFromDOM(){
+  agenda.rows=$$("#agendaHost .acc-item").map(it=>{const gid=$(".ag-gid",it).value;const g=GROUPMAP[gid]||{};return {time:$(".ag-time",it).value.trim(),kind:gid?"group":"text",gid:gid,no:gid?(g.groupNo||""):"",title:gid?(g.topic||""):"",text:$(".ag-text",it).value.trim()};});
+  agenda.published=$("#agPublished").checked; agenda.title=$("#agTitle").value.trim(); agenda.date=$("#agDate").value.trim(); agenda.place=$("#agPlace").value.trim();
+}
+$("#addAgenda").onclick=()=>{syncAgendaFromDOM();agenda.rows.push({time:"",kind:"text",gid:"",no:"",title:"",text:""});renderAgenda();};
+$("#agendaHost").addEventListener("click",e=>{
+  const head=e.target.closest(".acc-head"); if(head){head.parentElement.classList.toggle("open");return;}
+  const it=e.target.closest(".acc-item"); if(!it)return; const idx=+it.dataset.idx;
+  if(e.target.closest("[data-act=ag-del]")){syncAgendaFromDOM();agenda.rows.splice(idx,1);renderAgenda();}
+  else if(e.target.closest("[data-act=ag-up]")){syncAgendaFromDOM();if(idx>0){const t=agenda.rows[idx-1];agenda.rows[idx-1]=agenda.rows[idx];agenda.rows[idx]=t;renderAgenda();}}
+  else if(e.target.closest("[data-act=ag-down]")){syncAgendaFromDOM();if(idx<agenda.rows.length-1){const t=agenda.rows[idx+1];agenda.rows[idx+1]=agenda.rows[idx];agenda.rows[idx]=t;renderAgenda();}}
+});
+$("#agendaHost").addEventListener("input",e=>{const it=e.target.closest(".acc-item");if(it)updateAgendaHeader(it);});
+$("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-item");if(it)updateAgendaHeader(it);});
+$("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
+
+/* 登錄與上傳 */
+$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+
+/* 專題規定／說明文件（上傳到 Storage，內嵌於學生入口） */
+function renderRulesCurrent(upd){
+  const host=$("#rulesCurrent"); if(!host) return;
+  if(upd&&upd.rulesUrl){
+    host.innerHTML='目前文件：<a href="'+esc(upd.rulesUrl)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(upd.rulesName||"檢視")+'</a> <span style="color:var(--muted);font-size:12px">（'+(upd.rulesType==="image"?"圖片":"PDF")+'）</span>';
+  }else{ host.innerHTML='<span style="color:var(--muted)">尚未上傳規定文件。</span>'; }
+}
+$("#rulesFile").addEventListener("change",async e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file)return;
+  const ext=(file.name.toLowerCase().match(/\.[a-z0-9]+$/)||[""])[0];
+  const isPdf=ext===".pdf"; const isImg=[".png",".jpg",".jpeg"].includes(ext);
+  if(!isPdf&&!isImg){ flash("rulesMsg","僅支援 PDF 或 PNG／JPG。",false); e.target.value=""; return; }
+  if(file.size>=20*1024*1024){ flash("rulesMsg","檔案超過 20MB。",false); e.target.value=""; return; }
+  flash("rulesMsg","上傳中…");
+  try{
+    let oldPath=""; try{ const d=await db.doc("settings/uploads").get(); if(d.exists) oldPath=d.data().rulesPath||""; }catch(_){}
+    const path="public/rules/rules_"+Date.now()+ext;
+    const ref=storage.ref(path);
+    await ref.put(file,{contentType:file.type||(isPdf?"application/pdf":"image/*")});
+    const url=await ref.getDownloadURL();
+    await db.doc("settings/uploads").set({rulesUrl:url,rulesPath:path,rulesName:file.name,rulesType:isPdf?"pdf":"image"},{merge:true});
+    if(oldPath&&oldPath!==path){ try{ await storage.ref(oldPath).delete(); }catch(_){}}
+    renderRulesCurrent({rulesUrl:url,rulesName:file.name,rulesType:isPdf?"pdf":"image"});
+    flash("rulesMsg","已上傳。");
+  }catch(err){ flash("rulesMsg","上傳失敗："+(err.code||err.message),false); }
+  finally{ e.target.value=""; }
+});
+$("#rulesRemove").onclick=async()=>{
+  if(!confirm("確定移除目前的規定文件？學生入口將不再顯示。"))return;
+  try{
+    let oldPath=""; try{ const d=await db.doc("settings/uploads").get(); if(d.exists) oldPath=d.data().rulesPath||""; }catch(_){}
+    const del=firebase.firestore.FieldValue.delete();
+    await db.doc("settings/uploads").set({rulesUrl:del,rulesPath:del,rulesName:del,rulesType:del},{merge:true});
+    if(oldPath){ try{ await storage.ref(oldPath).delete(); }catch(_){}}
+    renderRulesCurrent({});
+    flash("rulesMsg","已移除。");
+  }catch(err){ flash("rulesMsg","移除失敗："+(err.code||err.message),false); }
+};
+
+/* 帳號（教師 / 委員） */
+async function createAccount(role,name,email,pw,msgId,clearIds){
+  if(!name||!email||pw.length<6){flash(msgId,"請填姓名、電子郵件與至少 6 碼密碼。",false);return;}
+  const btn = role==="teacher" ? $("#createTeacher") : $("#createCommittee");
+  if(btn.disabled) return; btn.disabled=true;
+  try{
+    const sec=firebase.apps.find(a=>a.name==="secondary")||firebase.initializeApp(firebaseConfig,"secondary");
+    const cred=await sec.auth().createUserWithEmailAndPassword(email,pw);
+    await db.doc("users/"+cred.user.uid).set({role:role,name:name,email:email});
+    await sec.auth().signOut();
+    clearIds.forEach(id=>$("#"+id).value="");
+    flash(msgId,"已建立帳號。"); await loadAccounts(); await loadGroups();
+  }catch(e){ flash(msgId,"建立失敗："+(e.code||e.message),false); }
+  finally{ btn.disabled=false; }
+}
+$("#createTeacher").onclick=()=>createAccount("teacher",$("#tName").value.trim(),$("#tEmail").value.trim(),$("#tPw").value,"tAccMsg",["tName","tEmail","tPw"]);
+$("#createCommittee").onclick=()=>createAccount("committee",$("#cName").value.trim(),$("#cEmail").value.trim(),$("#cPw").value,"cAccMsg",["cName","cEmail","cPw"]);
+
+async function loadAccounts(){
+  const snap=await db.collection("users").get();
+  const all=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  TEACHERS=all.filter(u=>u.role==="teacher").map(u=>({uid:u.uid,name:u.name||u.email||u.uid})).sort((a,b)=>a.name.localeCompare(b.name));
+  COMMITTEE=all.filter(u=>u.role==="committee").map(u=>({uid:u.uid,name:u.name||u.email||u.uid})).sort((a,b)=>a.name.localeCompare(b.name));
+  renderAccList("teacherAccList", all.filter(u=>u.role==="teacher"));
+  renderAccList("committeeAccList", all.filter(u=>u.role==="committee"));
+}
+function renderAccList(hostId,rows){
+  const host=$("#"+hostId);
+  if(!rows.length){host.innerHTML='<p class="empty-note">尚無帳號。</p>';return;}
+  host.innerHTML=rows.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(u=>
+    '<div class="accrow" data-uid="'+esc(u.uid)+'" data-email="'+esc(u.email||"")+'">'+
+    '<input class="ac-name" type="text" value="'+esc(u.name||"")+'" style="max-width:150px">'+
+    '<span class="ac-email">'+esc(u.email||"")+'</span><span class="spacer" style="flex:1"></span>'+
+    '<button class="btn btn-sm" data-act="save-name">儲存姓名</button>'+
+    '<button class="btn btn-sm" data-act="reset-pw">重設密碼</button>'+
+    '<button class="btn btn-sm btn-danger" data-act="del-acc">刪除</button>'+
+    '<span class="msg" data-msg style="flex-basis:100%"></span></div>').join("");
+}
+document.addEventListener("click",async e=>{
+  const row=e.target.closest(".accrow"); if(!row)return;
+  if(!row.closest("#teacherAccList,#committeeAccList"))return;
+  if(!e.target.closest("[data-act=save-name],[data-act=reset-pw],[data-act=del-acc]"))return;
+  const uid=row.dataset.uid, email=row.dataset.email, msg=$("[data-msg]",row);
+  if(e.target.closest("[data-act=save-name]")){
+    try{ await db.doc("users/"+uid).update({name:$(".ac-name",row).value.trim()}); msg.textContent="已更新姓名。"; msg.className="msg ok"; await loadGroups(); }
+    catch(err){ msg.textContent="失敗："+(err.code||err.message); msg.className="msg err"; }
+  }else if(e.target.closest("[data-act=reset-pw]")){
+    if(!email){msg.textContent="此帳號無 email。";msg.className="msg err";return;}
+    try{ await auth.sendPasswordResetEmail(email); msg.textContent="已寄出密碼重設信至 "+email; msg.className="msg ok"; }
+    catch(err){ msg.textContent="寄送失敗："+(err.code||err.message); msg.className="msg err"; }
+  }else if(e.target.closest("[data-act=del-acc]")){
+    if(!confirm("確定刪除此帳號？將移除其角色（登入帳號記錄需另於 Firebase 主控台或清除腳本移除）。"))return;
+    try{ await db.doc("users/"+uid).delete(); await loadAccounts(); await loadGroups(); }
+    catch(err){ msg.textContent="刪除失敗："+(err.code||err.message); msg.className="msg err"; }
+  }
+});
+
+/* 分組與指導老師（摺疊，含專題題目） */
+function filesBlock(gid){
+  const gf=GFILES[gid]||{};
+  const rounds=[["r1","第一次",[["report","報告"],["slides","簡報"],["extra","補充"]]],["r2","第二次",[["slides","發表簡報"]]],["r3","第三次",[["report","報告"],["slides","簡報"]]]];
+  let any=false;
+  const rows=rounds.map(([rk,label,slots])=>{
+    const rec=gf[rk]||{};
+    const items=slots.map(([sk,sl])=>{ const f=rec[sk]; if(!f||!f.url) return ""; any=true;
+      return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+esc(sl)+'：'+esc(f.name||"檔案")+'</a>'; }).filter(Boolean).join("");
+    return items?'<div style="margin:3px 0"><span style="display:inline-block;min-width:52px;font-size:12px;color:var(--muted)">'+label+'</span>'+items+'</div>':"";
+  }).filter(Boolean).join("");
+  return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)"><div style="font-size:13px;color:var(--muted);margin-bottom:4px">上傳檔案</div>'+(any?rows:'<span style="font-size:13px;color:var(--muted)">尚無上傳檔案。</span>')+'</div>';
+}
+async function loadGroups(){
+  const [gs,gfs]=await Promise.all([db.collection("groups").get(), db.collection("groupFiles").get()]);
+  const groups=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+  GFILES={}; gfs.docs.forEach(d=>GFILES[d.id]=d.data());
+  GROUPMAP={}; groups.forEach(g=>GROUPMAP[g.id]=g);
+  const sub=k=>groups.filter(g=>g.submitted&&g.submitted[k]).length;
+  $("#gsummary").textContent=`共 ${groups.length} 組，已登錄指導老師 ${groups.filter(g=>g.advisorUid).length} 組。繳交：第一次 ${sub("r1")}／${groups.length}、第二次 ${sub("r2")}／${groups.length}、第三次 ${sub("r3")}／${groups.length}。`;
+  const host=$("#groupsHost");
+  if(!groups.length){host.innerHTML='<p class="empty-note">尚無分組資料。學生於學生入口送出分組後，會出現在這裡。</p>';renderCommitteeTables();return;}
+  const advSel=g=>'<option value="">（未登錄）</option>'+TEACHERS.map(t=>'<option value="'+esc(t.uid)+'"'+(t.uid===g.advisorUid?' selected':'')+'>'+esc(t.name)+'</option>').join("");
+  const pair=(l1,c1,v1,l2,c2,v2)=>'<div class="grid2"><div><label>'+l1+'</label><input class="'+c1+'" type="text" value="'+esc(v1)+'"></div><div><label>'+l2+'</label><input class="'+c2+'" type="text" value="'+esc(v2)+'"></div></div>';
+  host.innerHTML=groups.map(g=>{
+    const m=g.members||[]; const m1=m[0]||{},m2=m[1]||{},m3=m[2]||{};
+    const advState=g.advisorName?('<span class="acc-adv set">指導：'+esc(g.advisorName)+'</span>'):'<span class="acc-adv none">指導：未登錄</span>';
+    const sb=g.submitted||{}; const subCount=["r1","r2","r3"].filter(k=>sb[k]).length;
+    const searchStr=esc([g.groupNo,g.leaderName,g.leaderSid,(g.members||[]).map(x=>(x.name||"")+" "+(x.sid||"")).join(" "),g.topic,g.advisorName].join(" ").toLowerCase());
+    return `<div class="acc-item" data-id="${esc(g.id)}" data-search="${searchStr}"><div class="acc-head">
+      <span class="acc-no mono">${esc(g.groupNo||"未編號")}</span>
+      <span class="acc-leader">${esc(g.leaderName||"（無組長）")}</span>${advState}
+      <span style="font-size:12px;color:var(--muted)">繳 ${subCount}/3</span>
+      <span class="acc-chev">▾</span></div>
+      <div class="acc-body">
+        <div class="grid2"><div><label>組別編號</label><input class="a-no" type="text" value="${esc(g.groupNo||"")}"></div>
+        <div><label>指導老師</label><select class="a-advsel">${advSel(g)}</select></div></div>
+        <label>專題題目</label><input class="a-topic" type="text" value="${esc(g.topic||"")}" placeholder="由系辦填入該組專題題目">
+        ${pair("組長 學號","a-lsid",g.leaderSid||"","組長 姓名","a-lname",g.leaderName||"")}
+        ${pair("組員1 學號","a-m1sid",m1.sid||"","組員1 姓名","a-m1name",m1.name||"")}
+        ${pair("組員2 學號","a-m2sid",m2.sid||"","組員2 姓名","a-m2name",m2.name||"")}
+        ${pair("組員3 學號","a-m3sid",m3.sid||"","組員3 姓名","a-m3name",m3.name||"")}
+        <div style="margin-top:10px;display:flex;gap:18px;flex-wrap:wrap;align-items:center"><span style="font-size:13px;color:var(--muted)">繳交狀態：</span>
+          <label class="chk" style="margin:0"><input type="checkbox" class="a-r1" ${sb.r1?"checked":""}> 第一次</label>
+          <label class="chk" style="margin:0"><input type="checkbox" class="a-r2" ${sb.r2?"checked":""}> 第二次</label>
+          <label class="chk" style="margin:0"><input type="checkbox" class="a-r3" ${sb.r3?"checked":""}> 第三次</label></div>
+        ${filesBlock(g.id)}
+        <div class="item-foot"><button class="btn btn-sm btn-danger" data-act="del-group">刪除此組</button><span class="spacer" style="flex:1"></span><button class="btn btn-sm btn-primary" data-act="save-group">儲存</button></div>
+      </div></div>`;
+  }).join("");
+  filterGroups();
+  renderCommitteeTables();
+}
+$("#reloadGroups").onclick=()=>loadGroups();
+function filterGroups(){ const q=(($("#groupSearch")||{}).value||"").trim().toLowerCase(); $$("#groupsHost .acc-item").forEach(x=>{ x.style.display=(!q||(x.dataset.search||"").includes(q))?"":"none"; }); }
+$("#groupSearch").oninput=filterGroups;
+$("#expandAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>{ if(x.style.display!=="none") x.classList.add("open"); });
+$("#collapseAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>x.classList.remove("open"));
+$("#fillFromRank").onclick=()=>{
+  const rows=committeeRowsRaw(1).filter(r=>r._n>0);
+  if(!rows.length){ flash("finalMsg","第一階段尚無評分可帶入。",false); return; }
+  let n=parseInt($("#topN").value,10); if(!n||n<1) n=Math.ceil(rows.length/2);
+  state.finalists.groups=rows.slice(0,n).map(r=>({gid:r.gid||"",no:r.groupNo||"",title:r.topic||"",leader:r.leaderName||"",m1:r.m1name||"",m2:r.m2name||"",m3:r.m3name||""}));
+  renderFinalists();
+  flash("finalMsg","已帶入前 "+Math.min(n,rows.length)+" 組，請確認後按「儲存名單」並勾選發布。",true);
+};
+$("#forgotPw").onclick=(e)=>{
+  e.preventDefault();
+  const el=$("#loginMsg"); const set=(m,ok)=>{el.className="msg "+(ok?"ok":"err");el.textContent=m;};
+  const em=$("#email").value.trim();
+  if(!em){ set("請先在上方輸入電子郵件。",false); return; }
+  set("寄送中…",true);
+  auth.sendPasswordResetEmail(em).then(()=>set("重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",true)).catch(err=>{const c=err.code||"";set(c==="auth/user-not-found"?"此信箱尚未註冊為系統帳號，請確認或洽系辦。":c==="auth/invalid-email"?"電子郵件格式不正確。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":c==="auth/missing-email"?"請輸入電子郵件。":"寄送失敗："+(c||err.message),false);});
+};
+$("#groupsHost").addEventListener("click",async e=>{
+  const head=e.target.closest(".acc-head");
+  if(head){ head.parentElement.classList.toggle("open"); return; }
+  const item=e.target.closest(".acc-item"); if(!item)return; const gid=item.dataset.id;
+  const v=cls=>$("."+cls,item).value.trim();
+  if(e.target.closest("[data-act=save-group]")){
+    const members=[]; [["a-m1sid","a-m1name"],["a-m2sid","a-m2name"],["a-m3sid","a-m3name"]].forEach(([s,n])=>{ if(v(s)||v(n)) members.push({sid:v(s),name:v(n)}); });
+    const advUid=$(".a-advsel",item).value; const advName=(TEACHERS.find(t=>t.uid===advUid)||{}).name||"";
+    const submitted={r1:$(".a-r1",item).checked,r2:$(".a-r2",item).checked,r3:$(".a-r3",item).checked};
+    try{ await db.doc("groups/"+gid).set({groupNo:v("a-no"),topic:v("a-topic"),advisorUid:advUid,advisorName:advName,leaderSid:v("a-lsid"),leaderName:v("a-lname"),members:members,submitted:submitted},{merge:true}); flash("asgMsg","已儲存。"); await loadGroups(); }
+    catch(err){ flash("asgMsg","儲存失敗："+(err.code||err.message),false); }
+  }
+  if(e.target.closest("[data-act=del-group]")){
+    if(!confirm("確定刪除這一組？此動作無法復原。"))return;
+    try{ await db.doc("groups/"+gid).delete(); await loadGroups(); await loadLeaders(); flash("asgMsg","已刪除。"); }
+    catch(err){ flash("asgMsg","刪除失敗："+(err.code||err.message),false); }
+  }
+});
+
+/* 組長帳號 */
+async function loadLeaders(){
+  const [us,gs]=await Promise.all([db.collection("users").where("role","==","student").get(),db.collection("groups").get()]);
+  const gmap={}; gs.docs.forEach(d=>gmap[d.id]=d.data());
+  const leaders=us.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>String(a.email||"").localeCompare(String(b.email||"")));
+  const host=$("#leaderHost");
+  if(!leaders.length){host.innerHTML='<p class="empty-note">尚無組長帳號。</p>';return;}
+  host.innerHTML=leaders.map(u=>{const g=gmap[u.uid];const info=g?esc((g.groupNo||"未編號")+"　"+(g.leaderName||"")):"（尚未送出分組）";
+    return '<div class="accrow" data-uid="'+esc(u.uid)+'" data-email="'+esc(u.email||"")+'">'+
+      '<span style="font-weight:500;min-width:170px">'+esc(u.email||"（無 email）")+'</span>'+
+      '<span class="ac-email">'+info+'</span><span class="spacer" style="flex:1"></span>'+
+      '<button class="btn btn-sm" data-act="reset-pw">寄送密碼重設信</button>'+
+      '<button class="btn btn-sm btn-danger" data-act="del-acc-leader">刪除</button>'+
+      '<span class="msg" data-msg style="flex-basis:100%"></span></div>';
+  }).join("");
+}
+$("#leaderHost").addEventListener("click",async e=>{
+  if(e.target.closest("[data-act=reset-pw]")){
+    const row=e.target.closest(".accrow"); const msg=$("[data-msg]",row); const email=row.dataset.email;
+    if(!email){msg.textContent="無 email。";msg.className="msg err";return;}
+    try{ await auth.sendPasswordResetEmail(email); msg.textContent="已寄出密碼重設信。"; msg.className="msg ok"; }
+    catch(err){ msg.textContent="失敗："+(err.code||err.message); msg.className="msg err"; }
+    return;
+  }
+  const del=e.target.closest("[data-act=del-acc-leader]"); if(!del)return;
+  const row=e.target.closest(".accrow"); const uid=row.dataset.uid; const msg=$("[data-msg]",row);
+  if(!confirm("確定刪除此組長？將移除其角色與分組資料。\\n（登入帳號記錄需另於主控台或清除腳本移除。）"))return;
+  try{ await db.doc("groups/"+uid).delete().catch(()=>{}); await db.doc("users/"+uid).delete(); await loadLeaders(); await loadGroups(); }
+  catch(err){ msg.textContent="刪除失敗："+(err.code||err.message); msg.className="msg err"; }
+});
+
+/* ===== 評分檢視 ===== */
+// 指導教授成績
+async function loadTeacherScores(){ try{const snap=await db.collection("grades").get();GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());}catch(e){GRADES={};} renderTeacherTable(1,"tg1Host"); renderTeacherTable(2,"tg2Host"); }
+async function refreshScores(){
+  try{ await loadAccounts(); }catch(e){}
+  try{ const gs=await db.collection("grades").get(); GRADES={}; gs.docs.forEach(d=>GRADES[d.id]=d.data()); }catch(e){}
+  try{ const cs=await db.collection("committeeScores").get(); CSCORES=cs.docs.map(d=>d.data()); }catch(e){}
+  renderTeacherTable(1,"tg1Host"); renderTeacherTable(2,"tg2Host"); renderCommitteeTables();
+}
+$("#reloadTG").onclick=()=>refreshScores();
+function scoreTabActive(){ const p=document.querySelector('.tabpane[data-pane="score"]'); return !!(p&&p.classList.contains("on")); }
+let _lastAutoRefresh=0;
+function autoRefresh(){ const t=Date.now(); if(t-_lastAutoRefresh<3000) return; _lastAutoRefresh=t; refreshScores(); }
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && scoreTabActive()) autoRefresh(); });
+window.addEventListener("focus",()=>{ if(scoreTabActive()) autoRefresh(); });
+
+function teacherRowsRaw(sem){
+  const semKey="sem"+sem;
+  return Object.values(GROUPMAP).map(g=>{
+    const gr=(GRADES[g.id]||{})[semKey]||{};
+    const sc=slot=>{const s=(gr[slot]||{}).score;return (s===0||s)?s:"";};
+    const m=g.members||[]; const M=i=>m[i]||{};
+    return {groupNo:g.groupNo||"",leaderSid:g.leaderSid||"",leaderName:g.leaderName||"",leaderScore:sc("leader"),
+      m1sid:M(0).sid||"",m1name:M(0).name||"",m1score:sc("m1"),
+      m2sid:M(1).sid||"",m2name:M(1).name||"",m2score:sc("m2"),
+      m3sid:M(2).sid||"",m3name:M(2).name||"",m3score:sc("m3"),
+      advisor:g.advisorName||""};
+  });
+}
+const TEACHER_COLS=[
+  {key:"groupNo",label:"組別編號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderSid",label:"組長學號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderName",label:"組長姓名",kind:"text",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderScore",label:"組長分數",kind:"num",keyCol:true,sortable:true},
+  {key:"m1sid",label:"組員1學號",kind:"mono",groupStart:true},
+  {key:"m1name",label:"組員1姓名",kind:"text"},
+  {key:"m1score",label:"組員1分數",kind:"num"},
+  {key:"m2sid",label:"組員2學號",kind:"mono",groupStart:true},
+  {key:"m2name",label:"組員2姓名",kind:"text"},
+  {key:"m2score",label:"組員2分數",kind:"num"},
+  {key:"m3sid",label:"組員3學號",kind:"mono",groupStart:true},
+  {key:"m3name",label:"組員3姓名",kind:"text"},
+  {key:"m3score",label:"組員3分數",kind:"num"},
+  {key:"advisor",label:"指導教授",kind:"text",groupStart:true,keyCol:true,sortable:true}
+];
+function renderTeacherTable(sem,hostId){
+  if(!Object.keys(GROUPMAP).length){$("#"+hostId).innerHTML='<p class="empty-note">尚無分組資料。</p>';return;}
+  const rows=teacherRowsRaw(sem).sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo)));
+  scoreTable(hostId, TEACHER_COLS, rows);
+}
+
+// 校外委員成績（即時）
+function startCommitteeListener(){ if(startCommitteeListener.done)return;startCommitteeListener.done=true;db.collection("committeeScores").onSnapshot(snap=>{CSCORES=snap.docs.map(d=>d.data());renderCommitteeTables();},err=>console.warn("委員評分監聽失敗",err)); }
+function startGradesListener(){ if(startGradesListener.done)return;startGradesListener.done=true;db.collection("grades").onSnapshot(snap=>{GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());renderTeacherTable(1,"tg1Host");renderTeacherTable(2,"tg2Host");},err=>console.warn("成績監聽失敗",err)); }
+
+function committeeRowsRaw(stage){
+  const finNos=(state.finalists.groups||[]).map(x=>x.no);
+  let groups=Object.values(GROUPMAP);
+  if(stage===2) groups=groups.filter(g=>g.groupNo && finNos.includes(g.groupNo));
+  const rel=CSCORES.filter(s=>s.stage===stage);
+  const rows=groups.map(g=>{
+    const m=g.members||[];
+    let sum=0,n=0;
+    const row={gid:g.id,groupNo:g.groupNo||"",leaderSid:g.leaderSid||"",leaderName:g.leaderName||"",
+      m1sid:(m[0]||{}).sid||"",m1name:(m[0]||{}).name||"",
+      m2sid:(m[1]||{}).sid||"",m2name:(m[1]||{}).name||"",
+      m3sid:(m[2]||{}).sid||"",m3name:(m[2]||{}).name||"",
+      advisor:g.advisorName||"",topic:g.topic||""};
+    COMMITTEE.forEach(c=>row["cmt_"+c.uid]="");
+    rel.filter(s=>s.gid===g.id).forEach(s=>{ if(typeof s.score==="number"){ row["cmt_"+s.committeeUid]=s.score; sum+=s.score; n++; } });
+    row.avg=n?Math.round(sum/n*10)/10:""; row._n=n;
+    return row;
+  });
+  const scored=rows.filter(r=>r._n>0).sort((a,b)=>b.avg-a.avg); scored.forEach((r,i)=>{r.rank=i+1;r._top=(stage===2&&r.rank<=3);});
+  rows.filter(r=>!r._n).forEach(r=>r.rank="");
+  return scored.concat(rows.filter(r=>!r._n));
+}
+function committeeCols(){
+  const cols=[
+    {key:"groupNo",label:"組別編號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+    {key:"leaderSid",label:"組長學號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+    {key:"leaderName",label:"組長姓名",kind:"text",sticky:true,keyCol:true,sortable:true},
+    {key:"m1sid",label:"組員1學號",kind:"mono",groupStart:true},
+    {key:"m1name",label:"組員1姓名",kind:"text"},
+    {key:"m2sid",label:"組員2學號",kind:"mono",groupStart:true},
+    {key:"m2name",label:"組員2姓名",kind:"text"},
+    {key:"m3sid",label:"組員3學號",kind:"mono",groupStart:true},
+    {key:"m3name",label:"組員3姓名",kind:"text"},
+    {key:"advisor",label:"指導教授",kind:"text",groupStart:true,keyCol:true,sortable:true},
+    {key:"topic",label:"專題題目",kind:"ellip"}
+  ];
+  COMMITTEE.forEach((c,i)=>cols.push({key:"cmt_"+c.uid,label:c.name,kind:"num",groupStart:i===0,sortable:true}));
+  cols.push({key:"avg",label:"加總平均",kind:"num",groupStart:true,keyCol:true,sortable:true});
+  cols.push({key:"rank",label:"排名",kind:"num",keyCol:true,sortable:true});
+  return cols;
+}
+function renderCommitteeTables(){ renderCommitteeTable(1,"cs1Host"); renderCommitteeTable(2,"cs2Host"); }
+function renderCommitteeTable(stage,hostId){
+  if(!Object.keys(GROUPMAP).length){$("#"+hostId).innerHTML='<p class="empty-note">尚無分組資料。</p>';return;}
+  scoreTable(hostId, committeeCols(), committeeRowsRaw(stage));
+}
+
+/* 通用增強表格 */
+const STAB={};
+const STICKY_W={groupNo:76,leaderSid:92,leaderName:104};
+function scoreTable(hostId, columns, rows){
+  const prev=STAB[hostId]||{};
+  STAB[hostId]={columns, rows, sortKey:prev.sortKey||null, sortDir:prev.sortDir||1, search:prev.search||"", view:prev.view||"full"};
+  drawScore(hostId);
+}
+function drawScore(hostId){
+  const st=STAB[hostId]; const host=$("#"+hostId); if(!st||!host)return;
+  const cols=st.columns.filter(c=> st.view==="full" || c.keyCol);
+  const q=st.search.trim().toLowerCase();
+  let rows=st.rows;
+  if(q) rows=rows.filter(r=>st.columns.some(c=>String(r[c.key]!=null?r[c.key]:"").toLowerCase().includes(q)));
+  if(st.sortKey){
+    const col=st.columns.find(c=>c.key===st.sortKey); const num=col&&col.kind==="num";
+    rows=rows.slice().sort((a,b)=>{
+      let x=a[st.sortKey], y=b[st.sortKey];
+      const xe=(x===""||x==null), ye=(y===""||y==null);
+      if(xe&&ye)return 0; if(xe)return 1; if(ye)return -1;
+      if(num) return (x-y)*st.sortDir;
+      return String(x).localeCompare(String(y))*st.sortDir;
+    });
+  }
+  let left=0; const offsets={};
+  cols.forEach(c=>{ if(c.sticky){ offsets[c.key]=left; left+=(STICKY_W[c.key]||90); } });
+  const lastSticky=cols.filter(c=>c.sticky).pop();
+  const thCells=cols.map(c=>{
+    const cl=['hcell']; if(c.sticky)cl.push('sticky-c'); if(lastSticky&&c.key===lastSticky.key)cl.push('sticky-last'); if(c.groupStart)cl.push('grp'); if(c.kind==='num')cl.push('num'); if(c.sortable)cl.push('sortable');
+    const w=STICKY_W[c.key]||90;
+    const style=c.sticky?('left:'+offsets[c.key]+'px;min-width:'+w+'px;max-width:'+w+'px'):'';
+    const arrow=(st.sortKey===c.key)?(st.sortDir>0?' ▲':' ▼'):'';
+    return '<th class="'+cl.join(' ')+'"'+(c.sortable?' data-sort="'+c.key+'"':'')+(style?' style="'+style+'"':'')+'>'+esc(c.label)+arrow+'</th>';
+  }).join("");
+  const body=rows.map(r=>{
+    const tds=cols.map(c=>{
+      const cl=[]; if(c.sticky)cl.push('sticky-c'); if(lastSticky&&c.key===lastSticky.key)cl.push('sticky-last'); if(c.groupStart)cl.push('grp'); if(c.kind==='num')cl.push('num'); if(c.kind==='mono')cl.push('mono'); if(c.kind==='ellip')cl.push('ellip');
+      const w=STICKY_W[c.key]||90;
+      const style=c.sticky?('left:'+offsets[c.key]+'px;min-width:'+w+'px;max-width:'+w+'px'):'';
+      const v=r[c.key];
+      const inner=(c.kind==='num')?((v===0||v)?esc(v):'<span class="na">–</span>'):esc(v);
+      const title=((c.sticky||c.kind==='ellip')&&v)?(' title="'+esc(v)+'"'):'';
+      return '<td class="'+cl.join(' ')+'"'+(style?' style="'+style+'"':'')+title+'>'+inner+'</td>';
+    }).join("");
+    return '<tr'+(r._top?' class="top"':'')+'>'+tds+'</tr>';
+  }).join("");
+  const controls='<div class="score-controls">'+
+    '<input type="text" placeholder="搜尋組別／姓名／題目…" data-search value="'+esc(st.search)+'">'+
+    '<span class="seg"><button data-view="full" class="'+(st.view==="full"?"on":"")+'">完整</button><button data-view="simple" class="'+(st.view==="simple"?"on":"")+'">簡潔</button></span>'+
+    '<span style="color:var(--muted);font-size:12px">共 '+rows.length+' 組</span></div>';
+  host.innerHTML=controls+'<div class="scoretable"><table class="stab"><thead><tr>'+thCells+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  const se=host.querySelector("[data-search]");
+  se.oninput=()=>{ st.search=se.value; const pos=se.selectionStart; drawScore(hostId); const ne=host.querySelector("[data-search]"); if(ne){ne.focus(); try{ne.setSelectionRange(pos,pos);}catch(e){}} };
+  host.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{ st.view=b.dataset.view; drawScore(hostId); });
+  host.querySelectorAll("[data-sort]").forEach(th=>th.onclick=()=>{ const k=th.dataset.sort; if(st.sortKey===k)st.sortDir=-st.sortDir; else{st.sortKey=k;st.sortDir=1;} drawScore(hostId); });
+}
+
+/* CSV 下載 */
+function toCSV(headers,rows){const q=v=>{v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};return "\uFEFF"+[headers.map(q).join(","),...rows.map(r=>r.map(q).join(","))].join("\n");}
+function download(name,text){const b=new Blob([text],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-csv]"); if(!b)return;
+  const which=b.dataset.csv;
+  if(which==="t1"||which==="t2"){
+    const sem=which==="t1"?1:2; const cols=TEACHER_COLS;
+    const rows=teacherRowsRaw(sem).sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo))).map(r=>cols.map(c=>r[c.key]));
+    download("指導教授_"+(sem===1?"第一次成績":"第二次成績")+".csv", toCSV(cols.map(c=>c.label),rows));
+  }else{
+    const stage=which==="c1"?1:2; const cols=committeeCols();
+    const rows=committeeRowsRaw(stage).map(r=>cols.map(c=>r[c.key]));
+    download("校外委員_"+(stage===1?"第一階段":"第二階段")+"成績.csv", toCSV(cols.map(c=>c.label),rows));
+  }
+});
+
+/* 年度重置 */
+$("#resetYear").onclick=async()=>{
+  const msg=$("#resetMsg");
+  const typed=prompt("此操作將清空上一屆的分組、成績、委員評分與公告，且無法復原。\\n確定請輸入大寫 RESET：");
+  if(typed===null) return;
+  if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
+  $("#resetYear").disabled=true; msg.textContent="處理中…"; msg.className="msg";
+  try{
+    const [studs,groups,grades,cscores,anns,gfiles]=await Promise.all([
+      db.collection("users").where("role","==","student").get(), db.collection("groups").get(),
+      db.collection("grades").get(), db.collection("committeeScores").get(), db.collection("announcements").get(),
+      db.collection("groupFiles").get()
+    ]);
+    const refs=[]; [studs,groups,grades,cscores,anns,gfiles].forEach(snap=>snap.docs.forEach(d=>refs.push(d.ref)));
+    for(let i=0;i<refs.length;i+=400){ const batch=db.batch(); refs.slice(i,i+400).forEach(r=>batch.delete(r)); await batch.commit(); }
+    await db.doc("settings/finalists").set({published:false,groups:[]},{merge:true});
+    await db.doc("settings/registration").set({open:false},{merge:true});
+    msg.textContent="已完成年度重置，共清除 "+refs.length+" 筆資料。"; msg.className="msg ok";
+    state.finalists={published:false,groups:[]}; $("#fPublished").checked=false; renderFinalists(); $("#fRegOpen").checked=false;
+    await loadAnnouncements(); await loadAccounts(); await loadGroups(); await loadLeaders(); await loadTeacherScores();
+  }catch(e){ msg.textContent="重置失敗："+(e.code||e.message); msg.className="msg err"; }
+  finally{ $("#resetYear").disabled=false; }
+};
+</script>
+</body>
+</html>

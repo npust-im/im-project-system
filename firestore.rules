@@ -1,0 +1,94 @@
+rules_version = '2';
+
+// =============================================================
+//  Firestore 安全規則 · 實務專題系統
+//  部署方式：Firebase 主控台 → Build → Firestore Database →
+//            Rules 分頁 → 貼上 → 發布(Publish)。
+//
+//  ⚠️ 你先前說已自行設定過 Rules。請先把「你目前的規則」備份下來，
+//     再用本檔比對後替換。本檔是為了讓「現有功能 + 這次新增功能」
+//     都能正常運作而寫；若你原本有更嚴格的條款，請自行合併。
+//     部署後務必實際登入各角色測試一輪。
+// =============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin()     { return signedIn() && myRole() == 'admin'; }
+    function isTeacher()   { return signedIn() && myRole() == 'teacher'; }
+    function isCommittee() { return signedIn() && myRole() == 'committee'; }
+    function isStudent()   { return signedIn() && myRole() == 'student'; }
+    function advisorOf(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)).data.advisorUid;
+    }
+
+    // ---- 帳號資料 ----
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || isTeacher() || isCommittee());
+      // 組長註冊時自建自己的 users 文件，且角色必須是 student
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == 'student';
+      // 建立教師/委員帳號、改名、刪除 → 系辦
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- 分組名單（系辦維護編號、題目、指導老師）----
+    match /groups/{gid} {
+      allow read: if isAdmin() || isTeacher() || isCommittee()
+                  || (isStudent() && request.auth.uid == gid);
+      // 組長只能建立/更新自己那一組；系辦可全改
+      allow create, update: if (isStudent() && request.auth.uid == gid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---- 各組上傳檔案的中繼資料（檔名/下載網址）----
+    match /groupFiles/{gid} {
+      allow read: if isAdmin() || isTeacher() || isCommittee()
+                  || (isStudent() && request.auth.uid == gid);
+      allow create, update, delete: if isAdmin()
+                  || (isStudent() && request.auth.uid == gid);
+    }
+
+    // ---- 指導教授成績 ----
+    match /grades/{gid} {
+      allow read:  if isAdmin() || (isTeacher() && advisorOf(gid) == request.auth.uid);
+      allow write: if isAdmin() || (isTeacher() && advisorOf(gid) == request.auth.uid);
+    }
+
+    // ---- 校外委員評分 ----
+    match /committeeScores/{id} {
+      allow read:  if isAdmin() || (isCommittee() && resource.data.committeeUid == request.auth.uid);
+      allow create, update: if isCommittee()
+                  && request.resource.data.committeeUid == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // ---- 委員個人資料（戶籍地址、銀行資訊等文字＋檔案中繼）----
+    match /committeeDocs/{uid} {
+      allow read: if (isCommittee() && request.auth.uid == uid) || isAdmin();
+      allow create, update: if isCommittee() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (isCommittee() && request.auth.uid == uid);
+    }
+
+    // ---- 公告（首頁公開讀）----
+    match /announcements/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- 各項設定（首頁與各入口需公開讀；只有系辦可寫）----
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 其餘一律拒絕
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學生入口 · 實務專題系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;
+  --primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;
+  --primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--gold-soft:#F7EBD8;--radius:12px;
+  --shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:820px;margin:0 auto;padding:0 24px}
+
+.topbar{background:var(--primary);color:#fff;padding:14px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px}
+.topbar .r{display:flex;align-items:center;gap:14px;font-size:13px}
+.topbar a{color:#cfe0e8;text-decoration:none}
+.topbar a:hover{color:#fff}
+.link-btn{background:none;border:0;color:#cfe0e8;font:inherit;cursor:pointer;padding:0}
+.link-btn:hover{color:#fff}
+
+.center{min-height:74vh;display:grid;place-items:center;padding:40px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:28px}
+.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 16px}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tab{flex:1;text-align:center;padding:8px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border:1px solid transparent}
+.tab.on{color:var(--primary);background:var(--primary-soft);border-color:var(--line)}
+
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password]{
+  width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px;transition:.15s}
+input:disabled{background:#f2f5f7;color:#40525d}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:9px;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s;text-decoration:none}
+.btn:hover{border-color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#0e364a}
+.btn-block{width:100%;margin-top:18px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.msg{font-size:13px;margin-top:10px;min-height:18px}
+.msg.err{color:var(--danger)}
+.msg.ok{color:var(--accent)}
+
+.hidden{display:none!important}
+main{padding:28px 0 60px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0}
+.panel-head .hint{font-size:12px;color:var(--muted)}
+
+.prow{display:grid;grid-template-columns:76px 1fr 1fr;gap:12px;align-items:end;margin-bottom:6px}
+.prow .prole{font-size:13px;font-weight:700;color:var(--primary);padding-bottom:9px}
+.prow.head label{margin-top:0}
+.req{color:var(--danger)}
+.lock-note{background:var(--gold-soft);color:#8a5a1c;border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:6px}
+
+.advisor-box{display:flex;align-items:center;gap:12px;font-size:15px;flex-wrap:wrap}
+.advisor-name{font-weight:700}
+.pill{font-size:12px;font-weight:500;padding:3px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.wait{background:#eef1f3;color:var(--muted)}
+
+.round{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fafcfd}
+.round-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.round-no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--primary);font-weight:500}
+.round-title{font-weight:700;font-size:15px}
+.round-desc{font-size:13px;color:var(--muted);margin:0 0 12px}
+.round-locked{font-size:13px;color:var(--muted)}
+
+@media (max-width:640px){.prow{grid-template-columns:1fr}.prow .prole{padding-bottom:0}}
+
+/* 規定內嵌 */
+.rules-embed{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fafcfd}
+.rules-embed iframe{width:100%;height:560px;border:0;display:block}
+.rules-embed img{width:100%;display:block}
+.rules-none{color:var(--muted);font-size:14px}
+
+/* 上傳欄位 */
+.slot{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-child{border-top:0}
+.slot .slot-label{font-size:14px;font-weight:500}
+.slot .slot-label .req{color:var(--danger)}
+.slot .slot-hint{font-size:12px;color:var(--muted);font-weight:400}
+.slot .slot-state{font-size:13px;min-width:0;overflow:hidden}
+.slot .fname{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink);word-break:break-all}
+.slot .fnone{color:var(--muted);font-size:13px}
+.slot .slot-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.slot input[type=file]{display:none}
+.slot .prog{font-size:12px;color:var(--accent)}
+.slot .lnk{font-size:13px;color:var(--primary);text-decoration:underline;cursor:pointer}
+.slot .btn-file{padding:7px 12px;font-size:13px}
+@media (max-width:640px){.slot{grid-template-columns:1fr;gap:6px}.slot .slot-act{justify-content:flex-start}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="t">學生入口</span>
+    <div class="r" id="topRight"><a href="index.html">回首頁</a></div>
+  </div>
+</div>
+
+<div id="bootView" class="center"><div class="card" style="text-align:center;color:var(--muted)">載入中…</div></div>
+
+<div id="authView" class="center hidden">
+  <div class="card">
+    <div class="tabs">
+      <div class="tab on" id="tabLogin">登入</div>
+      <div class="tab" id="tabReg">註冊（組長）</div>
+    </div>
+
+    <div id="loginForm">
+      <h1 style="font-size:19px;margin:14px 0 0">組長登入</h1>
+      <label for="lEmail">電子郵件</label>
+      <input id="lEmail" type="email" autocomplete="username">
+      <label for="lPw">密碼</label>
+      <input id="lPw" type="password" autocomplete="current-password">
+      <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
+      <div style="text-align:right;margin-top:8px"><a href="#" id="forgotPw" style="font-size:13px;color:var(--primary)">忘記密碼？</a></div>
+      <div class="msg err" id="loginMsg"></div>
+    </div>
+
+    <div id="regForm" class="hidden">
+      <h1 style="font-size:19px;margin:14px 0 0">組長註冊</h1>
+      <p class="hint" style="font-size:12px;color:var(--muted);margin:6px 0 0">每組僅需組長一人註冊，用於登錄分組名單與上傳。</p>
+      <label for="rEmail">電子郵件</label>
+      <input id="rEmail" type="email" autocomplete="username">
+      <label for="rPw">設定密碼（至少 6 碼）</label>
+      <input id="rPw" type="password" autocomplete="new-password">
+      <button class="btn btn-primary btn-block" id="regBtn">建立帳號</button>
+      <div class="msg err" id="regMsg"></div>
+    </div>
+  </div>
+</div>
+
+<main id="studentView" class="wrap hidden">
+
+  <section class="panel">
+    <div class="panel-head"><h2>分組名單</h2><span class="hint" id="groupState"></span></div>
+    <div id="lockNote" class="lock-note hidden">分組名單已送出，無法自行修改。如需更正，請洽系辦。</div>
+
+    <div class="prow head">
+      <div class="prole">組長 <span class="req">*</span></div>
+      <div><label>學號</label><input id="leaderSid" type="text"></div>
+      <div><label>姓名</label><input id="leaderName" type="text"></div>
+    </div>
+    <div class="prow">
+      <div class="prole">組員1 <span class="req">*</span></div>
+      <div><input id="m1Sid" type="text" placeholder="學號"></div>
+      <div><input id="m1Name" type="text" placeholder="姓名"></div>
+    </div>
+    <div class="prow">
+      <div class="prole">組員2 <span class="req">*</span></div>
+      <div><input id="m2Sid" type="text" placeholder="學號"></div>
+      <div><input id="m2Name" type="text" placeholder="姓名"></div>
+    </div>
+    <div class="prow">
+      <div class="prole">組員3</div>
+      <div><input id="m3Sid" type="text" placeholder="學號（選填）"></div>
+      <div><input id="m3Name" type="text" placeholder="姓名（選填）"></div>
+    </div>
+
+    <div id="saveArea">
+      <button class="btn btn-primary" id="saveGroup" style="margin-top:16px">送出分組名單</button>
+      <span class="msg err" id="groupMsg"></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>指導老師</h2></div>
+    <div class="advisor-box" id="advisorBox"></div>
+  </section>
+
+  <section class="panel" id="rulesPanel">
+    <div class="panel-head"><h2>專題規定／說明</h2><span class="hint">請詳閱後再上傳</span></div>
+    <div id="rulesHost"><p class="rules-none">系辦尚未上傳規定文件。</p></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>檔案上傳</h2><span class="hint">單檔上限 20MB</span></div>
+    <div id="uploadHost"></div>
+  </section>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=(s,el=document)=>el.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function flash(id,msg,ok=true){const e=$("#"+id);e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(ok&&msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2600);}
+
+if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#authView").classList.remove("hidden"); }
+const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
+const ROSTER_IDS=["leaderSid","leaderName","m1Sid","m1Name","m2Sid","m2Name","m3Sid","m3Name"];
+let myFiles={};  // groupFiles/{uid} 的內容：{r1:{report,slides,extra}, r2:{slides}, r3:{report,slides}}
+let myGroupNo="", mySubmitted={};
+
+$("#tabLogin").onclick=()=>{$("#tabLogin").classList.add("on");$("#tabReg").classList.remove("on");$("#loginForm").classList.remove("hidden");$("#regForm").classList.add("hidden");};
+$("#tabReg").onclick=()=>{$("#tabReg").classList.add("on");$("#tabLogin").classList.remove("on");$("#regForm").classList.remove("hidden");$("#loginForm").classList.add("hidden");};
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; $("#bootView").classList.add("hidden"); $("#authView").classList.remove("hidden"); $("#studentView").classList.add("hidden"); return; }
+  try{
+    const u=await db.doc("users/"+user.uid).get();
+    if(!u.exists || u.data().role!=="student"){ flash("loginMsg","此入口供學生（組長）使用。",false); await auth.signOut(); return; }
+    $("#topRight").innerHTML='<a href="index.html">回首頁</a><button class="link-btn" id="signOut">登出（'+esc(user.email)+'）</button>';
+    $("#signOut").onclick=()=>auth.signOut();
+    $("#bootView").classList.add("hidden"); $("#authView").classList.add("hidden"); $("#studentView").classList.remove("hidden");
+    await loadGroup(user);
+    await loadRules();
+    await loadUploads();
+    subscribeLiveStudent(user.uid);
+  }catch(e){ flash("loginMsg","載入失敗："+(e.code||e.message),false); }
+});
+
+$("#loginBtn").onclick=()=>{
+  const em=$("#lEmail").value.trim(), pw=$("#lPw").value;
+  if(!em||!pw){flash("loginMsg","請輸入電子郵件與密碼。",false);return;}
+  const btn=$("#loginBtn"); btn.disabled=true; btn.textContent="登入中…";
+  auth.signInWithEmailAndPassword(em,pw).catch(e=>flash("loginMsg","登入失敗："+(e.code||e.message),false)).finally(()=>{btn.disabled=false;btn.textContent="登入";});
+};
+$("#lPw").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click();});
+$("#forgotPw").onclick=(e)=>{
+  e.preventDefault();
+  const el=$("#loginMsg"); const set=(m,ok)=>{el.className="msg "+(ok?"ok":"err");el.textContent=m;};
+  const em=$("#lEmail").value.trim();
+  if(!em){ set("請先在上方輸入電子郵件。",false); return; }
+  set("寄送中…",true);
+  auth.sendPasswordResetEmail(em).then(()=>set("重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",true)).catch(err=>{const c=err.code||"";set(c==="auth/user-not-found"?"此信箱尚未註冊為系統帳號，請確認或洽系辦。":c==="auth/invalid-email"?"電子郵件格式不正確。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":c==="auth/missing-email"?"請輸入電子郵件。":"寄送失敗："+(c||err.message),false);});
+};
+
+$("#regBtn").onclick=async()=>{
+  const em=$("#rEmail").value.trim(), pw=$("#rPw").value;
+  if(!em||!pw){flash("regMsg","請填寫電子郵件與密碼。",false);return;}
+  $("#regBtn").disabled=true; $("#regBtn").textContent="建立中…";
+  try{
+    const reg=await db.doc("settings/registration").get();
+    if(!reg.exists || reg.data().open!==true){ flash("regMsg","目前未開放分組登錄，請於公告期間再試。",false); return; }
+    const cred=await auth.createUserWithEmailAndPassword(em,pw);
+    try{ await db.doc("users/"+cred.user.uid).set({role:"student",email:em}); }
+    catch(werr){ try{ await cred.user.delete(); }catch(_){}; throw werr; }
+  }catch(e){ flash("regMsg","註冊失敗："+(e.code||e.message),false); }
+  finally{ $("#regBtn").disabled=false; $("#regBtn").textContent="建立帳號"; }
+};
+
+/* 分組名單 */
+function setRosterDisabled(locked){
+  ROSTER_IDS.forEach(id=>$("#"+id).disabled=locked);
+  $("#lockNote").classList.toggle("hidden",!locked);
+  $("#saveArea").classList.toggle("hidden",locked);
+  $("#groupState").textContent = locked ? "已送出" : "尚未送出";
+}
+async function loadGroup(user){
+  const doc=await db.doc("groups/"+user.uid).get();
+  if(doc.exists){
+    const g=doc.data(); myGroupNo=g.groupNo||""; mySubmitted=g.submitted||{};
+    $("#leaderSid").value=g.leaderSid||""; $("#leaderName").value=g.leaderName||"";
+    const m=g.members||[];
+    $("#m1Sid").value=m[0]?.sid||""; $("#m1Name").value=m[0]?.name||"";
+    $("#m2Sid").value=m[1]?.sid||""; $("#m2Name").value=m[1]?.name||"";
+    $("#m3Sid").value=m[2]?.sid||""; $("#m3Name").value=m[2]?.name||"";
+    setRosterDisabled(true);
+    renderAdvisor(g.advisorName||"");
+  }else{
+    myGroupNo=""; mySubmitted={}; setRosterDisabled(false); renderAdvisor("");
+  }
+}
+$("#saveGroup").onclick=async()=>{
+  const user=auth.currentUser; if(!user)return;
+  const v=id=>$("#"+id).value.trim();
+  const req=[["leaderSid","組長學號"],["leaderName","組長姓名"],["m1Sid","組員1學號"],["m1Name","組員1姓名"],["m2Sid","組員2學號"],["m2Name","組員2姓名"]];
+  for(const [id,label] of req){ if(!v(id)){ flash("groupMsg","請填寫必填欄位："+label+"。",false); return; } }
+  if((v("m3Sid")&&!v("m3Name"))||(!v("m3Sid")&&v("m3Name"))){ flash("groupMsg","組員3 需同時填學號與姓名，或兩者留空。",false); return; }
+  const members=[{sid:v("m1Sid"),name:v("m1Name")},{sid:v("m2Sid"),name:v("m2Name")}];
+  if(v("m3Sid")&&v("m3Name")) members.push({sid:v("m3Sid"),name:v("m3Name")});
+
+  if(!confirm("分組名單送出後將無法自行修改，如需更正須洽系辦。確定送出？")) return;
+
+  $("#saveGroup").disabled=true;
+  try{
+    await db.doc("groups/"+user.uid).set({
+      leaderUid:user.uid, leaderSid:v("leaderSid"), leaderName:v("leaderName"),
+      members:members, createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setRosterDisabled(true);
+    flash("groupMsg","已送出。",true);
+    await loadUploads();
+  }catch(e){ flash("groupMsg","送出失敗："+(e.code||e.message),false); $("#saveGroup").disabled=false; }
+};
+
+/* 指導老師 */
+function renderAdvisor(name){
+  const box=$("#advisorBox");
+  if(name){ box.innerHTML='<span class="advisor-name">'+esc(name)+'</span><span class="pill">已登錄</span>'; }
+  else{ box.innerHTML='<span class="pill wait">尚未登錄</span><span style="color:var(--muted);font-size:14px">指導老師經同意書確認後，由系辦登錄並顯示於此。</span>'; }
+}
+
+function subscribeLiveStudent(uid){
+  if(subscribeLiveStudent.done)return; subscribeLiveStudent.done=true;
+  db.doc("groups/"+uid).onSnapshot(d=>{ if(d.exists){ const g=d.data(); myGroupNo=g.groupNo||""; renderAdvisor(g.advisorName||""); } loadUploads(); },()=>{});
+  db.doc("settings/uploads").onSnapshot(()=>{ loadRules(); loadUploads(); },()=>{});
+  db.doc("settings/finalists").onSnapshot(()=>loadUploads(),()=>{});
+  db.doc("groupFiles/"+uid).onSnapshot(d=>{ myFiles=d.exists?d.data():{}; loadUploads(); },()=>{});
+}
+
+/* 規定文件內嵌顯示 */
+async function loadRules(){
+  let up={};
+  try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
+  const host=$("#rulesHost");
+  if(!up.rulesUrl){ host.innerHTML='<p class="rules-none">系辦尚未上傳規定文件。</p>'; return; }
+  if(up.rulesType==="image"){
+    host.innerHTML='<div class="rules-embed"><img src="'+esc(up.rulesUrl)+'" alt="專題規定"></div>';
+  }else{
+    host.innerHTML='<div class="rules-embed"><iframe src="'+esc(up.rulesUrl)+'#toolbar=1" title="專題規定"></iframe></div>'+
+      '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">若下方無法顯示，可 <a href="'+esc(up.rulesUrl)+'" target="_blank" rel="noopener" style="color:var(--primary)">另開新分頁檢視</a>。</p>';
+  }
+}
+
+/* 三輪上傳（Firebase Storage）
+   欄位定義：slot = {key, label, required, accept 說明}                       */
+const ROUND_DEFS={
+  r1:{no:"第一次",title:"第一階段書面資料",slots:[
+      {key:"report",label:"專題報告",required:true, accept:".doc,.docx,.pdf", hint:"Word 或 PDF"},
+      {key:"slides",label:"專題簡報",required:true, accept:".ppt,.pptx,.pdf", hint:"PPT 或 PDF"},
+      {key:"extra", label:"補充資料",required:false,accept:".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.zip", hint:"選填，限 1 個檔案"}]},
+  r2:{no:"第二次",title:"第二階段發表簡報",finalistOnly:true,slots:[
+      {key:"slides",label:"發表簡報",required:true, accept:".ppt,.pptx,.pdf", hint:"PPT 或 PDF"}]},
+  r3:{no:"第三次",title:"最終成果",slots:[
+      {key:"report",label:"報告 Word",required:true, accept:".doc,.docx,.pdf", hint:"Word 或 PDF"},
+      {key:"slides",label:"簡報 PPT",required:true, accept:".ppt,.pptx,.pdf", hint:"PPT 或 PDF"}]}
+};
+function roundDone(rk){
+  const def=ROUND_DEFS[rk], rec=myFiles[rk]||{};
+  return def.slots.filter(s=>s.required).every(s=>rec[s.key]&&rec[s.key].url);
+}
+async function loadUploads(){
+  const uid=auth.currentUser&&auth.currentUser.uid; if(!uid){ return; }
+  let up={}, fin={published:false,groups:[]};
+  try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
+  try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
+  const isFinalist = !!fin.published && Array.isArray(fin.groups) && !!myGroupNo && fin.groups.some(g=>g.no===myGroupNo);
+  const openMap={r1:!!up.round1Open, r2:!!up.round2Open, r3:!!up.round3Open};
+  const hasGroup = !!myGroupNo || Object.keys(myFiles).length>0 || true; // 已登入即為組長
+  const order=["r1","r2","r3"];
+  $("#uploadHost").innerHTML=order.map(rk=>{
+    const def=ROUND_DEFS[rk];
+    let locked=!openMap[rk], lockMsg="尚未開放。";
+    if(rk==="r2" && !isFinalist){ locked=true; lockMsg="此輪僅開放入選第二階段之組別。"; }
+    const done=roundDone(rk);
+    const badge=done?'<span style="font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:999px">已上傳</span>':'';
+    let body;
+    if(locked){ body='<div class="round-locked">'+esc(lockMsg)+'</div>'; }
+    else{
+      const rec=myFiles[rk]||{};
+      body=def.slots.map(s=>{
+        const f=rec[s.key];
+        const stateHtml = f&&f.url
+          ? '<a class="fname" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>'
+          : '<span class="fnone">'+(s.required?'尚未上傳':'（未上傳）')+'</span>';
+        const btnLabel = f&&f.url ? '重新上傳' : '上傳';
+        return '<div class="slot" data-round="'+rk+'" data-slot="'+s.key+'">'+
+          '<div class="slot-label">'+esc(s.label)+(s.required?' <span class="req">*</span>':'')+
+            '<div class="slot-hint">'+esc(s.hint)+'</div></div>'+
+          '<div class="slot-state">'+stateHtml+'<span class="prog" style="display:none"></span></div>'+
+          '<div class="slot-act">'+
+            (f&&f.url?'<span class="lnk" data-act="view">檢視</span>':'')+
+            '<label class="btn btn-file"><input type="file" accept="'+esc(s.accept)+'" data-act="pick">'+btnLabel+'</label>'+
+          '</div></div>';
+      }).join("");
+    }
+    return '<div class="round"><div class="round-top"><span class="round-no mono">'+esc(def.no)+'</span>'+
+      '<span class="round-title">'+esc(def.title)+'</span>'+badge+'</div>'+body+'</div>';
+  }).join("");
+}
+
+/* 檔案挑選 → 驗證 → 上傳到 Storage → 記錄到 groupFiles/{uid} */
+function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
+$("#uploadHost").addEventListener("click",e=>{
+  const v=e.target.closest('[data-act=view]'); if(v){ const slot=v.closest(".slot"); const a=slot.querySelector("a.fname"); if(a) window.open(a.href,"_blank","noopener"); }
+});
+$("#uploadHost").addEventListener("change",async e=>{
+  const inp=e.target.closest('input[type=file][data-act=pick]'); if(!inp)return;
+  const file=inp.files&&inp.files[0]; if(!file){ return; }
+  const slotEl=inp.closest(".slot"); const rk=slotEl.dataset.round, sk=slotEl.dataset.slot;
+  const def=ROUND_DEFS[rk].slots.find(s=>s.key===sk);
+  const accepts=def.accept.split(",").map(x=>x.trim().toLowerCase());
+  const ext=extOf(file.name);
+  const prog=slotEl.querySelector(".prog");
+  const showErr=m=>{ prog.style.display=""; prog.style.color="var(--danger)"; prog.textContent=m; };
+  if(!accepts.includes(ext)){ showErr("檔案格式須為 "+def.accept); inp.value=""; return; }
+  if(file.size >= 20*1024*1024){ showErr("檔案超過 20MB。"); inp.value=""; return; }
+  const uid=auth.currentUser.uid;
+  const path="groups/"+uid+"/"+rk+"/"+sk+"_"+Date.now()+ext;
+  prog.style.display=""; prog.style.color="var(--accent)"; prog.textContent="上傳中… 0%";
+  try{
+    const ref=storage.ref(path);
+    const task=ref.put(file,{contentType:file.type||"application/octet-stream"});
+    task.on("state_changed",s=>{ const pct=Math.round((s.bytesTransferred/s.totalBytes)*100); prog.textContent="上傳中… "+pct+"%"; });
+    await task;
+    const url=await ref.getDownloadURL();
+    const rec=Object.assign({},myFiles[rk]||{});
+    const old=rec[sk];
+    rec[sk]={name:file.name, path:path, url:url, size:file.size, at:Date.now()};
+    await db.doc("groupFiles/"+uid).set({[rk]:rec},{merge:true});
+    myFiles[rk]=rec;
+    // 刪除舊檔（若有且路徑不同）
+    if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
+    prog.textContent="已上傳 ✓";
+    setTimeout(loadUploads,700);
+  }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
+  finally{ inp.value=""; }
+});
+</script>
+</body>
+</html>

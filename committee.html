@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校外委員入口 · 實務專題系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;--primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;--primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--radius:12px;--shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.topbar{background:var(--primary);color:#fff;padding:14px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px}
+.topbar .r{display:flex;align-items:center;gap:14px;font-size:13px}
+.topbar a{color:#cfe0e8;text-decoration:none}.topbar a:hover{color:#fff}
+.link-btn{background:none;border:0;color:#cfe0e8;font:inherit;cursor:pointer;padding:0}.link-btn:hover{color:#fff}
+.center{min-height:74vh;display:grid;place-items:center;padding:40px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:28px}
+.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 4px}.card .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=number]{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;transition:.15s}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input:disabled{background:#f2f5f7;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:9px;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s;text-decoration:none}
+.btn:hover{border-color:var(--primary)}.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn-primary:hover{background:#0e364a}
+.btn-block{width:100%;margin-top:18px}.btn-sm{padding:7px 13px;font-size:13px}
+.msg{font-size:13px;margin-top:10px;min-height:18px}.msg.err{color:var(--danger)}.msg.ok{color:var(--accent)}
+.hidden{display:none!important}
+main{padding:24px 0 60px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tab{padding:10px 16px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.stage-hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+.filebar{margin:0 0 16px}
+.notice{background:#f7ece0;color:#8a5a1c;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px}
+.grow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.grow .gno{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:70px}
+.grow .gtitle{font-weight:500;flex:1;min-width:150px}
+.grow .gscore{display:flex;align-items:center;gap:8px}
+.grow .gscore input{width:92px}
+.grow .unit{color:var(--muted);font-size:13px}
+.grow .rmsg{font-size:12px;min-width:60px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:30px;text-align:center;color:var(--muted);font-size:15px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap"><span class="t">校外委員入口</span><div class="r" id="topRight"><a href="index.html">回首頁</a></div></div></div>
+
+<div id="bootView" class="center"><div class="card" style="text-align:center;color:var(--muted)">載入中…</div></div>
+
+<div id="loginView" class="center hidden">
+  <div class="card"><h1>校外委員登入</h1><p class="sub">請以系辦提供的委員帳號登入。</p>
+  <label for="email">電子郵件</label><input id="email" type="email" autocomplete="username">
+  <label for="pw">密碼</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn btn-primary btn-block" id="loginBtn">登入</button><div style="text-align:right;margin-top:8px"><a href="#" id="forgotPw" style="font-size:13px;color:var(--primary)">忘記密碼？</a></div><div class="msg err" id="loginMsg"></div></div>
+</div>
+<div id="denyView" class="center hidden">
+  <div class="card"><h1>無校外委員權限</h1><p class="sub">此帳號非校外委員帳號。如有疑問請洽系辦。</p>
+  <button class="btn btn-block" id="denySignOut">登出</button></div>
+</div>
+
+<main id="cmView" class="wrap hidden">
+  <div class="tabs"><div class="tab on" id="tab1">第一階段（書面）</div><div class="tab" id="tab2">第二階段（口頭）</div></div>
+  <div class="filebar" id="fileBar"></div>
+  <p class="stage-hint" id="stageHint"></p>
+  <div id="notice"></div>
+  <div id="listHost"></div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=(s,el=document)=>el.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
+const auth=firebase.auth(), db=firebase.firestore();
+
+let MY_UID=null, stage=1;
+let allGroups=[], finalists={published:false,groups:[]}, myScores={}, files={}, scoring={};
+
+function show(v){["bootView","loginView","denyView","cmView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
+function stageOpen(){ return scoring["c"+stage+"open"]!==false; }
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }
+  try{
+    const u=await db.doc("users/"+user.uid).get();
+    if(u.exists && u.data().role==="committee"){
+      MY_UID=user.uid;
+      $("#topRight").innerHTML='<a href="index.html">回首頁</a><button class="link-btn" id="signOut">登出（'+esc(user.email)+'）</button>';
+      $("#signOut").onclick=()=>auth.signOut();
+      show("cmView"); await loadData(); render(); subscribeLive();
+    }else{ show("denyView"); }
+  }catch(e){ show("denyView"); }
+});
+$("#loginBtn").onclick=()=>{const em=$("#email").value.trim(),pw=$("#pw").value;if(!em||!pw){$("#loginMsg").textContent="請輸入電子郵件與密碼。";return;}const btn=$("#loginBtn");btn.disabled=true;btn.textContent="登入中…";auth.signInWithEmailAndPassword(em,pw).catch(e=>$("#loginMsg").textContent="登入失敗："+(e.code||e.message)).finally(()=>{btn.disabled=false;btn.textContent="登入";});};
+$("#pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click();});
+$("#forgotPw").onclick=(e)=>{
+  e.preventDefault();
+  const el=$("#loginMsg"); const set=(m,ok)=>{el.className="msg "+(ok?"ok":"err");el.textContent=m;};
+  const em=$("#email").value.trim();
+  if(!em){ set("請先在上方輸入電子郵件。",false); return; }
+  set("寄送中…",true);
+  auth.sendPasswordResetEmail(em).then(()=>set("重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",true)).catch(err=>{const c=err.code||"";set(c==="auth/user-not-found"?"此信箱尚未註冊為系統帳號，請確認或洽系辦。":c==="auth/invalid-email"?"電子郵件格式不正確。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":c==="auth/missing-email"?"請輸入電子郵件。":"寄送失敗："+(c||err.message),false);});
+};
+$("#denySignOut").onclick=()=>auth.signOut();
+$("#tab1").onclick=()=>{stage=1;$("#tab1").classList.add("on");$("#tab2").classList.remove("on");render();};
+$("#tab2").onclick=()=>{stage=2;$("#tab2").classList.add("on");$("#tab1").classList.remove("on");render();};
+function reRender(){
+  const keep={};
+  document.querySelectorAll("#listHost .grow").forEach(r=>{ const i=r.querySelector("input"); if(i&&i.value!=="") keep[r.dataset.id]=i.value; });
+  render();
+  Object.keys(keep).forEach(gid=>{ const i=document.querySelector('#listHost .grow[data-id="'+gid+'"] input'); if(i) i.value=keep[gid]; });
+}
+function applyScoringState(){
+  const open=stageOpen();
+  $("#notice").innerHTML = open ? '' : '<div class="notice">本階段評分目前未開放，僅供檢視。開放後即可儲存。</div>';
+  document.querySelectorAll("#listHost .grow input, #listHost [data-act=save]").forEach(el=>el.disabled=!open);
+}
+function applyFileBar(){
+  const url = stage===1 ? files.stage1Url : files.stage2Url;
+  const fopen = stage===1 ? files.stage1Open : files.stage2Open;
+  $("#fileBar").innerHTML = (fopen && url) ? '<a class="btn btn-sm" href="'+esc(url)+'" target="_blank" rel="noopener">查看本階段全部檔案（雲端硬碟）</a>' : '';
+}
+function subscribeLive(){
+  if(subscribeLive.done)return; subscribeLive.done=true;
+  db.doc("settings/scoring").onSnapshot(d=>{ scoring=d.exists?d.data():{}; applyScoringState(); },()=>{});
+  db.doc("settings/committeeFiles").onSnapshot(d=>{ files=d.exists?d.data():{}; applyFileBar(); },()=>{});
+  db.doc("settings/finalists").onSnapshot(d=>{ finalists=d.exists?d.data():{published:false,groups:[]}; reRender(); },()=>{});
+  db.collection("groups").onSnapshot(s=>{ allGroups=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))); reRender(); },()=>{});
+}
+
+async function loadData(){
+  const [gs,fin,sc,fl,scr]=await Promise.all([
+    db.collection("groups").get(),
+    db.doc("settings/finalists").get(),
+    db.collection("committeeScores").where("committeeUid","==",MY_UID).get(),
+    db.doc("settings/committeeFiles").get(),
+    db.doc("settings/scoring").get()
+  ]);
+  allGroups=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+  finalists=fin.exists?fin.data():{published:false,groups:[]};
+  myScores={}; sc.docs.forEach(d=>{const s=d.data();myScores[s.stage+"__"+s.gid]=s.score;});
+  files=fl.exists?fl.data():{}; scoring=scr.exists?scr.data():{};
+}
+function groupsForStage(){
+  if(stage===1) return allGroups;
+  if(!finalists.published) return [];
+  const nos=(finalists.groups||[]).map(g=>g.no);
+  return allGroups.filter(g=>g.groupNo && nos.includes(g.groupNo));
+}
+function render(){
+  const url = stage===1 ? files.stage1Url : files.stage2Url;
+  const fopen = stage===1 ? files.stage1Open : files.stage2Open;
+  $("#fileBar").innerHTML = (fopen && url) ? '<a class="btn btn-sm" href="'+esc(url)+'" target="_blank" rel="noopener">查看本階段全部檔案（雲端硬碟）</a>' : '';
+  const open=stageOpen();
+  $("#notice").innerHTML = open ? '' : '<div class="notice">本階段評分目前未開放，僅供檢視。開放後即可儲存。</div>';
+  const list=groupsForStage();
+  const done=list.filter(g=>{const v=myScores[stage+"__"+g.id];return v===0||v;}).length;
+  const base = stage===1
+    ? "請為所有組別評定第一階段書面成績（0–100），每組可分別儲存。"
+    : (finalists.published ? "請為入選第二階段之組別評定口頭發表成績（0–100），每組可分別儲存。" : "第二階段入選名單尚未公布。");
+  $("#stageHint").textContent = base + (list.length ? "（已完成 "+done+"／"+list.length+" 組）" : "");
+  const host=$("#listHost");
+  if(!list.length){ host.innerHTML='<div class="empty">'+(stage===2&&!finalists.published?"入選名單公布後即可評分。":"目前沒有可評分的組別。")+'</div>'; return; }
+  host.innerHTML=list.map(g=>{
+    const val=myScores[stage+"__"+g.id]; const v=(val===0||val)?val:"";
+    return '<div class="grow" data-id="'+esc(g.id)+'">'+
+      '<span class="gno mono">'+esc(g.groupNo||"未編號")+'</span>'+
+      '<span class="gtitle">'+esc(g.topic||"（未填題目）")+'</span>'+
+      '<span class="gscore"><input type="number" min="0" max="100" value="'+v+'" placeholder="0–100" '+(open?"":"disabled")+'><span class="unit">分</span></span>'+
+      '<button class="btn btn-primary btn-sm" data-act="save" '+(open?"":"disabled")+'>儲存</button>'+
+      '<span class="rmsg msg" data-msg></span></div>';
+  }).join("");
+}
+$("#listHost").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act=save]"); if(!b)return;
+  if(!stageOpen()) return;
+  const row=b.closest(".grow"); const gid=row.dataset.id; const msg=$("[data-msg]",row);
+  const raw=$("input",row).value.trim();
+  if(raw===""){ msg.textContent="請輸入分數。"; msg.className="rmsg msg err"; return; }
+  const n=Number(raw);
+  if(!Number.isFinite(n)||n<0||n>100){ msg.textContent="0–100"; msg.className="rmsg msg err"; return; }
+  b.disabled=true;
+  try{
+    const id=stage+"__"+gid+"__"+MY_UID;
+    await db.doc("committeeScores/"+id).set({gid:gid,committeeUid:MY_UID,stage:stage,score:n,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    myScores[stage+"__"+gid]=n; msg.textContent="已儲存"; msg.className="rmsg msg ok"; setTimeout(()=>{msg.textContent="";},2200);
+  }catch(err){ msg.textContent="失敗"; msg.className="rmsg msg err"; }
+  finally{ b.disabled=false; }
+});
+</script>
+</body>
+</html>

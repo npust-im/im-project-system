@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>指導教授入口 · 實務專題系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;--primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;--primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--radius:12px;--shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.topbar{background:var(--primary);color:#fff;padding:14px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px}
+.topbar .r{display:flex;align-items:center;gap:14px;font-size:13px}
+.topbar a{color:#cfe0e8;text-decoration:none}.topbar a:hover{color:#fff}
+.link-btn{background:none;border:0;color:#cfe0e8;font:inherit;cursor:pointer;padding:0}.link-btn:hover{color:#fff}
+.center{min-height:74vh;display:grid;place-items:center;padding:40px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:28px}
+.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 4px}.card .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=number]{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;transition:.15s}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input:disabled{background:#f2f5f7;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:9px;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--primary)}.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn-primary:hover{background:#0e364a}
+.btn-block{width:100%;margin-top:18px}.btn-sm{padding:7px 13px;font-size:13px}
+.msg{font-size:13px;margin-top:10px;min-height:18px}.msg.err{color:var(--danger)}.msg.ok{color:var(--accent)}
+.hidden{display:none!important}
+main{padding:24px 0 60px}
+.intro{margin:4px 0 18px;color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tab{padding:10px 16px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.notice{background:#f7ece0;color:#8a5a1c;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px}
+.gpanel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
+.gtop{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;flex-wrap:wrap}
+.gno{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500}
+.gsub{font-size:12px;color:var(--muted);margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.stu{display:grid;grid-template-columns:110px 1fr 120px 1.4fr;gap:12px;align-items:center;margin-bottom:10px}
+.stu .sid{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
+.stu .sname{font-weight:500}.stu-head{font-size:12px;color:var(--muted);margin-bottom:4px}
+.gfoot{display:flex;align-items:center;gap:14px;margin-top:8px}.spacer{flex:1}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:34px;text-align:center;color:var(--muted);font-size:15px}
+@media (max-width:640px){.stu{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap"><span class="t">指導教授入口</span><div class="r" id="topRight"><a href="index.html">回首頁</a></div></div></div>
+
+<div id="bootView" class="center"><div class="card" style="text-align:center;color:var(--muted)">載入中…</div></div>
+
+<div id="loginView" class="center hidden">
+  <div class="card"><h1>指導教授登入</h1><p class="sub">請以系辦提供的教師帳號登入。</p>
+  <label for="email">電子郵件</label><input id="email" type="email" autocomplete="username">
+  <label for="pw">密碼</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn btn-primary btn-block" id="loginBtn">登入</button><div style="text-align:right;margin-top:8px"><a href="#" id="forgotPw" style="font-size:13px;color:var(--primary)">忘記密碼？</a></div><div class="msg err" id="loginMsg"></div></div>
+</div>
+<div id="denyView" class="center hidden">
+  <div class="card"><h1>無指導教授權限</h1><p class="sub">此帳號非指導教授帳號。如有疑問請洽系辦。</p>
+  <button class="btn btn-block" id="denySignOut">登出</button></div>
+</div>
+
+<main id="teacherView" class="wrap hidden">
+  <p class="intro" id="intro"></p>
+  <div class="tabs"><div class="tab on" id="tab1">第一次成績（大三下）</div><div class="tab" id="tab2">第二次成績（大四上）</div></div>
+  <div id="notice"></div>
+  <div id="groupsHost"></div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=(s,el=document)=>el.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
+const auth=firebase.auth(), db=firebase.firestore();
+
+let MY_UID=null, sem=1, SCORING={};
+let myGroups=[], gradeCache={};
+function semOpen(){ return SCORING["t"+sem+"open"]!==false; }
+function show(v){["bootView","loginView","denyView","teacherView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }
+  try{
+    const u=await db.doc("users/"+user.uid).get();
+    if(u.exists && u.data().role==="teacher"){
+      MY_UID=user.uid;
+      $("#topRight").innerHTML='<a href="index.html">回首頁</a><button class="link-btn" id="signOut">登出（'+esc(user.email)+'）</button>';
+      $("#signOut").onclick=()=>auth.signOut();
+      $("#intro").textContent=(u.data().name?u.data().name+" 老師，":"")+"以下為您指導的組別，請逐一為每位學生評定總成績（0–100）。兩次成績分頁填寫。";
+      show("teacherView"); await loadData(); render(); subscribeLiveT();
+    }else{ show("denyView"); }
+  }catch(e){ show("denyView"); }
+});
+$("#loginBtn").onclick=()=>{const em=$("#email").value.trim(),pw=$("#pw").value;if(!em||!pw){$("#loginMsg").textContent="請輸入電子郵件與密碼。";return;}const btn=$("#loginBtn");btn.disabled=true;btn.textContent="登入中…";auth.signInWithEmailAndPassword(em,pw).catch(e=>$("#loginMsg").textContent="登入失敗："+(e.code||e.message)).finally(()=>{btn.disabled=false;btn.textContent="登入";});};
+$("#pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click();});
+$("#forgotPw").onclick=(e)=>{
+  e.preventDefault();
+  const el=$("#loginMsg"); const set=(m,ok)=>{el.className="msg "+(ok?"ok":"err");el.textContent=m;};
+  const em=$("#email").value.trim();
+  if(!em){ set("請先在上方輸入電子郵件。",false); return; }
+  set("寄送中…",true);
+  auth.sendPasswordResetEmail(em).then(()=>set("重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",true)).catch(err=>{const c=err.code||"";set(c==="auth/user-not-found"?"此信箱尚未註冊為系統帳號，請確認或洽系辦。":c==="auth/invalid-email"?"電子郵件格式不正確。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":c==="auth/missing-email"?"請輸入電子郵件。":"寄送失敗："+(c||err.message),false);});
+};
+$("#denySignOut").onclick=()=>auth.signOut();
+$("#tab1").onclick=()=>{sem=1;$("#tab1").classList.add("on");$("#tab2").classList.remove("on");render();};
+$("#tab2").onclick=()=>{sem=2;$("#tab2").classList.add("on");$("#tab1").classList.remove("on");render();};
+function subscribeLiveT(){
+  if(subscribeLiveT.done)return; subscribeLiveT.done=true;
+  db.doc("settings/scoring").onSnapshot(d=>{
+    SCORING=d.exists?d.data():{};
+    const open=semOpen();
+    $("#notice").innerHTML = open ? '' : '<div class="notice">本次成績目前未開放評分，僅供檢視。開放後即可儲存。</div>';
+    document.querySelectorAll("#groupsHost .s-score, #groupsHost .s-comment, #groupsHost [data-act=save]").forEach(el=>el.disabled=!open);
+  },()=>{});
+}
+
+async function loadData(){
+  const [gs,scr]=await Promise.all([
+    db.collection("groups").where("advisorUid","==",MY_UID).get(),
+    db.doc("settings/scoring").get()
+  ]);
+  myGroups=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+  SCORING=scr.exists?scr.data():{};
+  gradeCache={};
+  await Promise.all(myGroups.map(async g=>{ try{ const d=await db.doc("grades/"+g.id).get(); gradeCache[g.id]=d.exists?d.data():{}; }catch(e){ gradeCache[g.id]={}; } }));
+}
+function studentsOf(g){
+  const list=[];
+  if(g.leaderSid||g.leaderName) list.push({slot:"leader",sid:g.leaderSid||"",name:g.leaderName||"",role:"組長"});
+  (g.members||[]).forEach((m,i)=>list.push({slot:"m"+(i+1),sid:m.sid||"",name:m.name||"",role:"組員"+(i+1)}));
+  return list;
+}
+function render(){
+  const host=$("#groupsHost");
+  const open=semOpen();
+  $("#notice").innerHTML = open ? '' : '<div class="notice">本次成績目前未開放評分，僅供檢視。開放後即可儲存。</div>';
+  if(!myGroups.length){ host.innerHTML='<div class="empty">目前沒有您指導的組別。待系辦登錄指導老師後，組別會顯示於此。</div>'; return; }
+  const semKey="sem"+sem; const dis=open?"":"disabled";
+  host.innerHTML=myGroups.map(g=>{
+    const saved=(gradeCache[g.id]||{})[semKey]||{};
+    const rows=studentsOf(g).map(s=>{
+      const rec=saved[s.slot]||{}; const val=(rec.score===0||rec.score)?rec.score:"";
+      return '<div class="stu" data-slot="'+esc(s.slot)+'">'+
+        '<span class="sid mono">'+esc(s.sid||"—")+'</span>'+
+        '<span class="sname">'+esc(s.name||"—")+'<span style="color:var(--muted);font-weight:400;font-size:12px">（'+esc(s.role)+'）</span></span>'+
+        '<input class="s-score" type="number" min="0" max="100" value="'+val+'" placeholder="0–100" '+dis+'>'+
+        '<input class="s-comment" type="text" value="'+esc(rec.comment||"")+'" placeholder="評語（選填）" '+dis+'></div>';
+    }).join("");
+    return '<div class="gpanel" data-id="'+esc(g.id)+'">'+
+      '<div class="gtop"><span class="gno mono">'+esc(g.groupNo||"未編號")+'</span><strong>'+esc(g.topic||"（未填題目）")+'</strong></div>'+
+      '<p class="gsub">'+(sem===1?"第一次專題成績（大三下學期）":"第二次專題成績（大四上學期）")+'</p>'+
+      '<div class="stu stu-head"><span>學號</span><span>姓名</span><span>分數</span><span>評語</span></div>'+rows+
+      '<div class="gfoot"><span class="spacer"></span><span class="msg ok" data-msg></span><button class="btn btn-primary btn-sm" data-act="save" '+dis+'>儲存本組成績</button></div></div>';
+  }).join("");
+}
+$("#groupsHost").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act=save]"); if(!b)return;
+  if(!semOpen()) return;
+  const panel=b.closest(".gpanel"); const gid=panel.dataset.id; const msg=$("[data-msg]",panel);
+  const semKey="sem"+sem; const map={}; let bad=false;
+  [...panel.querySelectorAll(".stu[data-slot]")].forEach(row=>{
+    const slot=row.dataset.slot; if(!slot) return;
+    const raw=$(".s-score",row).value.trim(); let score=null;
+    if(raw!==""){ const n=Number(raw); if(!Number.isFinite(n)||n<0||n>100){bad=true;return;} score=n; }
+    map[slot]={score:score,comment:$(".s-comment",row).value.trim()};
+  });
+  if(bad){ msg.textContent="分數需為 0–100。"; msg.className="msg err"; return; }
+  b.disabled=true;
+  try{ await db.doc("grades/"+gid).set({[semKey]:map},{merge:true}); gradeCache[gid]=gradeCache[gid]||{}; gradeCache[gid][semKey]=map; msg.textContent="已儲存。"; msg.className="msg ok"; setTimeout(()=>msg.textContent="",2600); }
+  catch(err){ msg.textContent="儲存失敗："+(err.code||err.message); msg.className="msg err"; }
+  finally{ b.disabled=false; }
+});
+</script>
+</body>
+</html>

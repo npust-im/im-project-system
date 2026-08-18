@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>實務專題系統 · 工業管理系</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;
+  --primary:#15455E;--accent:#2E8B84;--gold:#C9822E;
+  --primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--gold-soft:#F7EBD8;
+  --radius:12px;--shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+
+.site-header{position:sticky;top:0;z-index:20;background:rgba(238,242,245,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1040px;margin:0 auto;padding:14px 24px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{flex:none;width:40px;height:40px;border-radius:10px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:.5px}
+.brand-text{display:flex;flex-direction:column;min-width:0}
+.brand-dept{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.brand-title{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px;line-height:1.2}
+.portal-nav{display:flex;gap:4px;flex-wrap:wrap}
+.portal-nav a{font-size:14px;font-weight:500;color:var(--muted);padding:7px 12px;border-radius:8px;transition:.15s}
+.portal-nav a:hover{color:var(--primary);background:var(--primary-soft)}
+.portal-nav a.is-admin{color:var(--primary)}
+
+.hero{padding:56px 0 32px}
+.hero h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.25;margin:0 0 22px;letter-spacing:.01em}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-weight:500;font-size:15px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#0e364a}
+
+.section{padding:28px 0}
+.section-head{margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.section-head h2{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0}
+
+.term-label{display:inline-flex;align-items:center;gap:10px;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--primary);letter-spacing:.05em;margin:24px 0 4px}
+.term-label::before{content:"";width:22px;height:2px;background:var(--primary)}
+.term-label:first-child{margin-top:0}
+.spine{list-style:none;margin:0;padding:0;position:relative}
+.spine::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.station{position:relative;padding:14px 0 14px 44px}
+.station::before{content:"";position:absolute;left:5px;top:20px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--line);z-index:1}
+.station.done::before{background:var(--line);border-color:var(--line)}
+.station.current::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.station-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;transition:.15s}
+.station.current .station-card{border-color:var(--accent);box-shadow:var(--shadow)}
+.station-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.station-name{font-weight:700;font-size:16px}
+.station-date{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
+.station-badge{font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.station-desc{font-size:14px;color:var(--muted);margin:0}
+
+.ann-list{display:flex;flex-direction:column;gap:12px}
+.ann{display:flex;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;transition:.15s}
+.ann:hover{box-shadow:var(--shadow)}
+.ann.pinned{border-left:3px solid var(--gold)}
+.ann-date{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);flex:none;width:104px;padding-top:2px}
+.ann-body h3{margin:0 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pin-flag{font-size:11px;font-weight:500;color:var(--gold);background:var(--gold-soft);padding:1px 8px;border-radius:999px}
+.ann-body p{margin:0;font-size:14px;color:var(--muted);white-space:pre-wrap}
+
+.finalists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-top:3px solid var(--gold)}
+.fcard-no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--gold);font-weight:500;letter-spacing:.05em}
+.fcard-title{font-weight:700;font-size:15px;margin:6px 0 6px;line-height:1.45}
+.fcard-advisor{font-size:13px;color:var(--muted)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);padding:30px;text-align:center;color:var(--muted);font-size:15px}
+
+.site-footer{border-top:1px solid var(--line);margin-top:44px;padding:26px 0;color:var(--muted);font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (max-width:640px){.header-inner{flex-direction:column;align-items:flex-start;gap:10px}.ann{flex-direction:column;gap:4px}.ann-date{width:auto}.hero{padding:40px 0 24px}}
+.fnames{margin-top:8px;font-size:14px;color:var(--ink);line-height:1.6}
+.agenda-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);border-top:3px solid var(--gold);padding:22px 24px 10px;box-shadow:var(--shadow)}
+.agenda-head{text-align:center;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:6px}
+.agenda-head h3{font-family:"Noto Serif TC",serif;margin:0 0 6px;font-size:21px;color:var(--primary)}
+.agenda-meta{display:flex;gap:18px;justify-content:center;color:var(--muted);font-size:14px;flex-wrap:wrap}
+.agenda-row{display:grid;grid-template-columns:118px 1fr;gap:14px;padding:9px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.agenda-row:last-child{border-bottom:0}
+.agenda-time{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500}
+.agenda-item{font-size:15px}
+.agenda-item .ag-no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--gold);margin-right:8px}
+.agenda-item.special{color:var(--accent);font-weight:500}
+.pin-flag-lg{display:inline-block;font-size:11px;font-weight:500;color:var(--gold);background:var(--gold-soft);padding:2px 9px;border-radius:999px;margin-left:8px;vertical-align:middle}
+@media (max-width:640px){.agenda-row{grid-template-columns:92px 1fr}}
+.ftable-wrap{border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:var(--radius);overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.ftable{width:100%;border-collapse:collapse}
+.ftable th,.ftable td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:12px 14px;font-size:15px;text-align:left;vertical-align:middle}
+.ftable th:last-child,.ftable td:last-child{border-right:0}
+.ftable tbody tr:last-child td{border-bottom:0}
+.ftable thead th{background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:14px;text-align:center}
+.ftable td.fnum{text-align:center;font-family:"IBM Plex Mono",monospace;color:var(--muted);width:64px}
+.ftable td.ftt{font-weight:500}
+.ftable td.fnm{width:200px;color:var(--ink)}
+@media (max-width:640px){.ftable th,.ftable td{padding:10px}.ftable td.fnm{width:auto}}
+.fnote{margin:10px 2px 0;font-size:13px;color:var(--muted)}
+.fintro{white-space:pre-wrap;font-size:14px;color:var(--ink);line-height:1.7;margin:0 2px 14px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">IM</div>
+      <div class="brand-text">
+        <span class="brand-dept" id="brandDept">工業管理系</span>
+        <span class="brand-title">實務專題系統</span>
+      </div>
+    </div>
+    <nav class="portal-nav" aria-label="入口">
+      <a href="student.html">學生入口</a>
+      <a href="teacher.html">指導教授</a>
+      <a href="committee.html">校外委員</a>
+      <a href="admin.html" class="is-admin">管理員</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1>實務專題系統</h1>
+    <div class="hero-actions">
+      <a href="student.html" class="btn btn-primary">學生入口</a>
+    </div>
+  </section>
+
+  <section class="section wrap" id="agendaSection" style="display:none">
+    <div class="section-head"><h2>口頭發表當天議程<span class="pin-flag-lg">置頂</span></h2></div>
+    <div class="agenda-card">
+      <div class="agenda-head"><h3 id="agTitleH"></h3><div class="agenda-meta"><span id="agDateH"></span><span id="agPlaceH"></span></div></div>
+      <div id="agRowsHost"></div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="timeline">
+    <div class="section-head"><h2>專題流程與重要日程</h2></div>
+    <div id="spineHost"></div>
+  </section>
+
+  <section class="section wrap" id="announcements">
+    <div class="section-head"><h2>最新公告</h2></div>
+    <div class="ann-list" id="annHost"></div>
+  </section>
+
+  <section class="section wrap" id="finalists">
+    <div class="section-head"><h2>入選第二階段名單</h2></div>
+    <div id="finalHost"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap"><span id="footDept">工業管理系 · 實務專題系統</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=(s,el=document)=>el.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const data={school:"工業管理系",currentStageId:"",stages:[],announcements:[],finalists:{published:false,groups:[],intro:"",foot:"※此排序非第一階段成績排序。"},agenda:{published:false,title:"",date:"",place:"",rows:[]}};
+let loaded=false;
+
+function renderHeader(){
+  $("#brandDept").textContent=data.school||"工業管理系";
+  $("#footDept").textContent=(data.school||"工業管理系")+" · 實務專題系統";
+}
+function renderSpine(){
+  const host=$("#spineHost");
+  if(!loaded){host.innerHTML='<div class="empty">載入中…</div>';return;}
+  if(!data.stages.length){host.innerHTML='<div class="empty">流程日程尚未公布。</div>';return;}
+  const curIdx=data.stages.findIndex(s=>s.id===data.currentStageId);
+  let html="",lastTerm=null;
+  data.stages.forEach((s,i)=>{
+    if(s.term!==lastTerm){ if(lastTerm!==null) html+="</ul>"; html+='<div class="term-label">'+esc(s.term)+'</div><ul class="spine">'; lastTerm=s.term; }
+    let cls="station";
+    if(curIdx>=0){ if(i<curIdx) cls+=" done"; else if(i===curIdx) cls+=" current"; }
+    const badge=(i===curIdx)?'<span class="station-badge">進行中</span>':"";
+    html+='<li class="'+cls+'"><div class="station-card"><div class="station-top">'+
+      '<span class="station-name">'+esc(s.name)+'</span>'+badge+
+      '<span class="station-date mono">'+esc(s.date)+'</span></div>'+
+      '<p class="station-desc">'+esc(s.desc)+'</p></div></li>';
+  });
+  html+="</ul>";
+  host.innerHTML=html;
+}
+function renderAnnouncements(){
+  const host=$("#annHost");
+  if(!loaded){host.innerHTML='<div class="empty">載入中…</div>';return;}
+  const list=[...data.announcements]
+    .sort((a,b)=>String(b.date).localeCompare(String(a.date)))
+    .sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
+  if(!list.length){host.innerHTML='<div class="empty">目前沒有公告。</div>';return;}
+  host.innerHTML=list.map(a=>'<article class="ann '+(a.pinned?'pinned':'')+'">'+
+    '<div class="ann-date mono">'+esc(a.date)+'</div>'+
+    '<div class="ann-body"><h3>'+esc(a.title)+(a.pinned?'<span class="pin-flag">置頂</span>':'')+'</h3>'+
+    '<p>'+esc(a.body)+'</p></div></article>').join("");
+}
+function renderAgenda(){
+  const sec=$("#agendaSection");const a=data.agenda;
+  if(!a||!a.published||!(a.rows&&a.rows.length)){sec.style.display="none";return;}
+  sec.style.display="";
+  $("#agTitleH").textContent=a.title||"口頭發表當天議程";
+  $("#agDateH").textContent=a.date||"";
+  $("#agPlaceH").textContent=a.place||"";
+  $("#agRowsHost").innerHTML=a.rows.map(r=>{
+    const isGroup=(r.kind==="group")||r.no||r.title;
+    const item=isGroup
+      ? '<span class="agenda-item">'+(r.no?'<span class="ag-no">'+esc(r.no)+'</span>':'')+esc(r.title||"")+'</span>'
+      : '<span class="agenda-item special">'+esc(r.text||"")+'</span>';
+    return '<div class="agenda-row"><span class="agenda-time">'+esc(r.time||"")+'</span>'+item+'</div>';
+  }).join("");
+}
+function renderFinalists(){
+  const host=$("#finalHost");const f=data.finalists;
+  if(!loaded){host.innerHTML='<div class="empty">載入中…</div>';return;}
+  if(!f.published||!f.groups.length){host.innerHTML='<div class="empty">第二階段入選名單尚未公布。</div>';return;}
+  const rows=f.groups.map((g,i)=>{
+    const names=[g.leader,g.m1,g.m2,g.m3].filter(Boolean).map(esc).join("、")||'<span style="color:var(--muted)">名單整理中</span>';
+    return '<tr><td class="fnum">'+(i+1)+'</td><td class="ftt">'+esc(g.title||"")+'</td><td class="fnm">'+names+'</td></tr>';
+  }).join("");
+  const intro=f.intro?'<div class="fintro">'+esc(f.intro)+'</div>':'';
+  const foot=f.foot?'<p class="fnote">'+esc(f.foot)+'</p>':'';
+  host.innerHTML=intro+'<div class="ftable-wrap"><table class="ftable"><thead><tr><th style="width:64px">編號</th><th>專題名稱</th><th style="width:200px">學生姓名</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+foot;
+}
+function render(){renderHeader();renderAgenda();renderSpine();renderAnnouncements();renderFinalists();}
+
+async function load(){
+  render();
+  if(typeof firebase==="undefined"||!firebase.apps.length){ loaded=true; render(); return; }
+  try{
+    const db=firebase.firestore();
+    const [site,flow,fin,ann,ag]=await Promise.all([
+      db.doc("settings/site").get(),
+      db.doc("settings/flow").get(),
+      db.doc("settings/finalists").get(),
+      db.collection("announcements").get(),
+      db.doc("settings/agenda").get()
+    ]);
+    if(site.exists){const d=site.data();data.school=d.school||data.school;}
+    if(flow.exists){const d=flow.data();data.stages=Array.isArray(d.stages)?d.stages:[];data.currentStageId=d.currentStageId||"";}
+    if(fin.exists){const d=fin.data();data.finalists={published:!!d.published,groups:Array.isArray(d.groups)?d.groups:[],intro:d.intro||"",foot:(d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。")};}
+    if(ag.exists){const d=ag.data();data.agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
+    data.announcements=ann.docs.map(x=>x.data());
+    loaded=true; render();
+  }catch(e){ console.warn("Firestore 尚未設定或載入失敗，顯示空狀態。",e); loaded=true; render(); }
+}
+
+let toastTimer;
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2200);}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-portal]");if(a){e.preventDefault();toast("「"+a.dataset.portal+"」尚未開放。");}});
+
+load();
+</script>
+</body>
+</html>
