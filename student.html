@@ -101,6 +101,14 @@ main{padding:28px 0 60px}
 .slot .lnk{font-size:13px;color:var(--primary);text-decoration:underline;cursor:pointer}
 .slot .btn-file{padding:7px 12px;font-size:13px}
 @media (max-width:640px){.slot{grid-template-columns:1fr;gap:6px}.slot .slot-act{justify-content:flex-start}}
+/* 分頁 */
+.tabs{display:flex;gap:6px;margin:22px 0 0;border-bottom:1px solid var(--line)}
+.tab{padding:10px 18px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.round-h{font-family:"Noto Serif TC",serif;font-size:18px;margin:0 0 4px}
+.round-sec{margin-top:18px}
+.round-sec:first-of-type{margin-top:10px}
+.round-sub{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -183,14 +191,13 @@ main{padding:28px 0 60px}
     <div class="advisor-box" id="advisorBox"></div>
   </section>
 
-  <section class="panel" id="rulesPanel">
-    <div class="panel-head"><h2>專題規定／說明</h2><span class="hint">請詳閱後再上傳</span></div>
-    <div id="rulesHost"><p class="rules-none">系辦尚未上傳規定文件。</p></div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head"><h2>檔案上傳</h2><span class="hint">單檔上限 20MB</span></div>
-    <div id="uploadHost"></div>
+  <div class="tabs" id="upTabs">
+    <div class="tab on" data-r="r1">第一次上傳</div>
+    <div class="tab" data-r="r2">第二次上傳</div>
+    <div class="tab" data-r="r3">第三次上傳</div>
+  </div>
+  <section class="panel" style="border-top-left-radius:0;border-top-right-radius:0">
+    <div id="roundHost"></div>
   </section>
 
 </main>
@@ -209,7 +216,7 @@ if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textCon
 const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
 const ROSTER_IDS=["leaderSid","leaderName","m1Sid","m1Name","m2Sid","m2Name","m3Sid","m3Name"];
 let myFiles={};  // groupFiles/{uid} 的內容：{r1:{report,slides,extra}, r2:{slides}, r3:{report,slides}}
-let myGroupNo="", mySubmitted={};
+let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1";
 
 $("#tabLogin").onclick=()=>{$("#tabLogin").classList.add("on");$("#tabReg").classList.remove("on");$("#loginForm").classList.remove("hidden");$("#regForm").classList.add("hidden");};
 $("#tabReg").onclick=()=>{$("#tabReg").classList.add("on");$("#tabLogin").classList.remove("on");$("#regForm").classList.remove("hidden");$("#loginForm").classList.add("hidden");};
@@ -223,8 +230,7 @@ auth.onAuthStateChanged(async user=>{
     $("#signOut").onclick=()=>auth.signOut();
     $("#bootView").classList.add("hidden"); $("#authView").classList.add("hidden"); $("#studentView").classList.remove("hidden");
     await loadGroup(user);
-    await loadRules();
-    await loadUploads();
+    await renderRound();
     subscribeLiveStudent(user.uid);
   }catch(e){ flash("loginMsg","載入失敗："+(e.code||e.message),false); }
 });
@@ -270,6 +276,7 @@ async function loadGroup(user){
   const doc=await db.doc("groups/"+user.uid).get();
   if(doc.exists){
     const g=doc.data(); myGroupNo=g.groupNo||""; mySubmitted=g.submitted||{};
+    myLeaderSid=g.leaderSid||""; myLeaderName=g.leaderName||"";
     $("#leaderSid").value=g.leaderSid||""; $("#leaderName").value=g.leaderName||"";
     const m=g.members||[];
     $("#m1Sid").value=m[0]?.sid||""; $("#m1Name").value=m[0]?.name||"";
@@ -278,7 +285,7 @@ async function loadGroup(user){
     setRosterDisabled(true);
     renderAdvisor(g.advisorName||"");
   }else{
-    myGroupNo=""; mySubmitted={}; setRosterDisabled(false); renderAdvisor("");
+    myGroupNo=""; mySubmitted={}; myLeaderSid=""; myLeaderName=""; setRosterDisabled(false); renderAdvisor("");
   }
 }
 $("#saveGroup").onclick=async()=>{
@@ -300,7 +307,7 @@ $("#saveGroup").onclick=async()=>{
     });
     setRosterDisabled(true);
     flash("groupMsg","已送出。",true);
-    await loadUploads();
+    await renderRound();
   }catch(e){ flash("groupMsg","送出失敗："+(e.code||e.message),false); $("#saveGroup").disabled=false; }
 };
 
@@ -313,25 +320,19 @@ function renderAdvisor(name){
 
 function subscribeLiveStudent(uid){
   if(subscribeLiveStudent.done)return; subscribeLiveStudent.done=true;
-  db.doc("groups/"+uid).onSnapshot(d=>{ if(d.exists){ const g=d.data(); myGroupNo=g.groupNo||""; renderAdvisor(g.advisorName||""); } loadUploads(); },()=>{});
-  db.doc("settings/uploads").onSnapshot(()=>{ loadRules(); loadUploads(); },()=>{});
-  db.doc("settings/finalists").onSnapshot(()=>loadUploads(),()=>{});
-  db.doc("groupFiles/"+uid).onSnapshot(d=>{ myFiles=d.exists?d.data():{}; loadUploads(); },()=>{});
+  db.doc("groups/"+uid).onSnapshot(d=>{ if(d.exists){ const g=d.data(); myGroupNo=g.groupNo||""; myLeaderSid=g.leaderSid||myLeaderSid; myLeaderName=g.leaderName||myLeaderName; renderAdvisor(g.advisorName||""); } renderRound(); },()=>{});
+  db.doc("settings/uploads").onSnapshot(()=>renderRound(),()=>{});
+  db.doc("settings/finalists").onSnapshot(()=>renderRound(),()=>{});
+  db.doc("groupFiles/"+uid).onSnapshot(d=>{ myFiles=d.exists?d.data():{}; renderRound(); },()=>{});
 }
 
-/* 規定文件內嵌顯示 */
-async function loadRules(){
-  let up={};
-  try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
-  const host=$("#rulesHost");
-  if(!up.rulesUrl){ host.innerHTML='<p class="rules-none">系辦尚未上傳規定文件。</p>'; return; }
-  if(up.rulesType==="image"){
-    host.innerHTML='<div class="rules-embed"><img src="'+esc(up.rulesUrl)+'" alt="專題規定"></div>';
-  }else{
-    host.innerHTML='<div class="rules-embed"><iframe src="'+esc(up.rulesUrl)+'#toolbar=1" title="專題規定"></iframe></div>'+
-      '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">若下方無法顯示，可 <a href="'+esc(up.rulesUrl)+'" target="_blank" rel="noopener" style="color:var(--primary)">另開新分頁檢視</a>。</p>';
-  }
-}
+/* 分頁切換 */
+$("#upTabs").addEventListener("click",e=>{
+  const t=e.target.closest(".tab"); if(!t)return;
+  curR=t.dataset.r;
+  [...$("#upTabs").children].forEach(x=>x.classList.toggle("on",x===t));
+  renderRound();
+});
 
 /* 三輪上傳（Firebase Storage）
    欄位定義：slot = {key, label, required, accept 說明}                       */
@@ -346,56 +347,67 @@ const ROUND_DEFS={
       {key:"report",label:"報告 Word",required:true, accept:".doc,.docx,.pdf", hint:"Word 或 PDF"},
       {key:"slides",label:"簡報 PPT",required:true, accept:".ppt,.pptx,.pdf", hint:"PPT 或 PDF"}]}
 };
+const ROUND_LABEL={r1:"第一次",r2:"第二次",r3:"第三次"};
 function roundDone(rk){
   const def=ROUND_DEFS[rk], rec=myFiles[rk]||{};
   return def.slots.filter(s=>s.required).every(s=>rec[s.key]&&rec[s.key].url);
 }
-async function loadUploads(){
+function rulesEmbed(url,type){
+  if(!url) return '<p class="rules-none">系辦尚未上傳本次規定文件。</p>';
+  if(type==="image") return '<div class="rules-embed"><img src="'+esc(url)+'" alt="專題規定"></div>';
+  return '<div class="rules-embed"><iframe src="'+esc(url)+'#toolbar=1" title="專題規定"></iframe></div>'+
+    '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">若下方無法顯示，可 <a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:var(--primary)">另開新分頁檢視</a>。</p>';
+}
+async function renderRound(){
   const uid=auth.currentUser&&auth.currentUser.uid; if(!uid){ return; }
   let up={}, fin={published:false,groups:[]};
   try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
   try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
   const isFinalist = !!fin.published && Array.isArray(fin.groups) && !!myGroupNo && fin.groups.some(g=>g.no===myGroupNo);
   const openMap={r1:!!up.round1Open, r2:!!up.round2Open, r3:!!up.round3Open};
-  const hasGroup = !!myGroupNo || Object.keys(myFiles).length>0 || true; // 已登入即為組長
-  const order=["r1","r2","r3"];
-  $("#uploadHost").innerHTML=order.map(rk=>{
-    const def=ROUND_DEFS[rk];
-    let locked=!openMap[rk], lockMsg="尚未開放。";
-    if(rk==="r2" && !isFinalist){ locked=true; lockMsg="此輪僅開放入選第二階段之組別。"; }
-    const done=roundDone(rk);
-    const badge=done?'<span style="font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:999px">已上傳</span>':'';
-    let body;
-    if(locked){ body='<div class="round-locked">'+esc(lockMsg)+'</div>'; }
-    else{
-      const rec=myFiles[rk]||{};
-      body=def.slots.map(s=>{
-        const f=rec[s.key];
-        const stateHtml = f&&f.url
-          ? '<a class="fname" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>'
-          : '<span class="fnone">'+(s.required?'尚未上傳':'（未上傳）')+'</span>';
-        const btnLabel = f&&f.url ? '重新上傳' : '上傳';
-        return '<div class="slot" data-round="'+rk+'" data-slot="'+s.key+'">'+
-          '<div class="slot-label">'+esc(s.label)+(s.required?' <span class="req">*</span>':'')+
-            '<div class="slot-hint">'+esc(s.hint)+'</div></div>'+
-          '<div class="slot-state">'+stateHtml+'<span class="prog" style="display:none"></span></div>'+
-          '<div class="slot-act">'+
-            (f&&f.url?'<span class="lnk" data-act="view">檢視</span>':'')+
-            '<label class="btn btn-file"><input type="file" accept="'+esc(s.accept)+'" data-act="pick">'+btnLabel+'</label>'+
-          '</div></div>';
-      }).join("");
-    }
-    return '<div class="round"><div class="round-top"><span class="round-no mono">'+esc(def.no)+'</span>'+
-      '<span class="round-title">'+esc(def.title)+'</span>'+badge+'</div>'+body+'</div>';
-  }).join("");
+  const rk=curR, def=ROUND_DEFS[rk], n=(rk==="r1"?1:rk==="r2"?2:3);
+  let locked=!openMap[rk], lockMsg="本次上傳尚未開放。";
+  if(rk==="r2" && !isFinalist){ locked=true; lockMsg="第二次上傳僅開放入選第二階段之組別。"; }
+  const done=roundDone(rk);
+  const badge=done?' <span style="font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:999px">已完成</span>':'';
+  let slotsHtml;
+  if(locked){ slotsHtml='<div class="round-locked">'+esc(lockMsg)+'</div>'; }
+  else{
+    const rec=myFiles[rk]||{};
+    slotsHtml=def.slots.map(s=>{
+      const f=rec[s.key];
+      const stateHtml = f&&f.url
+        ? '<a class="fname" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>'
+        : '<span class="fnone">'+(s.required?'尚未上傳':'（未上傳）')+'</span>';
+      const btnLabel = f&&f.url ? '重新上傳' : '上傳';
+      return '<div class="slot" data-round="'+rk+'" data-slot="'+esc(s.key)+'">'+
+        '<div class="slot-label">'+esc(s.label)+(s.required?' <span class="req">*</span>':'')+
+          '<div class="slot-hint">'+esc(s.hint)+'</div></div>'+
+        '<div class="slot-state">'+stateHtml+'<span class="prog" style="display:none"></span></div>'+
+        '<div class="slot-act">'+
+          (f&&f.url?'<span class="lnk" data-act="view">檢視</span>':'')+
+          '<label class="btn btn-file"><input type="file" accept="'+esc(s.accept)+'" data-act="pick">'+btnLabel+'</label>'+
+        '</div></div>';
+    }).join("");
+  }
+  $("#roundHost").innerHTML=
+    '<h2 class="round-h">'+esc(def.no)+'　'+esc(def.title)+badge+'</h2>'+
+    '<div class="round-sec"><div class="round-sub">規定／注意事項</div>'+rulesEmbed(up["rules"+n+"Url"],up["rules"+n+"Type"])+'</div>'+
+    '<div class="round-sec"><div class="round-sub">檔案上傳（單檔上限 20MB）</div>'+slotsHtml+'</div>';
 }
-
 /* 檔案挑選 → 驗證 → 上傳到 Storage → 記錄到 groupFiles/{uid} */
 function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
-$("#uploadHost").addEventListener("click",e=>{
+function safeAscii(s){ return String(s||"").replace(/[^\x20-\x7E]/g,"_").replace(/["\\\/]/g,"_").trim()||"file"; }
+function friendlyName(rk,sk,ext){
+  const label={report:"報告",slides:"簡報",extra:"補充資料"}[sk]||sk;
+  const idPart=(myGroupNo||myLeaderSid||"未編號");
+  const namePart=myLeaderName?("_"+myLeaderName):"";
+  return idPart+namePart+"_"+(ROUND_LABEL[rk]||rk)+"_"+label+ext;
+}
+$("#roundHost").addEventListener("click",e=>{
   const v=e.target.closest('[data-act=view]'); if(v){ const slot=v.closest(".slot"); const a=slot.querySelector("a.fname"); if(a) window.open(a.href,"_blank","noopener"); }
 });
-$("#uploadHost").addEventListener("change",async e=>{
+$("#roundHost").addEventListener("change",async e=>{
   const inp=e.target.closest('input[type=file][data-act=pick]'); if(!inp)return;
   const file=inp.files&&inp.files[0]; if(!file){ return; }
   const slotEl=inp.closest(".slot"); const rk=slotEl.dataset.round, sk=slotEl.dataset.slot;
@@ -408,22 +420,23 @@ $("#uploadHost").addEventListener("change",async e=>{
   if(file.size >= 20*1024*1024){ showErr("檔案超過 20MB。"); inp.value=""; return; }
   const uid=auth.currentUser.uid;
   const path="groups/"+uid+"/"+rk+"/"+sk+"_"+Date.now()+ext;
+  const dlName=friendlyName(rk,sk,ext);
+  const disposition="inline; filename=\""+safeAscii(dlName)+"\"; filename*=UTF-8''"+encodeURIComponent(dlName);
   prog.style.display=""; prog.style.color="var(--accent)"; prog.textContent="上傳中… 0%";
   try{
     const ref=storage.ref(path);
-    const task=ref.put(file,{contentType:file.type||"application/octet-stream"});
+    const task=ref.put(file,{contentType:file.type||"application/octet-stream",contentDisposition:disposition});
     task.on("state_changed",s=>{ const pct=Math.round((s.bytesTransferred/s.totalBytes)*100); prog.textContent="上傳中… "+pct+"%"; });
     await task;
     const url=await ref.getDownloadURL();
     const rec=Object.assign({},myFiles[rk]||{});
     const old=rec[sk];
-    rec[sk]={name:file.name, path:path, url:url, size:file.size, at:Date.now()};
+    rec[sk]={name:file.name, dlName:dlName, path:path, url:url, size:file.size, at:Date.now()};
     await db.doc("groupFiles/"+uid).set({[rk]:rec},{merge:true});
     myFiles[rk]=rec;
-    // 刪除舊檔（若有且路徑不同）
     if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
     prog.textContent="已上傳 ✓";
-    setTimeout(loadUploads,700);
+    setTimeout(renderRound,700);
   }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
   finally{ inp.value=""; }
 });
