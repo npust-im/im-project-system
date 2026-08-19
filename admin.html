@@ -262,7 +262,7 @@ table.stab .na{color:#b9c2c8}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">三次分開，各自顯示於學生入口對應分頁</span></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 10px">支援 PDF 或圖片（PNG／JPG），單檔上限 20MB；上傳新檔會取代該次舊檔。三次的規定與注意事項可各自不同。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 10px">支援 PDF 或圖片（PNG／JPG），單檔上限 50MB；上傳新檔會取代該次舊檔。三次的規定與注意事項可各自不同。</p>
       <div data-rblock="1" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第一次上傳規定（報告／簡報／補充資料）</div><div id="rulesCurrent1" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="1" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="1" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg1" style="margin-left:10px"></span></div>
       <div data-rblock="2" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第二次上傳規定（入選組別：發表簡報）</div><div id="rulesCurrent2" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="2" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="2" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg2" style="margin-left:10px"></span></div>
       <div data-rblock="3" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第三次上傳規定（最終成果：報告／簡報）</div><div id="rulesCurrent3" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="3" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="3" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg3" style="margin-left:10px"></span></div>
@@ -438,19 +438,25 @@ function renderCommitteeDocs(){
   const host=$("#cdocsHost"); if(!host) return;
   const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
   if(!list.length){ host.innerHTML='<p class="empty-note">尚無委員帳號。</p>'; return; }
+  const na='<span style="color:var(--muted)">未填</span>';
   const fileLink=(f,label)=> f&&f.url ? '<a href="'+esc(f.url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+label+'</a>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
+  const acctText=d=>{
+    if(d.payType==="bank"){ const b=[d.bankCode,d.bankBranch,d.bankAccount].filter(Boolean).join(" / "); return '銀行　'+(b?esc(b):na); }
+    if(d.payType==="post"){ return '郵局　'+(d.postAccount?esc(d.postAccount):na); }
+    return na;
+  };
   host.innerHTML=list.map(c=>{
     const d=CDOCS[c.uid]||{};
-    const bank=[d.bankCode,d.bankBranch,d.bankAccount].filter(Boolean).join(" / ")||'<span style="color:var(--muted)">未填</span>';
-    const addr=d.householdAddr?esc(d.householdAddr):'<span style="color:var(--muted)">未填</span>';
+    const row=(label,val)=>'<div style="margin:6px 0;font-size:14px"><span style="color:var(--muted);font-size:12px;margin-right:8px;display:inline-block;min-width:72px">'+label+'</span>'+val+'</div>';
     return '<div class="acc-item" style="cursor:default"><div class="acc-head" style="cursor:default">'+
         '<span class="acc-leader">'+esc(c.name||"（未命名）")+'</span>'+
         '<span style="font-size:12px;color:var(--muted)">'+esc(c.email||"")+'</span></div>'+
       '<div style="padding:0 14px 14px">'+
-        '<div style="margin:6px 0;font-size:14px"><span style="color:var(--muted);font-size:12px;margin-right:8px">戶籍地址</span>'+addr+'</div>'+
-        '<div style="margin:6px 0;font-size:14px"><span style="color:var(--muted);font-size:12px;margin-right:8px">銀行 代碼/分行/帳號</span>'+bank+'</div>'+
+        row("身分證字號", d.idNumber?esc(d.idNumber):na)+
+        row("戶籍地址", d.householdAddr?esc(d.householdAddr):na)+
+        row("匯款帳戶", acctText(d))+
         '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">'+
-          fileLink(d.idFront,"身分證正面")+fileLink(d.idBack,"身分證反面")+fileLink(d.passbook,"存簿封面")+
+          fileLink(d.passbook,"存簿封面")+
         '</div></div></div>';
   }).join("");
 }
@@ -458,8 +464,9 @@ document.addEventListener("click",e=>{
   if(e.target&&e.target.id==="reloadCDocs"){ loadCommitteeDocs(); }
   if(e.target&&e.target.id==="csvCDocs"){
     const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
-    const headers=["姓名","電子郵件","戶籍地址","銀行代碼","分行","帳號","身分證正面","身分證反面","存簿封面"];
-    const rows=list.map(c=>{ const d=CDOCS[c.uid]||{}; return [c.name||"",c.email||"",d.householdAddr||"",d.bankCode||"",d.bankBranch||"",d.bankAccount||"",(d.idFront&&d.idFront.url)||"",(d.idBack&&d.idBack.url)||"",(d.passbook&&d.passbook.url)||""]; });
+    const payMap={post:"郵局",bank:"銀行"};
+    const headers=["姓名","電子郵件","身分證字號","戶籍地址","匯款方式","郵局帳號","銀行代碼","分行","銀行帳號","存簿封面"];
+    const rows=list.map(c=>{ const d=CDOCS[c.uid]||{}; return [c.name||"",c.email||"",d.idNumber||"",d.householdAddr||"",payMap[d.payType]||"",d.postAccount||"",d.bankCode||"",d.bankBranch||"",d.bankAccount||"",(d.passbook&&d.passbook.url)||""]; });
     download("委員個人資料.csv", toCSV(headers,rows));
   }
 });
@@ -582,7 +589,7 @@ $("#adminView").addEventListener("change",async e=>{
   const ext=(file.name.toLowerCase().match(/\.[a-z0-9]+$/)||[""])[0];
   const isPdf=ext===".pdf"; const isImg=[".png",".jpg",".jpeg"].includes(ext);
   if(!isPdf&&!isImg){ flash(msgId,"僅支援 PDF 或 PNG／JPG。",false); inp.value=""; return; }
-  if(file.size>=20*1024*1024){ flash(msgId,"檔案超過 20MB。",false); inp.value=""; return; }
+  if(file.size>=50*1024*1024){ flash(msgId,"檔案超過 50MB。",false); inp.value=""; return; }
   flash(msgId,"上傳中…");
   try{
     let oldPath=""; try{ const d=await db.doc("settings/uploads").get(); if(d.exists) oldPath=d.data()["rules"+n+"Path"]||""; }catch(_){}

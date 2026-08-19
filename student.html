@@ -393,7 +393,7 @@ async function renderRound(){
   $("#roundHost").innerHTML=
     '<h2 class="round-h">'+esc(def.no)+'　'+esc(def.title)+badge+'</h2>'+
     '<div class="round-sec"><div class="round-sub">規定／注意事項</div>'+rulesEmbed(up["rules"+n+"Url"],up["rules"+n+"Type"])+'</div>'+
-    '<div class="round-sec"><div class="round-sub">檔案上傳（單檔上限 20MB）</div>'+slotsHtml+'</div>';
+    '<div class="round-sec"><div class="round-sub">檔案上傳（單檔上限 50MB）</div>'+slotsHtml+'</div>';
 }
 /* 檔案挑選 → 驗證 → 上傳到 Storage → 記錄到 groupFiles/{uid} */
 function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
@@ -417,7 +417,7 @@ $("#roundHost").addEventListener("change",async e=>{
   const prog=slotEl.querySelector(".prog");
   const showErr=m=>{ prog.style.display=""; prog.style.color="var(--danger)"; prog.textContent=m; };
   if(!accepts.includes(ext)){ showErr("檔案格式須為 "+def.accept); inp.value=""; return; }
-  if(file.size >= 20*1024*1024){ showErr("檔案超過 20MB。"); inp.value=""; return; }
+  if(file.size >= 50*1024*1024){ showErr("檔案超過 50MB。"); inp.value=""; return; }
   const uid=auth.currentUser.uid;
   const path="groups/"+uid+"/"+rk+"/"+sk+"_"+Date.now()+ext;
   const dlName=friendlyName(rk,sk,ext);

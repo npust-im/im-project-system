@@ -63,6 +63,9 @@ main{padding:24px 0 60px}
 .doc-state .nofile{color:var(--muted);font-size:13px}
 .doc-state .prog{font-size:12px;margin-left:8px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.paytype{display:flex;gap:22px}
+.paytype .radio{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;cursor:pointer}
+.paytype .radio input{width:auto}
 @media (max-width:640px){.doc-slot{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -225,33 +228,45 @@ function render(){
 }
 
 /* ===== 個人資料（匯款用） ===== */
-const DOC_FILES=[["idFront","身分證正面"],["idBack","身分證反面"],["passbook","存簿封面"]];
 function renderDocs(){
   const d=myDocs||{};
-  const fileRow=(key,label)=>{
-    const f=d[key];
-    const state=f&&f.url?'<a class="fname" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>':'<span class="nofile">尚未上傳</span>';
-    return '<div class="doc-slot"><div class="doc-label">'+esc(label)+'</div>'+
-      '<div class="doc-state" data-doc-state="'+key+'">'+state+'<span class="prog" style="display:none"></span></div>'+
-      '<label class="btn btn-sm"><input type="file" accept=".jpg,.jpeg,.png,.pdf" data-doc="'+key+'" style="display:none">'+(f&&f.url?"重新上傳":"上傳")+'</label></div>';
-  };
+  const pb=d.passbook;
+  const pbState = pb&&pb.url?'<a class="fname" href="'+esc(pb.url)+'" target="_blank" rel="noopener">'+esc(pb.name||"檔案")+'</a>':'<span class="nofile">尚未上傳</span>';
+  const pay=d.payType||"post";
   $("#docsArea").innerHTML=
-    '<div class="notice" style="background:#eef1f3;color:var(--muted)">此頁資料僅供系辦作業（例如評審費匯款）使用，只有您本人與系辦看得到；其他委員無法看到。單檔上限 20MB，格式 JPG／PNG／PDF。</div>'+
-    '<div class="docpanel"><h3 class="doch">證件與存簿</h3>'+
-      DOC_FILES.map(([k,l])=>fileRow(k,l)).join("")+
+    '<div class="notice" style="background:#eef1f3;color:var(--muted)">此頁資料僅供系辦作業（例如評審費匯款）使用，只有您本人與系辦看得到；其他委員無法看到。存簿封面：單檔上限 50MB，格式 JPG／PNG／PDF。</div>'+
+    '<div class="docpanel"><h3 class="doch">身分與戶籍</h3>'+
+      '<label>身分證字號</label><input type="text" id="dId" value="'+esc(d.idNumber||"")+'" placeholder="請輸入身分證字號">'+
+      '<label style="margin-top:10px">戶籍地址</label><input type="text" id="dAddr" value="'+esc(d.householdAddr||"")+'" placeholder="請填寫戶籍地址">'+
     '</div>'+
-    '<div class="docpanel"><h3 class="doch">戶籍與匯款資料</h3>'+
-      '<label>戶籍地址</label><input type="text" id="dAddr" value="'+esc(d.householdAddr||"")+'" placeholder="請填寫戶籍地址">'+
-      '<div class="grid3" style="margin-top:6px">'+
-        '<div><label>銀行代碼</label><input type="text" id="dBankCode" value="'+esc(d.bankCode||"")+'" placeholder="例：822"></div>'+
-        '<div><label>分行</label><input type="text" id="dBranch" value="'+esc(d.bankBranch||"")+'" placeholder="分行名稱"></div>'+
-        '<div><label>帳號</label><input type="text" id="dAcct" value="'+esc(d.bankAccount||"")+'" placeholder="銀行帳號"></div>'+
+    '<div class="docpanel"><h3 class="doch">匯款帳戶</h3>'+
+      '<p style="font-size:13px;color:var(--muted);margin:0 0 10px">郵局與銀行二擇一。</p>'+
+      '<div class="paytype">'+
+        '<label class="radio"><input type="radio" name="payType" value="post"'+(pay==="post"?" checked":"")+'> 郵局</label>'+
+        '<label class="radio"><input type="radio" name="payType" value="bank"'+(pay==="bank"?" checked":"")+'> 銀行</label>'+
       '</div>'+
-      '<div style="margin-top:16px"><button class="btn btn-primary" id="saveDocs">儲存資料</button><span class="msg ok" id="docsMsg" style="margin-left:10px"></span></div>'+
-    '</div>';
+      '<div id="postFields" class="'+(pay==="post"?"":"hidden")+'" style="margin-top:12px">'+
+        '<label>郵局帳號</label><input type="text" id="dPost" value="'+esc(d.postAccount||"")+'" placeholder="局號＋帳號">'+
+      '</div>'+
+      '<div id="bankFields" class="'+(pay==="bank"?"":"hidden")+'" style="margin-top:12px">'+
+        '<div class="grid3">'+
+          '<div><label>銀行代碼</label><input type="text" id="dBankCode" value="'+esc(d.bankCode||"")+'" placeholder="例：822"></div>'+
+          '<div><label>分行</label><input type="text" id="dBranch" value="'+esc(d.bankBranch||"")+'" placeholder="分行名稱"></div>'+
+          '<div><label>帳號</label><input type="text" id="dAcct" value="'+esc(d.bankAccount||"")+'" placeholder="銀行帳號"></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="docpanel"><h3 class="doch">存簿封面</h3>'+
+      '<div class="doc-slot"><div class="doc-label">存簿封面</div>'+
+        '<div class="doc-state" data-doc-state="passbook">'+pbState+'<span class="prog" style="display:none"></span></div>'+
+        '<label class="btn btn-sm"><input type="file" accept=".jpg,.jpeg,.png,.pdf" data-doc="passbook" style="display:none">'+(pb&&pb.url?"重新上傳":"上傳")+'</label></div>'+
+    '</div>'+
+    '<div style="margin-top:4px"><button class="btn btn-primary" id="saveDocs">儲存資料</button><span class="msg ok" id="docsMsg" style="margin-left:10px"></span></div>';
 }
 function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
 $("#docsArea").addEventListener("change",async e=>{
+  const radio=e.target.closest('input[name="payType"]');
+  if(radio){ const isPost=radio.value==="post"; $("#postFields").classList.toggle("hidden",!isPost); $("#bankFields").classList.toggle("hidden",isPost); return; }
   const inp=e.target.closest('input[type=file][data-doc]'); if(!inp)return;
   const file=inp.files&&inp.files[0]; if(!file)return;
   const key=inp.dataset.doc;
@@ -259,7 +274,7 @@ $("#docsArea").addEventListener("change",async e=>{
   const showErr=m=>{ prog.style.display=""; prog.style.color="var(--danger)"; prog.textContent=m; };
   const ext=extOf(file.name);
   if(![".jpg",".jpeg",".png",".pdf"].includes(ext)){ showErr("格式須為 JPG／PNG／PDF。"); inp.value=""; return; }
-  if(file.size>=20*1024*1024){ showErr("檔案超過 20MB。"); inp.value=""; return; }
+  if(file.size>=50*1024*1024){ showErr("檔案超過 50MB。"); inp.value=""; return; }
   const path="committee/"+MY_UID+"/"+key+"_"+Date.now()+ext;
   prog.style.display=""; prog.style.color="var(--accent)"; prog.textContent="上傳中… 0%";
   try{
@@ -282,7 +297,15 @@ $("#docsArea").addEventListener("click",async e=>{
   const btn=e.target.closest("#saveDocs"); const msg=$("#docsMsg");
   btn.disabled=true;
   try{
-    const patch={householdAddr:$("#dAddr").value.trim(),bankCode:$("#dBankCode").value.trim(),bankBranch:$("#dBranch").value.trim(),bankAccount:$("#dAcct").value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const pay=(document.querySelector('input[name="payType"]:checked')||{}).value||"post";
+    const patch={
+      idNumber:$("#dId").value.trim(),
+      householdAddr:$("#dAddr").value.trim(),
+      payType:pay,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(pay==="post"){ patch.postAccount=$("#dPost").value.trim(); patch.bankCode=""; patch.bankBranch=""; patch.bankAccount=""; }
+    else{ patch.postAccount=""; patch.bankCode=$("#dBankCode").value.trim(); patch.bankBranch=$("#dBranch").value.trim(); patch.bankAccount=$("#dAcct").value.trim(); }
     await db.doc("committeeDocs/"+MY_UID).set(patch,{merge:true});
     Object.assign(myDocs,patch);
     msg.textContent="已儲存。"; msg.className="msg ok"; setTimeout(()=>{msg.textContent="";},2200);
