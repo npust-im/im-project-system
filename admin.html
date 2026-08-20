@@ -56,6 +56,26 @@ main{padding:22px 0 60px}
 .tabbar{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:10;padding-top:10px}
 .tabbtn{padding:10px 16px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none}
 .tabbtn.on{color:var(--primary);border-bottom-color:var(--primary)}
+.subtabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line)}
+.subtab{padding:8px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none}
+.subtab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.folder{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden;background:var(--surface)}
+.folder-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-weight:500;user-select:none}
+.folder-head:hover{background:#f6f9fb}
+.folder-head .fchev{margin-left:auto;color:var(--muted);transition:transform .15s}
+.folder.open .folder-head .fchev{transform:rotate(90deg)}
+.folder-body{border-top:1px solid var(--line);padding:6px 14px 10px;display:none}
+.folder.open .folder-body{display:block}
+.file-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}
+.file-row:first-child{border-top:0}
+.file-row:hover{color:var(--primary)}
+.file-row .ftag{font-size:11px;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px;flex-shrink:0}
+.file-row .fdl{margin-left:auto;color:var(--muted);font-size:12px}
+.file-single{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-weight:500;background:var(--surface)}
+.file-single:hover{border-color:var(--primary);color:var(--primary)}
+.file-none{color:var(--muted);font-size:13px}
+.files-grouprow{margin-bottom:12px}
+.files-grouprow .fg-label{font-size:12px;color:var(--muted);margin-bottom:4px}
 .tabpane{display:none}.tabpane.on{display:block}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
@@ -150,6 +170,7 @@ table.stab .na{color:#b9c2c8}
     <button class="tabbtn" data-tab="student">學生</button>
     <button class="tabbtn" data-tab="teacher">教師</button>
     <button class="tabbtn" data-tab="committee">校外委員</button>
+    <button class="tabbtn" data-tab="files">檔案</button>
     <button class="tabbtn" data-tab="score">評分</button>
   </div>
 
@@ -317,6 +338,20 @@ table.stab .na{color:#b9c2c8}
     </section>
   </div>
 
+  <!-- 檔案 -->
+  <div class="tabpane" data-pane="files">
+    <section class="panel">
+      <div class="panel-head"><h2>學生上傳檔案</h2><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost" id="reloadFiles">重新整理</button></div></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">與學生上傳同步。點資料夾展開後，點檔案即下載，檔名為「小組編號--專題題目」。小組編號與專題題目取自「學生」分頁中系辦填寫的欄位。</p>
+      <div class="subtabs" id="fileSubtabs">
+        <button class="subtab on" data-fr="r1">第一次</button>
+        <button class="subtab" data-fr="r2">第二次</button>
+        <button class="subtab" data-fr="r3">第三次</button>
+      </div>
+      <div id="filesHost"></div>
+    </section>
+  </div>
+
   <!-- 評分 -->
   <div class="tabpane" data-pane="score">
     <section class="panel">
@@ -372,6 +407,7 @@ $$(".tabbtn").forEach(b=>b.onclick=()=>{
   $$(".tabpane").forEach(p=>p.classList.toggle("on",p.dataset.pane===b.dataset.tab));
   $("#adminView").classList.toggle("wide", b.dataset.tab==="score");
   if(b.dataset.tab==="score") refreshScores();
+  if(b.dataset.tab==="files") loadFilesTab();
 });
 
 function show(view){["bootView","loginView","denyView","adminView"].forEach(v=>$("#"+v).classList.toggle("hidden",v!==view));}
@@ -471,7 +507,55 @@ document.addEventListener("click",e=>{
   }
 });
 
-/* 流程與日程 */
+/* ===== 檔案分頁（學生上傳，資料夾＋下載） ===== */
+let FILES_GROUPS=[], FILES_MAP={}, curFR="r1";
+const FILE_ROUND_SLOTS={ r1:[["report","報告"],["slides","簡報"],["extra","補充"]], r2:[["slides","發表簡報"]], r3:[["report","報告"],["slides","簡報"]] };
+function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
+function safeName(s){ return String(s||"").replace(/[\/\\:*?"<>|]/g,"_").replace(/\s+/g," ").trim()||"file"; }
+function folderName(g){ return (g.groupNo||"未編號")+"--"+(g.topic||"未命名題目"); }
+async function downloadAs(url,filename){
+  try{
+    const r=await fetch(url); if(!r.ok) throw new Error("http");
+    const b=await r.blob(); const u=URL.createObjectURL(b);
+    const a=document.createElement("a"); a.href=u; a.download=filename||"file"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),4000);
+  }catch(e){ window.open(url,"_blank","noopener"); }
+}
+async function loadFilesTab(){
+  try{
+    const [gs,gf]=await Promise.all([db.collection("groups").get(), db.collection("groupFiles").get()]);
+    FILES_GROUPS=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+    FILES_MAP={}; gf.docs.forEach(d=>FILES_MAP[d.id]=d.data());
+  }catch(e){}
+  renderFilesTab();
+}
+function renderFilesTab(){
+  const host=$("#filesHost"); if(!host) return;
+  const rk=curFR, single=(rk==="r2"), slots=FILE_ROUND_SLOTS[rk];
+  const groups=FILES_GROUPS||[];
+  if(!groups.length){ host.innerHTML='<p class="empty-note">尚無分組資料。學生送出分組並上傳後會出現在這裡。</p>'; return; }
+  host.innerHTML=groups.map(g=>{
+    const rec=(FILES_MAP[g.id]||{})[rk]||{};
+    const label=folderName(g);
+    const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+    if(!present.length){ return '<div class="files-grouprow"><div class="fg-label">'+esc(label)+'</div><span class="file-none">尚無上傳</span></div>'; }
+    if(single){
+      const f=present[0].f; const dl=safeName(label)+extOf(f.name||f.path||"");
+      return '<div class="files-grouprow"><span class="file-single" data-url="'+esc(f.url)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span></div>';
+    }
+    const rows=present.map(({tag,f})=>{ const nm=safeName(label)+extOf(f.name||f.path||"");
+      return '<div class="file-row" data-url="'+esc(f.url)+'" data-dl="'+esc(nm)+'"><span class="ftag">'+esc(tag)+'</span><span>'+esc(nm)+'</span><span class="fdl">下載</span></div>'; }).join("");
+    return '<div class="folder" data-gid="'+esc(g.id)+'"><div class="folder-head" data-act="folder-toggle">📁 <span>'+esc(label)+'</span><span class="fchev">▸</span></div><div class="folder-body">'+rows+'</div></div>';
+  }).join("");
+}
+$("#fileSubtabs").addEventListener("click",e=>{ const b=e.target.closest(".subtab"); if(!b)return; curFR=b.dataset.fr; $$(".subtab").forEach(x=>x.classList.toggle("on",x===b)); renderFilesTab(); });
+$("#reloadFiles").onclick=loadFilesTab;
+$("#filesHost").addEventListener("click",e=>{
+  const head=e.target.closest("[data-act=folder-toggle]");
+  if(head){ head.closest(".folder").classList.toggle("open"); return; }
+  const item=e.target.closest(".file-row,.file-single");
+  if(item){ downloadAs(item.dataset.url, item.dataset.dl); }
+});
 function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
 function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));state.currentStageId=$("#fCurrent").value;}
 function renderStages(){
