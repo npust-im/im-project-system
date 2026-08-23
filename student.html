@@ -6,6 +6,10 @@
 <title>學生入口 · 實務專題系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -109,6 +113,19 @@ main{padding:28px 0 60px}
 .round-sec{margin-top:18px}
 .round-sec:first-of-type{margin-top:10px}
 .round-sub{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+
+/* mobile-compat */
+@media (max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
+  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
+  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
+  .topbar .t{font-size:15px}
+  .topbar .r{font-size:12px;gap:10px}
+  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
+}
 </style>
 </head>
 <body>

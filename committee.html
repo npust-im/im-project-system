@@ -6,6 +6,11 @@
 <title>校外委員入口 · 實務專題系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;--primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;--primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--radius:12px;--shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06)}
@@ -74,6 +79,19 @@ main{padding:24px 0 60px}
 .paytype .radio{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;cursor:pointer}
 .paytype .radio input{width:auto}
 @media (max-width:640px){.doc-slot{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+
+/* mobile-compat */
+@media (max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
+  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
+  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
+  .topbar .t{font-size:15px}
+  .topbar .r{font-size:12px;gap:10px}
+  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
+}
 </style>
 </head>
 <body>
@@ -168,6 +186,8 @@ function reRender(){
   render();
   Object.keys(keep).forEach(gid=>{ const i=document.querySelector('#listHost .grow[data-id="'+gid+'"] input'); if(i) i.value=keep[gid]; });
 }
+let _rrT=null;
+function reRenderD(){ clearTimeout(_rrT); _rrT=setTimeout(reRender,120); }
 function applyScoringState(){
   const open=stageOpen();
   $("#notice").innerHTML = open ? '' : '<div class="notice">本階段評分目前未開放，僅供檢視。開放後即可儲存。</div>';
@@ -208,7 +228,8 @@ async function zipFolder(el){
   try{
     const label=folderName(g);
     const zip=new JSZip(); const dir=zip.folder(safeName(label));
-    for(const {tag,f} of present){ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); const b=await r.blob(); dir.file(safeName(label)+"--"+tag+extOf(f.name||f.path||""), b); }
+    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
+    blobs.forEach(({tag,ext,blob})=>dir.file(safeName(label)+"--"+tag+ext, blob));
     const blob=await zip.generateAsync({type:"blob"});
     const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=safeName(label)+".zip"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
     if(msg) msg.textContent="";
@@ -218,9 +239,9 @@ async function zipFolder(el){
 function subscribeLive(){
   if(subscribeLive.done)return; subscribeLive.done=true;
   db.doc("settings/scoring").onSnapshot(d=>{ scoring=d.exists?d.data():{}; applyScoringState(); },()=>{});
-  db.doc("settings/finalists").onSnapshot(d=>{ finalists=d.exists?d.data():{published:false,groups:[]}; reRender(); },()=>{});
-  db.collection("groups").onSnapshot(s=>{ allGroups=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))); reRender(); },()=>{});
-  db.collection("groupFiles").onSnapshot(s=>{ gfilesMap={}; s.docs.forEach(x=>gfilesMap[x.id]=x.data()); reRender(); },()=>{});
+  db.doc("settings/finalists").onSnapshot(d=>{ finalists=d.exists?d.data():{published:false,groups:[]}; reRenderD(); },()=>{});
+  db.collection("groups").onSnapshot(s=>{ allGroups=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))); reRenderD(); },()=>{});
+  db.collection("groupFiles").onSnapshot(s=>{ gfilesMap={}; s.docs.forEach(x=>gfilesMap[x.id]=x.data()); reRenderD(); },()=>{});
 }
 
 async function loadData(){
@@ -279,7 +300,7 @@ function renderDocs(){
   const pbState = pb&&pb.url?'<a class="fname" href="'+esc(pb.url)+'" target="_blank" rel="noopener">'+esc(pb.name||"檔案")+'</a>':'<span class="nofile">尚未上傳</span>';
   const pay=d.payType||"post";
   $("#docsArea").innerHTML=
-    '<div class="notice" style="background:#eef1f3;color:var(--muted)">此頁資料僅供系辦作業（例如評審費匯款）使用，只有您本人與系辦看得到；其他委員無法看到。存簿封面：單檔上限 50MB，格式 JPG／PNG／PDF。</div>'+
+    '<div class="notice" style="background:#eef1f3;color:var(--muted)">僅供系辦匯款作業，只有本人與系辦可見。存簿封面：JPG／PNG／PDF，單檔 50MB。</div>'+
     '<div class="docpanel"><h3 class="doch">身分與戶籍</h3>'+
       '<label>身分證字號</label><input type="text" id="dId" value="'+esc(d.idNumber||"")+'" placeholder="請輸入身分證字號">'+
       '<label style="margin-top:10px">戶籍地址</label><input type="text" id="dAddr" value="'+esc(d.householdAddr||"")+'" placeholder="請填寫戶籍地址">'+
@@ -359,7 +380,7 @@ $("#docsArea").addEventListener("click",async e=>{
 });
 $("#listHost").addEventListener("click",e=>{
   const single=e.target.closest(".file-single");
-  if(single){ downloadAs(single.dataset.url, single.dataset.dl); return; }
+  if(single){ const t=single.textContent; single.style.opacity=".6"; single.textContent="下載中…"; Promise.resolve(downloadAs(single.dataset.url, single.dataset.dl)).finally(()=>{ single.textContent=t; single.style.opacity=""; }); return; }
   const folder=e.target.closest(".folder");
   if(folder){ zipFolder(folder); }
 });

@@ -6,6 +6,10 @@
 <title>指導教授入口 · 實務專題系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;--primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;--primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--radius:12px;--shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06)}
@@ -48,6 +52,19 @@ main{padding:24px 0 60px}
 .gfoot{display:flex;align-items:center;gap:14px;margin-top:8px}.spacer{flex:1}
 .empty{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:34px;text-align:center;color:var(--muted);font-size:15px}
 @media (max-width:640px){.stu{grid-template-columns:1fr 1fr}}
+
+/* mobile-compat */
+@media (max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
+  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
+  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
+  .topbar .t{font-size:15px}
+  .topbar .r{font-size:12px;gap:10px}
+  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
+}
 </style>
 </head>
 <body>

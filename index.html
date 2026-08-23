@@ -6,6 +6,7 @@
 <title>實務專題系統 · 工業管理系</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
@@ -112,6 +113,19 @@ a{color:inherit;text-decoration:none}
 @media (max-width:640px){.ftable th,.ftable td{padding:10px}.ftable td.fnm{width:auto}}
 .fnote{margin:10px 2px 0;font-size:13px;color:var(--muted)}
 .fintro{white-space:pre-wrap;font-size:14px;color:var(--ink);line-height:1.7;margin:0 2px 14px}
+
+/* mobile-compat */
+@media (max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
+  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
+  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
+  .topbar .t{font-size:15px}
+  .topbar .r{font-size:12px;gap:10px}
+  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
+}
 </style>
 </head>
 <body>

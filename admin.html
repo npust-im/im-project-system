@@ -6,6 +6,11 @@
 <title>管理員後台 · 實務專題系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -141,6 +146,19 @@ table.stab tbody tr.top:hover td{background:#f0dfc2}
 table.stab .na{color:#b9c2c8}
 
 @media (max-width:640px){.grid2{grid-template-columns:1fr}.item .item-grid{grid-template-columns:1fr}.rowline{grid-template-columns:1fr}}
+
+/* mobile-compat */
+@media (max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
+  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
+  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
+  .topbar .t{font-size:15px}
+  .topbar .r{font-size:12px;gap:10px}
+  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
+}
 </style>
 </head>
 <body>
@@ -295,13 +313,13 @@ table.stab .na{color:#b9c2c8}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">三次分開，各自顯示於學生入口對應分頁</span></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 10px">支援 PDF 或圖片（PNG／JPG），單檔上限 50MB；上傳新檔會取代該次舊檔。三次的規定與注意事項可各自不同。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 10px">PDF 或圖片（PNG／JPG），單檔 50MB；上傳新檔取代舊檔，三次可各自不同。</p>
       <div data-rblock="1" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第一次上傳規定（報告／簡報／補充資料）</div><div id="rulesCurrent1" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="1" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="1" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg1" style="margin-left:10px"></span></div>
       <div data-rblock="2" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第二次上傳規定（入選組別：發表簡報）</div><div id="rulesCurrent2" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="2" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="2" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg2" style="margin-left:10px"></span></div>
       <div data-rblock="3" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第三次上傳規定（最終成果：報告／簡報）</div><div id="rulesCurrent3" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="3" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="3" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg3" style="margin-left:10px"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開，可編輯名單、專題題目與指導老師</span></div>
+      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開編輯</span></div>
       <div class="gsummary" id="gsummary"></div>
       <div class="score-controls" style="margin-bottom:12px">
         <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師…">
@@ -355,7 +373,7 @@ table.stab .na{color:#b9c2c8}
   <div class="tabpane" data-pane="files">
     <section class="panel">
       <div class="panel-head"><h2>學生上傳檔案</h2><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost" id="reloadFiles">重新整理</button></div></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">與學生上傳同步。點資料夾展開後，點檔案即下載，檔名為「小組編號--專題題目」。小組編號與專題題目取自「學生」分頁中系辦填寫的欄位。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">點資料夾即下載整包 zip，檔名為「小組編號--專題題目」（取自「學生」分頁所填編號與題目）。</p>
       <div class="subtabs" id="fileSubtabs">
         <button class="subtab on" data-fr="r1">第一次</button>
         <button class="subtab" data-fr="r2">第二次</button>
@@ -381,7 +399,7 @@ table.stab .na{color:#b9c2c8}
           <select id="sdMode" style="max-width:180px"><option value="sample">樣本 STDEV（n−1）</option><option value="pop">母體 STDEVP（n）</option></select>
         </label>
       </div>
-      <p style="font-size:13px;color:var(--muted);margin:0">委員輸入原始分後，系統逐位委員標準化：常態化＝75＋5×(原始−該委員平均)÷該委員標準差；各組取各委員常態化平均並排名。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0">常態化＝75＋5×(原始−該委員平均)÷該委員標準差；各組取各委員常態化平均排名。</p>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>校外委員　第一階段成績</h2><button class="btn btn-sm" data-csv="c1">下載 CSV</button></div>
@@ -583,7 +601,8 @@ async function zipFolder(el, getGroup, getRec){
   try{
     const label=folderName(g);
     const zip=new JSZip(); const dir=zip.folder(safeName(label));
-    for(const {tag,f} of present){ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); const b=await r.blob(); dir.file(safeName(label)+"--"+tag+extOf(f.name||f.path||""), b); }
+    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
+    blobs.forEach(({tag,ext,blob})=>dir.file(safeName(label)+"--"+tag+ext, blob));
     const blob=await zip.generateAsync({type:"blob"});
     const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=safeName(label)+".zip"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
     if(msg) msg.textContent="";
@@ -592,7 +611,7 @@ async function zipFolder(el, getGroup, getRec){
 }
 $("#filesHost").addEventListener("click",e=>{
   const single=e.target.closest(".file-single");
-  if(single){ downloadAs(single.dataset.url, single.dataset.dl); return; }
+  if(single){ const t=single.textContent; single.style.opacity=".6"; single.textContent="下載中…"; Promise.resolve(downloadAs(single.dataset.url, single.dataset.dl)).finally(()=>{ single.textContent=t; single.style.opacity=""; }); return; }
   const folder=e.target.closest(".folder");
   if(folder){ zipFolder(folder, gid=>(FILES_GROUPS||[]).find(x=>x.id===gid), (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); }
 });
@@ -996,8 +1015,8 @@ function renderTeacherTable(sem,hostId){
 }
 
 // 校外委員成績（即時）
-function startCommitteeListener(){ if(startCommitteeListener.done)return;startCommitteeListener.done=true;db.collection("committeeScores").onSnapshot(snap=>{CSCORES=snap.docs.map(d=>d.data());renderCommitteeTables();},err=>console.warn("委員評分監聽失敗",err)); }
-function startGradesListener(){ if(startGradesListener.done)return;startGradesListener.done=true;db.collection("grades").onSnapshot(snap=>{GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());renderTeacherTable(1,"tg1Host");renderTeacherTable(2,"tg2Host");},err=>console.warn("成績監聽失敗",err)); }
+function startCommitteeListener(){ if(startCommitteeListener.done)return;startCommitteeListener.done=true;let t=null;db.collection("committeeScores").onSnapshot(snap=>{CSCORES=snap.docs.map(d=>d.data());clearTimeout(t);t=setTimeout(renderCommitteeTables,150);},err=>console.warn("委員評分監聽失敗",err)); }
+function startGradesListener(){ if(startGradesListener.done)return;startGradesListener.done=true;let t=null;db.collection("grades").onSnapshot(snap=>{GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());clearTimeout(t);t=setTimeout(()=>{renderTeacherTable(1,"tg1Host");renderTeacherTable(2,"tg2Host");},150);},err=>console.warn("成績監聽失敗",err)); }
 
 let COMMITTEE_SD_MODE="sample"; // 'sample'(n-1) | 'pop'(n)
 function committeeRowsRaw(stage){
