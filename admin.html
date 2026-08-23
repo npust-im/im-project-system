@@ -59,19 +59,12 @@ main{padding:22px 0 60px}
 .subtabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line)}
 .subtab{padding:8px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none}
 .subtab.on{color:var(--primary);border-bottom-color:var(--primary)}
-.folder{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden;background:var(--surface)}
-.folder-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-weight:500;user-select:none}
-.folder-head:hover{background:#f6f9fb}
-.folder-head .fchev{margin-left:auto;color:var(--muted);transition:transform .15s}
-.folder.open .folder-head .fchev{transform:rotate(90deg)}
-.folder-body{border-top:1px solid var(--line);padding:6px 14px 10px;display:none}
-.folder.open .folder-body{display:block}
-.file-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}
-.file-row:first-child{border-top:0}
-.file-row:hover{color:var(--primary)}
-.file-row .ftag{font-size:11px;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px;flex-shrink:0}
-.file-row .fdl{margin-left:auto;color:var(--muted);font-size:12px}
-.file-single{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-weight:500;background:var(--surface)}
+.folder{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:11px 14px;cursor:pointer;background:var(--surface);max-width:640px}
+.folder:hover{border-color:var(--primary);background:#f6f9fb}
+.folder .flabel{font-weight:500}
+.folder .dlall{margin-left:auto;color:var(--primary);font-size:13px;white-space:nowrap}
+.folder .fmsg{color:var(--muted);font-size:12px;margin-left:8px}
+.file-single{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-weight:500;background:var(--surface);margin-bottom:10px}
 .file-single:hover{border-color:var(--primary);color:var(--primary)}
 .file-none{color:var(--muted);font-size:13px}
 .files-grouprow{margin-bottom:12px}
@@ -377,6 +370,7 @@ table.stab .na{color:#b9c2c8}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
@@ -543,18 +537,35 @@ function renderFilesTab(){
       const f=present[0].f; const dl=safeName(label)+extOf(f.name||f.path||"");
       return '<div class="files-grouprow"><span class="file-single" data-url="'+esc(f.url)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span></div>';
     }
-    const rows=present.map(({tag,f})=>{ const nm=safeName(label)+extOf(f.name||f.path||"");
-      return '<div class="file-row" data-url="'+esc(f.url)+'" data-dl="'+esc(nm)+'"><span class="ftag">'+esc(tag)+'</span><span>'+esc(nm)+'</span><span class="fdl">下載</span></div>'; }).join("");
-    return '<div class="folder" data-gid="'+esc(g.id)+'"><div class="folder-head" data-act="folder-toggle">📁 <span>'+esc(label)+'</span><span class="fchev">▸</span></div><div class="folder-body">'+rows+'</div></div>';
+    return '<div class="folder" data-gid="'+esc(g.id)+'" data-rk="'+rk+'">📁 <span class="flabel">'+esc(label)+'</span><span class="dlall">下載整個資料夾 ⬇</span><span class="fmsg" data-fmsg></span></div>';
   }).join("");
 }
 $("#fileSubtabs").addEventListener("click",e=>{ const b=e.target.closest(".subtab"); if(!b)return; curFR=b.dataset.fr; $$(".subtab").forEach(x=>x.classList.toggle("on",x===b)); renderFilesTab(); });
 $("#reloadFiles").onclick=loadFilesTab;
+async function zipFolder(el, getGroup, getRec){
+  if(el.dataset.busy) return;
+  const gid=el.dataset.gid, rk=el.dataset.rk;
+  const g=getGroup(gid); if(!g) return;
+  const rec=getRec(gid,rk); const slots=FILE_ROUND_SLOTS[rk];
+  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+  const msg=el.querySelector("[data-fmsg]");
+  if(!present.length){ if(msg) msg.textContent="（無檔案）"; return; }
+  el.dataset.busy="1"; if(msg) msg.textContent="打包中…";
+  try{
+    const label=folderName(g);
+    const zip=new JSZip(); const dir=zip.folder(safeName(label));
+    for(const {tag,f} of present){ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); const b=await r.blob(); dir.file(safeName(label)+"--"+tag+extOf(f.name||f.path||""), b); }
+    const blob=await zip.generateAsync({type:"blob"});
+    const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=safeName(label)+".zip"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
+    if(msg) msg.textContent="";
+  }catch(err){ if(msg) msg.textContent="下載失敗（可能需先設定 CORS）"; }
+  finally{ delete el.dataset.busy; }
+}
 $("#filesHost").addEventListener("click",e=>{
-  const head=e.target.closest("[data-act=folder-toggle]");
-  if(head){ head.closest(".folder").classList.toggle("open"); return; }
-  const item=e.target.closest(".file-row,.file-single");
-  if(item){ downloadAs(item.dataset.url, item.dataset.dl); }
+  const single=e.target.closest(".file-single");
+  if(single){ downloadAs(single.dataset.url, single.dataset.dl); return; }
+  const folder=e.target.closest(".folder");
+  if(folder){ zipFolder(folder, gid=>(FILES_GROUPS||[]).find(x=>x.id===gid), (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); }
 });
 function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
 function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));state.currentStageId=$("#fCurrent").value;}
