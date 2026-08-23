@@ -376,6 +376,14 @@ table.stab .na{color:#b9c2c8}
       <div id="tg2Host"></div>
     </section>
     <section class="panel">
+      <div class="panel-head"><h2>校外委員成績（常態化）</h2>
+        <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px">標準差
+          <select id="sdMode" style="max-width:180px"><option value="sample">樣本 STDEV（n−1）</option><option value="pop">母體 STDEVP（n）</option></select>
+        </label>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:0">委員輸入原始分後，系統逐位委員標準化：常態化＝75＋5×(原始−該委員平均)÷該委員標準差；各組取各委員常態化平均並排名。</p>
+    </section>
+    <section class="panel">
       <div class="panel-head"><h2>校外委員　第一階段成績</h2><button class="btn btn-sm" data-csv="c1">下載 CSV</button></div>
       <div id="cs1Host"></div>
     </section>
@@ -991,25 +999,47 @@ function renderTeacherTable(sem,hostId){
 function startCommitteeListener(){ if(startCommitteeListener.done)return;startCommitteeListener.done=true;db.collection("committeeScores").onSnapshot(snap=>{CSCORES=snap.docs.map(d=>d.data());renderCommitteeTables();},err=>console.warn("委員評分監聽失敗",err)); }
 function startGradesListener(){ if(startGradesListener.done)return;startGradesListener.done=true;db.collection("grades").onSnapshot(snap=>{GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());renderTeacherTable(1,"tg1Host");renderTeacherTable(2,"tg2Host");},err=>console.warn("成績監聽失敗",err)); }
 
+let COMMITTEE_SD_MODE="sample"; // 'sample'(n-1) | 'pop'(n)
 function committeeRowsRaw(stage){
+  const usePop = COMMITTEE_SD_MODE==="pop";
   const finNos=(state.finalists.groups||[]).map(x=>x.no);
   let groups=currentGroupList();
   if(stage===2) groups=groups.filter(g=>g.groupNo && finNos.includes(g.groupNo));
   const rel=CSCORES.filter(s=>s.stage===stage);
+  // 蒐集每組每位委員的原始分，以及每位委員的原始分陣列（僅限本表的組別）
+  const gidRaw={}; groups.forEach(g=>gidRaw[g.id]={});
+  const rawByC={};
+  rel.forEach(s=>{ if(gidRaw[s.gid] && typeof s.score==="number"){ gidRaw[s.gid][s.committeeUid]=s.score; (rawByC[s.committeeUid]=rawByC[s.committeeUid]||[]).push(s.score); } });
+  // 逐位委員：平均數、標準差（樣本 n-1 或母體 n）
+  const stat={};
+  Object.entries(rawByC).forEach(([uid,arr])=>{
+    const n=arr.length, mean=arr.reduce((a,b)=>a+b,0)/n;
+    let sd=0; if(n>=2){ const ss=arr.reduce((a,b)=>a+(b-mean)*(b-mean),0); sd=Math.sqrt(ss/(usePop?n:(n-1))); }
+    stat[uid]={mean,sd,n};
+  });
   const rows=groups.map(g=>{
     const m=g.members||[];
-    let sum=0,n=0;
     const row={gid:g.id,groupNo:g.groupNo||"",leaderSid:g.leaderSid||"",leaderName:g.leaderName||"",
       m1sid:(m[0]||{}).sid||"",m1name:(m[0]||{}).name||"",
       m2sid:(m[1]||{}).sid||"",m2name:(m[1]||{}).name||"",
       m3sid:(m[2]||{}).sid||"",m3name:(m[2]||{}).name||"",
       advisor:g.advisorName||"",topic:g.topic||""};
-    COMMITTEE.forEach(c=>row["cmt_"+c.uid]="");
-    rel.filter(s=>s.gid===g.id).forEach(s=>{ if(typeof s.score==="number"){ row["cmt_"+s.committeeUid]=s.score; sum+=s.score; n++; } });
-    row.avg=n?Math.round(sum/n*10)/10:""; row._n=n;
+    COMMITTEE.forEach(c=>{ row["raw_"+c.uid]=""; row["z_"+c.uid]=""; row["nrm_"+c.uid]=""; });
+    let rawSum=0,rawN=0,normSum=0,normN=0;
+    Object.entries(gidRaw[g.id]).forEach(([uid,raw])=>{
+      const st=stat[uid]; if(!st) return;
+      const z=(st.sd>0)?((raw-st.mean)/st.sd):0;
+      const nv=(st.sd>0)?(75+5*z):75; // 標準差為 0（單筆或全同分）→ 常態化給 75
+      row["raw_"+uid]=raw; row["z_"+uid]=Math.round(z*10000)/10000; row["nrm_"+uid]=Math.round(nv*100)/100;
+      rawSum+=raw; rawN++; normSum+=nv; normN++;
+    });
+    row.rawAvg = rawN?Math.round(rawSum/rawN*100)/100 : "";
+    row.normAvg = normN?Math.round(normSum/normN*100)/100 : "";
+    row._n=normN; row._normFull=normN?normSum/normN:-Infinity;
     return row;
   });
-  const scored=rows.filter(r=>r._n>0).sort((a,b)=>b.avg-a.avg); scored.forEach((r,i)=>{r.rank=i+1;r._top=(stage===2&&r.rank<=3);});
+  const scored=rows.filter(r=>r._n>0).sort((a,b)=>b._normFull-a._normFull);
+  scored.forEach((r,i)=>{r.rank=i+1;r._top=(stage===2&&r.rank<=3);});
   rows.filter(r=>!r._n).forEach(r=>r.rank="");
   return scored.concat(rows.filter(r=>!r._n));
 }
@@ -1027,12 +1057,18 @@ function committeeCols(){
     {key:"advisor",label:"指導教授",kind:"text",groupStart:true,keyCol:true,sortable:true},
     {key:"topic",label:"專題題目",kind:"ellip"}
   ];
-  COMMITTEE.forEach((c,i)=>cols.push({key:"cmt_"+c.uid,label:c.name,kind:"num",groupStart:i===0,sortable:true}));
-  cols.push({key:"avg",label:"加總平均",kind:"num",groupStart:true,keyCol:true,sortable:true});
-  cols.push({key:"rank",label:"排名",kind:"num",keyCol:true,sortable:true});
+  COMMITTEE.forEach((c,i)=>{
+    cols.push({key:"raw_"+c.uid,label:c.name+"·原始",kind:"num",groupStart:true,sortable:true});
+    cols.push({key:"z_"+c.uid,label:c.name+"·標準化",kind:"num"});
+    cols.push({key:"nrm_"+c.uid,label:c.name+"·常態化",kind:"num"});
+  });
+  cols.push({key:"rawAvg",label:"原始平均",kind:"num",groupStart:true,sortable:true});
+  cols.push({key:"normAvg",label:"常態化平均",kind:"num",keyCol:true,sortable:true});
+  cols.push({key:"rank",label:"名次",kind:"num",keyCol:true,sortable:true});
   return cols;
 }
 function renderCommitteeTables(){ renderCommitteeTable(1,"cs1Host"); renderCommitteeTable(2,"cs2Host"); }
+$("#sdMode")&&($("#sdMode").onchange=e=>{ COMMITTEE_SD_MODE=e.target.value; renderCommitteeTables(); });
 function renderCommitteeTable(stage,hostId){
   if(!Object.keys(GROUPMAP).length){$("#"+hostId).innerHTML='<p class="empty-note">尚無分組資料。</p>';return;}
   scoreTable(hostId, committeeCols(), committeeRowsRaw(stage));
