@@ -127,6 +127,12 @@ main{padding:28px 0 60px}
   .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
 }
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15455E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="實務專題">
 </head>
 <body>
 
@@ -227,6 +233,7 @@ main{padding:28px 0 60px}
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
 function flash(id,msg,ok=true){const e=$("#"+id);e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(ok&&msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2600);}
 
 if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#authView").classList.remove("hidden"); }
@@ -274,7 +281,8 @@ $("#regBtn").onclick=async()=>{
   $("#regBtn").disabled=true; $("#regBtn").textContent="建立中…";
   try{
     const reg=await db.doc("settings/registration").get();
-    if(!reg.exists || reg.data().open!==true){ flash("regMsg","目前未開放分組登錄，請於公告期間再試。",false); return; }
+    const rd=reg.exists?reg.data():{};
+    if(rd.open!==true || !notPast(rd.regDeadline)){ flash("regMsg","目前未開放分組登錄，請於公告期間再試。",false); return; }
     const cred=await auth.createUserWithEmailAndPassword(em,pw);
     try{ await db.doc("users/"+cred.user.uid).set({role:"student",email:em}); }
     catch(werr){ try{ await cred.user.delete(); }catch(_){}; throw werr; }
@@ -390,7 +398,7 @@ async function renderRound(){
   try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
   try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
   const isFinalist = !!fin.published && Array.isArray(fin.groups) && !!myGroupNo && fin.groups.some(g=>g.no===myGroupNo);
-  const openMap={r1:!!up.round1Open, r2:!!up.round2Open, r3:!!up.round3Open};
+  const openMap={r1:!!up.round1Open && notPast(up.round1Deadline), r2:!!up.round2Open && notPast(up.round2Deadline), r3:!!up.round3Open && notPast(up.round3Deadline)};
   const rk=curR, def=ROUND_DEFS[rk], n=(rk==="r1"?1:rk==="r2"?2:3);
   let locked=!openMap[rk], lockMsg="本次上傳尚未開放。";
   if(rk==="r2" && !isFinalist){ locked=true; lockMsg="第二次上傳僅開放入選第二階段之組別。"; }
@@ -467,5 +475,6 @@ $("#roundHost").addEventListener("change",async e=>{
   finally{ inp.value=""; }
 });
 </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </body>
 </html>

@@ -95,6 +95,8 @@ main{padding:22px 0 60px}
 .setrow{display:flex;flex-wrap:wrap;gap:8px 26px}
 .setrow .chk{margin:0}
 .sethint{font-size:12px;color:var(--muted);margin:9px 0 0}
+.dl{display:inline-flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.dl input{font-size:13px;padding:5px 8px}
 .chk input{width:16px;height:16px;accent-color:var(--accent)}
 .rowline{display:grid;grid-template-columns:120px 1fr 160px auto;gap:10px;align-items:center;margin-bottom:10px}
 .empty-note{color:var(--muted);font-size:14px;padding:6px 0}
@@ -160,6 +162,12 @@ table.stab .na{color:#b9c2c8}
   .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
 }
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15455E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="實務專題">
 </head>
 <body>
 
@@ -211,13 +219,17 @@ table.stab .na{color:#b9c2c8}
       <div class="grid2">
         <div style="border-right:1px solid var(--line);padding-right:16px">
           <div style="font-weight:700;font-size:14px;margin-bottom:8px">指導教授</div>
-          <label class="chk" style="margin:0 0 22px"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
-          <label class="chk" style="margin:0"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
+          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
+          <label class="dl" style="margin:0 0 16px">截止 <input type="datetime-local" id="t1Deadline"></label>
+          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
+          <label class="dl" style="margin:0">截止 <input type="datetime-local" id="t2Deadline"></label>
         </div>
         <div>
           <div style="font-weight:700;font-size:14px;margin-bottom:8px">校外委員</div>
-          <label class="chk" style="margin:0 0 22px"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
-          <label class="chk" style="margin:0"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
+          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
+          <label class="dl" style="margin:0 0 16px">截止 <input type="datetime-local" id="c1Deadline"></label>
+          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
+          <label class="dl" style="margin:0">截止 <input type="datetime-local" id="c2Deadline"></label>
         </div>
       </div>
       <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
@@ -298,15 +310,23 @@ table.stab .na{color:#b9c2c8}
         <div class="setrow">
           <label class="chk"><input type="checkbox" id="fRegOpen"> 開放分組登錄</label>
           <label class="chk"><input type="checkbox" id="fNextCohort"> 新登錄歸為下屆</label>
+          <label class="dl">登錄截止 <input type="datetime-local" id="fRegDeadline"></label>
         </div>
-        <p class="sethint">勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽（屆別由系辦控管，學生無法自行更改）。</p>
+        <p class="sethint">勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽（屆別由系辦控管，學生無法自行更改）。設了截止時間，到點自動關閉；留空＝僅用勾選控制。</p>
       </div>
       <div class="setgrp">
-        <div class="setlabel">開放檔案上傳</div>
+        <div class="setlabel">開放檔案上傳（可各自設截止時間）</div>
         <div class="setrow">
           <label class="chk"><input type="checkbox" id="fForm1Open"> 第一次（報告／簡報／補充）</label>
+          <label class="dl">截止 <input type="datetime-local" id="fForm1Deadline"></label>
+        </div>
+        <div class="setrow" style="margin-top:8px">
           <label class="chk"><input type="checkbox" id="fForm2Open"> 第二次（發表簡報·限入選）</label>
+          <label class="dl">截止 <input type="datetime-local" id="fForm2Deadline"></label>
+        </div>
+        <div class="setrow" style="margin-top:8px">
           <label class="chk"><input type="checkbox" id="fForm3Open"> 第三次（最終成果）</label>
+          <label class="dl">截止 <input type="datetime-local" id="fForm3Deadline"></label>
         </div>
       </div>
       <div class="actions"><button class="btn btn-primary" id="saveUploads">儲存設定</button><span class="msg ok" id="upMsg"></span></div>
@@ -326,6 +346,13 @@ table.stab .na{color:#b9c2c8}
         <select id="cohortFilter" style="max-width:150px"><option value="all">全部屆別</option><option value="current">僅應屆競賽</option><option value="next">僅下屆</option></select>
         <button class="btn btn-sm" id="expandAll">展開全部</button>
         <button class="btn btn-sm" id="collapseAll">收合全部</button>
+      </div>
+      <div class="score-controls" style="margin-bottom:12px;gap:8px;align-items:center">
+        <span style="font-size:13px;color:var(--muted)">批次（作用於目前顯示的組別）</span>
+        <button class="btn btn-sm" id="batchCur">全設應屆</button>
+        <button class="btn btn-sm" id="batchNext">全設下屆</button>
+        <button class="btn btn-sm" id="batchNo">依序自動編號</button>
+        <span class="msg ok" id="batchMsg"></span>
       </div>
       <div id="groupsHost"></div>
       <div class="actions"><button class="btn btn-sm btn-ghost" id="reloadGroups">重新整理</button><span class="msg ok" id="asgMsg"></span></div>
@@ -363,7 +390,7 @@ table.stab .na{color:#b9c2c8}
       <div id="committeeAccList" style="margin-top:10px"></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>委員個人資料（匯款用）</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadCDocs">重新整理</button><button class="btn btn-sm" id="csvCDocs">下載 CSV</button></div></div>
+      <div class="panel-head"><h2>委員個人資料（匯款用）</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadCDocs">重新整理</button><button class="btn btn-sm" id="csvCDocs" data-xlsx="cdocs">下載 Excel</button></div></div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">委員於委員入口自行上傳。此區僅系辦可見。CSV 僅含文字欄位；證件與存簿為檔案連結。</p>
       <div id="cdocsHost"></div>
     </section>
@@ -386,11 +413,15 @@ table.stab .na{color:#b9c2c8}
   <!-- 評分 -->
   <div class="tabpane" data-pane="score">
     <section class="panel">
-      <div class="panel-head"><h2>指導教授　第一次成績</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadTG">重新整理</button><button class="btn btn-sm" data-csv="t1">下載 CSV</button></div></div>
+      <div class="panel-head"><h2>校外委員評分進度</h2></div>
+      <div id="cmtProgress"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>指導教授　第一次成績</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadTG">重新整理</button><button class="btn btn-sm" data-xlsx="t1">下載 Excel</button></div></div>
       <div id="tg1Host"></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>指導教授　第二次成績</h2><button class="btn btn-sm" data-csv="t2">下載 CSV</button></div>
+      <div class="panel-head"><h2>指導教授　第二次成績</h2><button class="btn btn-sm" data-xlsx="t2">下載 Excel</button></div>
       <div id="tg2Host"></div>
     </section>
     <section class="panel">
@@ -402,11 +433,11 @@ table.stab .na{color:#b9c2c8}
       <p style="font-size:13px;color:var(--muted);margin:0">常態化＝75＋5×(原始−該委員平均)÷該委員標準差；各組取各委員常態化平均排名。</p>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>校外委員　第一階段成績</h2><button class="btn btn-sm" data-csv="c1">下載 CSV</button></div>
+      <div class="panel-head"><h2>校外委員　第一階段成績</h2><button class="btn btn-sm" data-xlsx="c1">下載 Excel</button></div>
       <div id="cs1Host"></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>校外委員　第二階段成績</h2><button class="btn btn-sm" data-csv="c2">下載 CSV</button></div>
+      <div class="panel-head"><h2>校外委員　第二階段成績</h2><button class="btn btn-sm" data-xlsx="c2">下載 Excel</button></div>
       <div id="cs2Host"></div>
     </section>
   </div>
@@ -417,6 +448,7 @@ table.stab .na{color:#b9c2c8}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
@@ -485,10 +517,13 @@ async function loadAll(){
   $("#fPublished").checked=state.finalists.published; $("#fIntro").value=state.finalists.intro||""; $("#fFoot").value=state.finalists.foot||""; renderFinalists();
   $("#fRegOpen").checked = reg.exists ? !!reg.data().open : false;
   $("#fNextCohort").checked = reg.exists ? reg.data().nextCohort===true : false;
+  $("#fRegDeadline").value = (reg.exists && reg.data().regDeadline) || "";
   const upd=up.exists?up.data():{}; $("#fForm1Open").checked=!!upd.round1Open; $("#fForm2Open").checked=!!upd.round2Open; $("#fForm3Open").checked=!!upd.round3Open;
+  $("#fForm1Deadline").value=upd.round1Deadline||""; $("#fForm2Deadline").value=upd.round2Deadline||""; $("#fForm3Deadline").value=upd.round3Deadline||"";
   renderRulesCurrent(upd);
   const s=sc.exists?sc.data():{};
   $("#t1open").checked=s.t1open!==false;$("#t2open").checked=s.t2open!==false;$("#c1open").checked=s.c1open!==false;$("#c2open").checked=s.c2open!==false;
+  $("#t1Deadline").value=s.t1Deadline||""; $("#t2Deadline").value=s.t2Deadline||""; $("#c1Deadline").value=s.c1Deadline||""; $("#c2Deadline").value=s.c2Deadline||"";
   if(ag.exists){const d=ag.data();agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
   $("#agPublished").checked=agenda.published; $("#agTitle").value=agenda.title; $("#agDate").value=agenda.date; $("#agPlace").value=agenda.place; renderAgenda();
   await loadAnnouncements();
@@ -503,7 +538,7 @@ async function loadAll(){
 
 /* 網站設定 */
 $("#saveSite").onclick=async()=>{try{await db.doc("settings/site").set({school:$("#fSchool").value.trim(),academicYear:$("#fYear").value.trim()},{merge:true});flash("siteMsg","已儲存。");}catch(e){flash("siteMsg","儲存失敗："+(e.code||e.message),false);}};
-$("#saveScoring").onclick=async()=>{try{await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveScoring").onclick=async()=>{try{await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||""},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
 /* 委員個人資料（匯款用） */
 let CDOCS={};
 async function loadCommitteeDocs(){
@@ -539,13 +574,6 @@ function renderCommitteeDocs(){
 }
 document.addEventListener("click",e=>{
   if(e.target&&e.target.id==="reloadCDocs"){ loadCommitteeDocs(); }
-  if(e.target&&e.target.id==="csvCDocs"){
-    const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
-    const payMap={post:"郵局",bank:"銀行"};
-    const headers=["姓名","電子郵件","身分證字號","戶籍地址","匯款方式","郵局帳號","銀行代碼","分行","銀行帳號","存簿封面"];
-    const rows=list.map(c=>{ const d=CDOCS[c.uid]||{}; return [c.name||"",c.email||"",d.idNumber||"",d.householdAddr||"",payMap[d.payType]||"",d.postAccount||"",d.bankCode||"",d.bankBranch||"",d.bankAccount||"",(d.passbook&&d.passbook.url)||""]; });
-    download("委員個人資料.csv", toCSV(headers,rows));
-  }
 });
 
 /* ===== 檔案分頁（學生上傳，資料夾＋下載） ===== */
@@ -712,7 +740,7 @@ $("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-i
 $("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 登錄與上傳 */
-$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||""},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 專題規定／說明文件（三次分開，上傳到 Storage，內嵌於學生入口對應分頁） */
 function renderRulesCurrent(upd){
@@ -892,6 +920,24 @@ function filterGroups(){
 }
 $("#groupSearch").oninput=filterGroups;
 $("#cohortFilter")&&($("#cohortFilter").onchange=filterGroups);
+function visibleGids(){ return $$("#groupsHost .acc-item").filter(x=>x.style.display!=="none").map(x=>x.dataset.id); }
+async function batchSetCohort(coh){
+  const ids=visibleGids(); if(!ids.length){ flash("batchMsg","目前沒有顯示中的組別。",false); return; }
+  if(!confirm("將目前顯示的 "+ids.length+" 組全部設為「"+(coh==="next"?"下屆":"應屆競賽")+"」？"))return;
+  try{ for(let i=0;i<ids.length;i+=400){ const b=db.batch(); ids.slice(i,i+400).forEach(id=>b.set(db.doc("groups/"+id),{cohort:coh},{merge:true})); await b.commit(); } flash("batchMsg","已更新 "+ids.length+" 組。"); await loadGroups(); }
+  catch(e){ flash("batchMsg","失敗："+(e.code||e.message),false); }
+}
+$("#batchCur")&&($("#batchCur").onclick=()=>batchSetCohort("current"));
+$("#batchNext")&&($("#batchNext").onclick=()=>batchSetCohort("next"));
+$("#batchNo")&&($("#batchNo").onclick=async()=>{
+  const ids=visibleGids(); if(!ids.length){ flash("batchMsg","目前沒有顯示中的組別。",false); return; }
+  const startStr=prompt("依目前排序，從哪個號碼開始編號？（例如 1）","1"); if(startStr===null)return;
+  const start=parseInt(startStr,10); if(!Number.isFinite(start)||start<0){ flash("batchMsg","請輸入有效數字。",false); return; }
+  const pad=confirm("是否補零成兩位數（01、02…）？確定＝補零，取消＝純數字。");
+  if(!confirm("將依目前顯示順序，為這 "+ids.length+" 組從 "+(pad?String(start).padStart(2,"0"):start)+" 起編號？"))return;
+  try{ for(let i=0;i<ids.length;i+=400){ const b=db.batch(); ids.slice(i,i+400).forEach((id,j)=>{ const n=start+i+j; b.set(db.doc("groups/"+id),{groupNo:pad?String(n).padStart(2,"0"):String(n)},{merge:true}); }); await b.commit(); } flash("batchMsg","已編號。"); await loadGroups(); }
+  catch(e){ flash("batchMsg","失敗："+(e.code||e.message),false); }
+});
 $("#expandAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>{ if(x.style.display!=="none") x.classList.add("open"); });
 $("#collapseAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>x.classList.remove("open"));
 $("#fillFromRank").onclick=()=>{
@@ -1019,23 +1065,25 @@ function startCommitteeListener(){ if(startCommitteeListener.done)return;startCo
 function startGradesListener(){ if(startGradesListener.done)return;startGradesListener.done=true;let t=null;db.collection("grades").onSnapshot(snap=>{GRADES={};snap.docs.forEach(d=>GRADES[d.id]=d.data());clearTimeout(t);t=setTimeout(()=>{renderTeacherTable(1,"tg1Host");renderTeacherTable(2,"tg2Host");},150);},err=>console.warn("成績監聽失敗",err)); }
 
 let COMMITTEE_SD_MODE="sample"; // 'sample'(n-1) | 'pop'(n)
-function committeeRowsRaw(stage){
-  const usePop = COMMITTEE_SD_MODE==="pop";
+function committeeCompute(stage, usePop){
   const finNos=(state.finalists.groups||[]).map(x=>x.no);
   let groups=currentGroupList();
   if(stage===2) groups=groups.filter(g=>g.groupNo && finNos.includes(g.groupNo));
   const rel=CSCORES.filter(s=>s.stage===stage);
-  // 蒐集每組每位委員的原始分，以及每位委員的原始分陣列（僅限本表的組別）
   const gidRaw={}; groups.forEach(g=>gidRaw[g.id]={});
   const rawByC={};
   rel.forEach(s=>{ if(gidRaw[s.gid] && typeof s.score==="number"){ gidRaw[s.gid][s.committeeUid]=s.score; (rawByC[s.committeeUid]=rawByC[s.committeeUid]||[]).push(s.score); } });
-  // 逐位委員：平均數、標準差（樣本 n-1 或母體 n）
   const stat={};
   Object.entries(rawByC).forEach(([uid,arr])=>{
     const n=arr.length, mean=arr.reduce((a,b)=>a+b,0)/n;
     let sd=0; if(n>=2){ const ss=arr.reduce((a,b)=>a+(b-mean)*(b-mean),0); sd=Math.sqrt(ss/(usePop?n:(n-1))); }
     stat[uid]={mean,sd,n};
   });
+  return {groups, gidRaw, stat};
+}
+function committeeRowsRaw(stage, modeOverride){
+  const usePop = (modeOverride||COMMITTEE_SD_MODE)==="pop";
+  const {groups,gidRaw,stat}=committeeCompute(stage,usePop);
   const rows=groups.map(g=>{
     const m=g.members||[];
     const row={gid:g.id,groupNo:g.groupNo||"",leaderSid:g.leaderSid||"",leaderName:g.leaderName||"",
@@ -1048,7 +1096,7 @@ function committeeRowsRaw(stage){
     Object.entries(gidRaw[g.id]).forEach(([uid,raw])=>{
       const st=stat[uid]; if(!st) return;
       const z=(st.sd>0)?((raw-st.mean)/st.sd):0;
-      const nv=(st.sd>0)?(75+5*z):75; // 標準差為 0（單筆或全同分）→ 常態化給 75
+      const nv=(st.sd>0)?(75+5*z):75;
       row["raw_"+uid]=raw; row["z_"+uid]=Math.round(z*10000)/10000; row["nrm_"+uid]=Math.round(nv*100)/100;
       rawSum+=raw; rawN++; normSum+=nv; normN++;
     });
@@ -1086,7 +1134,23 @@ function committeeCols(){
   cols.push({key:"rank",label:"名次",kind:"num",keyCol:true,sortable:true});
   return cols;
 }
-function renderCommitteeTables(){ renderCommitteeTable(1,"cs1Host"); renderCommitteeTable(2,"cs2Host"); }
+function renderCommitteeTables(){ renderCommitteeTable(1,"cs1Host"); renderCommitteeTable(2,"cs2Host"); renderCmtProgress(); }
+function renderCmtProgress(){
+  const host=$("#cmtProgress"); if(!host) return;
+  if(!COMMITTEE.length){ host.innerHTML='<p class="empty-note">尚無委員帳號。</p>'; return; }
+  const finNos=(state.finalists.groups||[]).map(x=>x.no);
+  const cur=currentGroupList();
+  const tot1=cur.length;
+  const tot2=cur.filter(g=>g.groupNo && finNos.includes(g.groupNo)).length;
+  const cnt=(uid,stage)=>new Set(CSCORES.filter(s=>s.committeeUid===uid&&s.stage===stage&&typeof s.score==="number").map(s=>s.gid)).size;
+  const cell=(x,t)=>{ const done=t>0&&x>=t; const c=done?"var(--accent)":(x>0?"var(--gold)":"var(--muted)"); return '<span style="color:'+c+';font-weight:500">'+x+'／'+t+'</span>'; };
+  host.innerHTML='<div class="scoretable" style="max-height:none"><table class="stab"><thead><tr>'+
+    '<th>委員</th><th class="num">第一階段</th><th class="num">第二階段</th></tr></thead><tbody>'+
+    COMMITTEE.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(c=>
+      '<tr><td>'+esc(c.name||"")+'</td><td class="num">'+cell(cnt(c.uid,1),tot1)+'</td><td class="num">'+cell(cnt(c.uid,2),tot2)+'</td></tr>'
+    ).join("")+'</tbody></table></div>'+
+    '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">綠色＝已完成該階段全部組別；橘色＝部分；灰色＝尚未開始。</p>';
+}
 $("#sdMode")&&($("#sdMode").onchange=e=>{ COMMITTEE_SD_MODE=e.target.value; renderCommitteeTables(); });
 function renderCommitteeTable(stage,hostId){
   if(!Object.keys(GROUPMAP).length){$("#"+hostId).innerHTML='<p class="empty-note">尚無分組資料。</p>';return;}
@@ -1151,19 +1215,40 @@ function drawScore(hostId){
 }
 
 /* CSV 下載 */
-function toCSV(headers,rows){const q=v=>{v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};return "\uFEFF"+[headers.map(q).join(","),...rows.map(r=>r.map(q).join(","))].join("\n");}
-function download(name,text){const b=new Blob([text],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+function teacherAOA(sem){ const cols=TEACHER_COLS; const rows=teacherRowsRaw(sem).sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo))); return [cols.map(c=>c.label), ...rows.map(r=>cols.map(c=>r[c.key]))]; }
+function committeeAOA(stage, mode){
+  const usePop=mode==="pop"; const {stat}=committeeCompute(stage,usePop);
+  const rows=committeeRowsRaw(stage, mode);
+  const head=['組別編號','組長','專題題目'];
+  COMMITTEE.forEach(c=>head.push(c.name+'·原始', c.name+'·標準化', c.name+'·常態化'));
+  head.push('原始平均','常態化平均','名次');
+  const aoa=[head];
+  rows.forEach(r=>{ const line=[r.groupNo,r.leaderName,r.topic]; COMMITTEE.forEach(c=>line.push(r['raw_'+c.uid],r['z_'+c.uid],r['nrm_'+c.uid])); line.push(r.rawAvg,r.normAvg,r.rank); aoa.push(line); });
+  const meanRow=['平均數','',''], sdRow=['標準差','',''];
+  COMMITTEE.forEach(c=>{ const st=stat[c.uid]; meanRow.push(st?Math.round(st.mean*10000)/10000:'','',''); sdRow.push(st?Math.round(st.sd*10000)/10000:'','',''); });
+  aoa.push([],meanRow,sdRow);
+  return aoa;
+}
+function xlsxDownload(sheets, filename){
+  const wb=XLSX.utils.book_new();
+  sheets.forEach(([name,aoa])=>XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), name));
+  XLSX.writeFile(wb, filename);
+}
 document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-csv]"); if(!b)return;
-  const which=b.dataset.csv;
+  const b=e.target.closest("[data-xlsx]"); if(!b)return;
+  const which=b.dataset.xlsx;
   if(which==="t1"||which==="t2"){
-    const sem=which==="t1"?1:2; const cols=TEACHER_COLS;
-    const rows=teacherRowsRaw(sem).sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo))).map(r=>cols.map(c=>r[c.key]));
-    download("指導教授_"+(sem===1?"第一次成績":"第二次成績")+".csv", toCSV(cols.map(c=>c.label),rows));
-  }else{
-    const stage=which==="c1"?1:2; const cols=committeeCols();
-    const rows=committeeRowsRaw(stage).map(r=>cols.map(c=>r[c.key]));
-    download("校外委員_"+(stage===1?"第一階段":"第二階段")+"成績.csv", toCSV(cols.map(c=>c.label),rows));
+    const sem=which==="t1"?1:2;
+    xlsxDownload([[sem===1?"第一次成績":"第二次成績", teacherAOA(sem)]], "指導教授_"+(sem===1?"第一次成績":"第二次成績")+".xlsx");
+  }else if(which==="c1"||which==="c2"){
+    const stage=which==="c1"?1:2;
+    xlsxDownload([["母體(STDEVP)",committeeAOA(stage,"pop")],["樣本(STDEV)",committeeAOA(stage,"sample")]], "校外委員_"+(stage===1?"第一階段":"第二階段")+"成績.xlsx");
+  }else if(which==="cdocs"){
+    const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+    const payMap={post:"郵局",bank:"銀行"};
+    const head=["姓名","電子郵件","身分證字號","戶籍地址","匯款方式","郵局帳號","銀行代碼","分行","銀行帳號","存簿封面"];
+    const aoa=[head, ...list.map(c=>{ const d=CDOCS[c.uid]||{}; return [c.name||"",c.email||"",d.idNumber||"",d.householdAddr||"",payMap[d.payType]||"",d.postAccount||"",d.bankCode||"",d.bankBranch||"",d.bankAccount||"",(d.passbook&&d.passbook.url)||""]; })];
+    xlsxDownload([["委員個人資料",aoa]], "委員個人資料.xlsx");
   }
 });
 
@@ -1224,5 +1309,6 @@ $("#wipeStorage").onclick=async()=>{
   finally{ $("#wipeStorage").disabled=false; }
 };
 </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </body>
 </html>

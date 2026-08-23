@@ -93,6 +93,12 @@ main{padding:24px 0 60px}
   .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
 }
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15455E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="實務專題">
 </head>
 <body>
 <div class="topbar"><div class="wrap"><span class="t">校外委員入口</span><div class="r" id="topRight"><a href="index.html">回首頁</a></div></div></div>
@@ -142,7 +148,8 @@ let gfilesMap={}, myDocs={};
 const SLOT_LABEL={report:"報告",slides:"簡報",extra:"補充資料"};
 
 function show(v){["bootView","loginView","denyView","cmView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
-function stageOpen(){ return scoring["c"+stage+"open"]!==false; }
+function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
+function stageOpen(){ return scoring["c"+stage+"open"]!==false && notPast(scoring["c"+stage+"Deadline"]); }
 
 auth.onAuthStateChanged(async user=>{
   if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }
@@ -401,5 +408,6 @@ $("#listHost").addEventListener("click",async e=>{
   finally{ b.disabled=false; }
 });
 </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </body>
 </html>

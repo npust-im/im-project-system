@@ -66,6 +66,12 @@ main{padding:24px 0 60px}
   .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
 }
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15455E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="實務專題">
 </head>
 <body>
 <div class="topbar"><div class="wrap"><span class="t">指導教授入口</span><div class="r" id="topRight"><a href="index.html">回首頁</a></div></div></div>
@@ -102,7 +108,8 @@ const auth=firebase.auth(), db=firebase.firestore();
 
 let MY_UID=null, sem=1, SCORING={};
 let myGroups=[], gradeCache={};
-function semOpen(){ return SCORING["t"+sem+"open"]!==false; }
+function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
+function semOpen(){ return SCORING["t"+sem+"open"]!==false && notPast(SCORING["t"+sem+"Deadline"]); }
 function show(v){["bootView","loginView","denyView","teacherView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 
 auth.onAuthStateChanged(async user=>{
@@ -198,5 +205,6 @@ $("#groupsHost").addEventListener("click",async e=>{
   finally{ b.disabled=false; }
 });
 </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </body>
 </html>
