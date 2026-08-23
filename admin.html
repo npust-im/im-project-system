@@ -98,6 +98,9 @@ main{padding:22px 0 60px}
 .acc-no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:64px}
 .acc-leader{font-weight:500;min-width:80px}
 .acc-adv{font-size:13px}.acc-adv.none{color:var(--muted)}.acc-adv.set{color:var(--accent)}
+.cohort-badge{font-size:11px;font-weight:500;border-radius:999px;padding:1px 9px}
+.cohort-badge.cur{color:#fff;background:var(--primary)}
+.cohort-badge.next{color:#8a5a1c;background:#f4e3cc}
 .acc-chev{margin-left:auto;color:var(--muted);transition:transform .15s}
 .acc-item.open .acc-chev{transform:rotate(180deg)}
 .acc-body{display:none;padding:4px 14px 16px;border-top:1px solid var(--line);background:#fafcfd}
@@ -215,11 +218,12 @@ table.stab .na{color:#b9c2c8}
     </section>
 
     <section class="panel" style="border-color:#e6ccc8">
-      <div class="panel-head"><h2 style="color:var(--danger)">年度重置</h2><span class="hint">新學年開始前清空上一屆資料</span></div>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除：所有組長角色與分組、各組上傳檔案中繼、指導老師成績、校外委員評分、公告；並把入選名單與分組登錄關閉。</p>
+      <div class="panel-head"><h2 style="color:var(--danger)">年度重置（升屆）</h2><span class="hint">本屆競賽結束後執行</span></div>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除【應屆競賽】屆別的：分組、組長帳號資料、各組上傳檔案中繼、指導老師成績、校外委員評分、公告。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 6px"><strong>並把【下屆】的所有組別自動升為【應屆競賽】</strong>（下屆的登錄與名單完整保留，隔年接著使用）。</p>
       <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、規定文件，以及指導教授／校外委員／管理員帳號與其個人資料。</p>
-      <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。登入帳號記錄不會被刪除（無害，可另用清除腳本移除）。</p>
-      <button class="btn btn-danger" id="resetYear">執行年度重置</button><span class="msg" id="resetMsg" style="display:block;margin-bottom:14px"></span>
+      <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。Authentication 的登入帳號不會被刪除。</p>
+      <button class="btn btn-danger" id="resetYear">執行年度重置（升屆）</button><span class="msg" id="resetMsg" style="display:block;margin-bottom:14px"></span>
       <div style="border-top:1px solid var(--line);padding-top:12px">
         <p style="font-size:13px;color:var(--muted);margin:0 0 8px">另外：Firebase Storage 內的實體檔案（各組上傳檔）不會隨上方按鈕刪除。若要一併清空儲存空間，按下方（也需輸入 RESET 確認）。委員個人資料檔案不受影響。</p>
         <button class="btn btn-sm btn-danger" id="wipeStorage">清空所有各組上傳檔案（Storage）</button><span class="msg" id="wipeMsg" style="margin-left:10px"></span>
@@ -266,6 +270,7 @@ table.stab .na{color:#b9c2c8}
     <section class="panel">
       <div class="panel-head"><h2>登錄與上傳設定</h2><span class="hint">控制學生登錄與三輪上傳表單</span></div>
       <label class="chk"><input type="checkbox" id="fRegOpen"> 開放組長註冊與分組登錄</label>
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="fNextCohort"> 新登錄的組別歸為【下屆】（僅分組登錄與洽詢指導老師，不進入本屆競賽）</label>
       <div style="margin-top:8px">
         <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm1Open"> 開放第一次上傳（每組：報告／簡報／補充資料）</label>
         <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm2Open"> 開放第二次上傳（入選組別：發表簡報）</label>
@@ -286,6 +291,7 @@ table.stab .na{color:#b9c2c8}
       <div class="gsummary" id="gsummary"></div>
       <div class="score-controls" style="margin-bottom:12px">
         <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師…">
+        <select id="cohortFilter" style="max-width:150px"><option value="all">全部屆別</option><option value="current">僅應屆競賽</option><option value="next">僅下屆</option></select>
         <button class="btn btn-sm" id="expandAll">展開全部</button>
         <button class="btn btn-sm" id="collapseAll">收合全部</button>
       </div>
@@ -438,6 +444,7 @@ async function loadAll(){
   if(fin.exists){const d=fin.data();state.finalists={published:!!d.published,groups:Array.isArray(d.groups)?d.groups:[],intro:d.intro||"",foot:(d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。")};}
   $("#fPublished").checked=state.finalists.published; $("#fIntro").value=state.finalists.intro||""; $("#fFoot").value=state.finalists.foot||""; renderFinalists();
   $("#fRegOpen").checked = reg.exists ? !!reg.data().open : false;
+  $("#fNextCohort").checked = reg.exists ? reg.data().nextCohort===true : false;
   const upd=up.exists?up.data():{}; $("#fForm1Open").checked=!!upd.round1Open; $("#fForm2Open").checked=!!upd.round2Open; $("#fForm3Open").checked=!!upd.round3Open;
   renderRulesCurrent(upd);
   const s=sc.exists?sc.data():{};
@@ -518,7 +525,7 @@ async function downloadAs(url,filename){
 async function loadFilesTab(){
   try{
     const [gs,gf]=await Promise.all([db.collection("groups").get(), db.collection("groupFiles").get()]);
-    FILES_GROUPS=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+    FILES_GROUPS=gs.docs.map(d=>({id:d.id,...d.data()})).filter(g=>(g.cohort==="next"?"next":"current")==="current").sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
     FILES_MAP={}; gf.docs.forEach(d=>FILES_MAP[d.id]=d.data());
   }catch(e){}
   renderFilesTab();
@@ -606,7 +613,7 @@ $("#annHost").addEventListener("click",async e=>{
 
 /* 入選名單 */
 function groupOptions(sel){
-  return '<option value="">（選擇小組）</option>'+Object.values(GROUPMAP).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))).map(g=>'<option value="'+esc(g.id)+'"'+(g.id===sel?' selected':'')+'>'+esc((g.groupNo||"未編號")+" · "+(g.leaderName||""))+'</option>').join("");
+  return '<option value="">（選擇小組）</option>'+Object.values(GROUPMAP).filter(g=>(g.cohort==="next"?"next":"current")==="current").sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||""))).map(g=>'<option value="'+esc(g.id)+'"'+(g.id===sel?' selected':'')+'>'+esc((g.groupNo||"未編號")+" · "+(g.leaderName||""))+'</option>').join("");
 }
 function syncFinalFromDOM(){
   state.finalists.groups=$$("#finalHost .acc-item").map(it=>({gid:$(".f-gid",it).value,no:$(".f-no",it).value.trim(),title:$(".f-title",it).value.trim(),leader:$(".f-leader",it).value.trim(),m1:$(".f-m1",it).value.trim(),m2:$(".f-m2",it).value.trim(),m3:$(".f-m3",it).value.trim()}));
@@ -664,7 +671,7 @@ $("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-i
 $("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 登錄與上傳 */
-$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 專題規定／說明文件（三次分開，上傳到 Storage，內嵌於學生入口對應分頁） */
 function renderRulesCurrent(upd){
@@ -792,7 +799,8 @@ async function loadGroups(){
   GFILES={}; gfs.docs.forEach(d=>GFILES[d.id]=d.data());
   GROUPMAP={}; groups.forEach(g=>GROUPMAP[g.id]=g);
   const sub=k=>groups.filter(g=>g.submitted&&g.submitted[k]).length;
-  $("#gsummary").textContent=`共 ${groups.length} 組，已登錄指導老師 ${groups.filter(g=>g.advisorUid).length} 組。繳交：第一次 ${sub("r1")}／${groups.length}、第二次 ${sub("r2")}／${groups.length}、第三次 ${sub("r3")}／${groups.length}。`;
+  const curN=groups.filter(isCurrentCohort).length, nextN=groups.length-curN;
+  $("#gsummary").textContent=`共 ${groups.length} 組（應屆競賽 ${curN}、下屆 ${nextN}）。已登錄指導老師 ${groups.filter(g=>g.advisorUid).length} 組。應屆繳交：第一次 ${sub("r1")}、第二次 ${sub("r2")}、第三次 ${sub("r3")}。`;
   const host=$("#groupsHost");
   if(!groups.length){host.innerHTML='<p class="empty-note">尚無分組資料。學生於學生入口送出分組後，會出現在這裡。</p>';renderCommitteeTables();return;}
   const advSel=g=>'<option value="">（未登錄）</option>'+TEACHERS.map(t=>'<option value="'+esc(t.uid)+'"'+(t.uid===g.advisorUid?' selected':'')+'>'+esc(t.name)+'</option>').join("");
@@ -801,13 +809,18 @@ async function loadGroups(){
     const m=g.members||[]; const m1=m[0]||{},m2=m[1]||{},m3=m[2]||{};
     const advState=g.advisorName?('<span class="acc-adv set">指導：'+esc(g.advisorName)+'</span>'):'<span class="acc-adv none">指導：未登錄</span>';
     const sb=g.submitted||{}; const subCount=["r1","r2","r3"].filter(k=>sb[k]).length;
+    const isNext=g.cohort==="next";
+    const cohortBadge=isNext?'<span class="cohort-badge next">下屆</span>':'<span class="cohort-badge cur">應屆</span>';
     const searchStr=esc([g.groupNo,g.leaderName,g.leaderSid,(g.members||[]).map(x=>(x.name||"")+" "+(x.sid||"")).join(" "),g.topic,g.advisorName].join(" ").toLowerCase());
-    return `<div class="acc-item" data-id="${esc(g.id)}" data-search="${searchStr}"><div class="acc-head">
+    return `<div class="acc-item" data-id="${esc(g.id)}" data-cohort="${isNext?"next":"current"}" data-search="${searchStr}"><div class="acc-head">
       <span class="acc-no mono">${esc(g.groupNo||"未編號")}</span>
-      <span class="acc-leader">${esc(g.leaderName||"（無組長）")}</span>${advState}
+      <span class="acc-leader">${esc(g.leaderName||"（無組長）")}</span>${cohortBadge}${advState}
       <span style="font-size:12px;color:var(--muted)">繳 ${subCount}/3</span>
       <span class="acc-chev">▾</span></div>
       <div class="acc-body">
+        <div style="margin-bottom:10px;display:flex;gap:16px;align-items:center;flex-wrap:wrap"><span style="font-size:13px;color:var(--muted)">屆別：</span>
+          <label class="chk" style="margin:0"><input type="radio" name="coh-${esc(g.id)}" class="a-coh-cur" value="current" ${isNext?"":"checked"}> 應屆競賽</label>
+          <label class="chk" style="margin:0"><input type="radio" name="coh-${esc(g.id)}" class="a-coh-next" value="next" ${isNext?"checked":""}> 下屆（僅登錄）</label></div>
         <div class="grid2"><div><label>組別編號</label><input class="a-no" type="text" value="${esc(g.groupNo||"")}"></div>
         <div><label>指導老師</label><select class="a-advsel">${advSel(g)}</select></div></div>
         <label>專題題目</label><input class="a-topic" type="text" value="${esc(g.topic||"")}" placeholder="由系辦填入該組專題題目">
@@ -827,8 +840,17 @@ async function loadGroups(){
   renderCommitteeTables();
 }
 $("#reloadGroups").onclick=()=>loadGroups();
-function filterGroups(){ const q=(($("#groupSearch")||{}).value||"").trim().toLowerCase(); $$("#groupsHost .acc-item").forEach(x=>{ x.style.display=(!q||(x.dataset.search||"").includes(q))?"":"none"; }); }
+function filterGroups(){
+  const q=(($("#groupSearch")||{}).value||"").trim().toLowerCase();
+  const cf=(($("#cohortFilter")||{}).value)||"all";
+  $$("#groupsHost .acc-item").forEach(x=>{
+    const okQ=!q||(x.dataset.search||"").includes(q);
+    const okC=cf==="all"||(x.dataset.cohort||"current")===cf;
+    x.style.display=(okQ&&okC)?"":"none";
+  });
+}
 $("#groupSearch").oninput=filterGroups;
+$("#cohortFilter")&&($("#cohortFilter").onchange=filterGroups);
 $("#expandAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>{ if(x.style.display!=="none") x.classList.add("open"); });
 $("#collapseAll").onclick=()=>$$("#groupsHost .acc-item").forEach(x=>x.classList.remove("open"));
 $("#fillFromRank").onclick=()=>{
@@ -856,7 +878,8 @@ $("#groupsHost").addEventListener("click",async e=>{
     const members=[]; [["a-m1sid","a-m1name"],["a-m2sid","a-m2name"],["a-m3sid","a-m3name"]].forEach(([s,n])=>{ if(v(s)||v(n)) members.push({sid:v(s),name:v(n)}); });
     const advUid=$(".a-advsel",item).value; const advName=(TEACHERS.find(t=>t.uid===advUid)||{}).name||"";
     const submitted={r1:$(".a-r1",item).checked,r2:$(".a-r2",item).checked,r3:$(".a-r3",item).checked};
-    try{ await db.doc("groups/"+gid).set({groupNo:v("a-no"),topic:v("a-topic"),advisorUid:advUid,advisorName:advName,leaderSid:v("a-lsid"),leaderName:v("a-lname"),members:members,submitted:submitted},{merge:true}); flash("asgMsg","已儲存。"); await loadGroups(); }
+    const cohort=($(".a-coh-next",item)&&$(".a-coh-next",item).checked)?"next":"current";
+    try{ await db.doc("groups/"+gid).set({groupNo:v("a-no"),topic:v("a-topic"),advisorUid:advUid,advisorName:advName,leaderSid:v("a-lsid"),leaderName:v("a-lname"),members:members,submitted:submitted,cohort:cohort},{merge:true}); flash("asgMsg","已儲存。"); await loadGroups(); }
     catch(err){ flash("asgMsg","儲存失敗："+(err.code||err.message),false); }
   }
   if(e.target.closest("[data-act=del-group]")){
@@ -913,9 +936,11 @@ function autoRefresh(){ const t=Date.now(); if(t-_lastAutoRefresh<3000) return; 
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && scoreTabActive()) autoRefresh(); });
 window.addEventListener("focus",()=>{ if(scoreTabActive()) autoRefresh(); });
 
+function isCurrentCohort(g){ return (g && g.cohort==="next") ? false : true; }
+function currentGroupList(){ return Object.values(GROUPMAP).filter(isCurrentCohort); }
 function teacherRowsRaw(sem){
   const semKey="sem"+sem;
-  return Object.values(GROUPMAP).map(g=>{
+  return currentGroupList().map(g=>{
     const gr=(GRADES[g.id]||{})[semKey]||{};
     const sc=slot=>{const s=(gr[slot]||{}).score;return (s===0||s)?s:"";};
     const m=g.members||[]; const M=i=>m[i]||{};
@@ -954,7 +979,7 @@ function startGradesListener(){ if(startGradesListener.done)return;startGradesLi
 
 function committeeRowsRaw(stage){
   const finNos=(state.finalists.groups||[]).map(x=>x.no);
-  let groups=Object.values(GROUPMAP);
+  let groups=currentGroupList();
   if(stage===2) groups=groups.filter(g=>g.groupNo && finNos.includes(g.groupNo));
   const rel=CSCORES.filter(s=>s.stage===stage);
   const rows=groups.map(g=>{
@@ -1076,7 +1101,7 @@ document.addEventListener("click",e=>{
 /* 年度重置 */
 $("#resetYear").onclick=async()=>{
   const msg=$("#resetMsg");
-  const typed=prompt("此操作將清空上一屆的分組、成績、委員評分與公告，且無法復原。\\n確定請輸入大寫 RESET：");
+  const typed=prompt("此操作會刪除【應屆競賽】屆別的分組與成績等資料，並把【下屆】升為【應屆競賽】，無法復原。\\n確定請輸入大寫 RESET：");
   if(typed===null) return;
   if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
   $("#resetYear").disabled=true; msg.textContent="處理中…"; msg.className="msg";
@@ -1086,12 +1111,26 @@ $("#resetYear").onclick=async()=>{
       db.collection("grades").get(), db.collection("committeeScores").get(), db.collection("announcements").get(),
       db.collection("groupFiles").get()
     ]);
-    const refs=[]; [studs,groups,grades,cscores,anns,gfiles].forEach(snap=>snap.docs.forEach(d=>refs.push(d.ref)));
+    const curGids=new Set(), nextGroupDocs=[];
+    groups.docs.forEach(d=>{ if(d.data().cohort==="next") nextGroupDocs.push(d); else curGids.add(d.id); });
+    const refs=[];
+    // 刪除應屆組別本身
+    groups.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
+    // 應屆組長帳號（uid == 組別 id）
+    studs.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
+    // 應屆相關成績／評分／檔案中繼（依 gid）
+    grades.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
+    gfiles.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
+    cscores.docs.forEach(d=>{ const gid=(d.data()||{}).gid; if(gid && curGids.has(gid)) refs.push(d.ref); });
+    // 公告全部清除（屬本屆競賽）
+    anns.docs.forEach(d=>refs.push(d.ref));
     for(let i=0;i<refs.length;i+=400){ const batch=db.batch(); refs.slice(i,i+400).forEach(r=>batch.delete(r)); await batch.commit(); }
+    // 下屆升為應屆
+    for(let i=0;i<nextGroupDocs.length;i+=400){ const batch=db.batch(); nextGroupDocs.slice(i,i+400).forEach(d=>batch.set(d.ref,{cohort:"current"},{merge:true})); await batch.commit(); }
     await db.doc("settings/finalists").set({published:false,groups:[]},{merge:true});
-    await db.doc("settings/registration").set({open:false},{merge:true});
-    msg.textContent="已完成年度重置，共清除 "+refs.length+" 筆資料。"; msg.className="msg ok";
-    state.finalists={published:false,groups:[]}; $("#fPublished").checked=false; renderFinalists(); $("#fRegOpen").checked=false;
+    await db.doc("settings/registration").set({open:false,nextCohort:false},{merge:true});
+    msg.textContent="已完成升屆：清除 "+refs.length+" 筆應屆資料，"+nextGroupDocs.length+" 組下屆已升為應屆。"; msg.className="msg ok";
+    state.finalists={published:false,groups:[]}; $("#fPublished").checked=false; renderFinalists(); $("#fRegOpen").checked=false; $("#fNextCohort").checked=false;
     await loadAnnouncements(); await loadAccounts(); await loadGroups(); await loadLeaders(); await loadTeacherScores();
   }catch(e){ msg.textContent="重置失敗："+(e.code||e.message); msg.className="msg err"; }
   finally{ $("#resetYear").disabled=false; }

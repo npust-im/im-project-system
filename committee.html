@@ -240,10 +240,11 @@ async function loadData(){
   myDocs=docs.exists?docs.data():{};
 }
 function groupsForStage(){
-  if(stage===1) return allGroups;
+  const cur=allGroups.filter(g=>(g.cohort==="next"?"next":"current")==="current");
+  if(stage===1) return cur;
   if(!finalists.published) return [];
   const nos=(finalists.groups||[]).map(g=>g.no);
-  return allGroups.filter(g=>g.groupNo && nos.includes(g.groupNo));
+  return cur.filter(g=>g.groupNo && nos.includes(g.groupNo));
 }
 function render(){
   if(view==="docs") return;

@@ -129,7 +129,7 @@ async function loadData(){
     db.collection("groups").where("advisorUid","==",MY_UID).get(),
     db.doc("settings/scoring").get()
   ]);
-  myGroups=gs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+  myGroups=gs.docs.map(d=>({id:d.id,...d.data()})).filter(g=>(g.cohort==="next"?"next":"current")==="current").sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
   SCORING=scr.exists?scr.data():{};
   gradeCache={};
   await Promise.all(myGroups.map(async g=>{ try{ const d=await db.doc("grades/"+g.id).get(); gradeCache[g.id]=d.exists?d.data():{}; }catch(e){ gradeCache[g.id]={}; } }));

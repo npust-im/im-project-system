@@ -216,7 +216,7 @@ if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textCon
 const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
 const ROSTER_IDS=["leaderSid","leaderName","m1Sid","m1Name","m2Sid","m2Name","m3Sid","m3Name"];
 let myFiles={};  // groupFiles/{uid} 的內容：{r1:{report,slides,extra}, r2:{slides}, r3:{report,slides}}
-let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1";
+let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1", myCohort="current";
 
 $("#tabLogin").onclick=()=>{$("#tabLogin").classList.add("on");$("#tabReg").classList.remove("on");$("#loginForm").classList.remove("hidden");$("#regForm").classList.add("hidden");};
 $("#tabReg").onclick=()=>{$("#tabReg").classList.add("on");$("#tabLogin").classList.remove("on");$("#regForm").classList.remove("hidden");$("#loginForm").classList.add("hidden");};
@@ -276,7 +276,7 @@ async function loadGroup(user){
   const doc=await db.doc("groups/"+user.uid).get();
   if(doc.exists){
     const g=doc.data(); myGroupNo=g.groupNo||""; mySubmitted=g.submitted||{};
-    myLeaderSid=g.leaderSid||""; myLeaderName=g.leaderName||"";
+    myLeaderSid=g.leaderSid||""; myLeaderName=g.leaderName||""; myCohort=g.cohort==="next"?"next":"current";
     $("#leaderSid").value=g.leaderSid||""; $("#leaderName").value=g.leaderName||"";
     const m=g.members||[];
     $("#m1Sid").value=m[0]?.sid||""; $("#m1Name").value=m[0]?.name||"";
@@ -285,7 +285,7 @@ async function loadGroup(user){
     setRosterDisabled(true);
     renderAdvisor(g.advisorName||"");
   }else{
-    myGroupNo=""; mySubmitted={}; myLeaderSid=""; myLeaderName=""; setRosterDisabled(false); renderAdvisor("");
+    myGroupNo=""; mySubmitted={}; myLeaderSid=""; myLeaderName=""; myCohort="current"; setRosterDisabled(false); renderAdvisor("");
   }
 }
 $("#saveGroup").onclick=async()=>{
@@ -301,9 +301,12 @@ $("#saveGroup").onclick=async()=>{
 
   $("#saveGroup").disabled=true;
   try{
+    let nextCohort=false;
+    try{ const reg=await db.doc("settings/registration").get(); if(reg.exists) nextCohort=reg.data().nextCohort===true; }catch(_){}
+    myCohort = nextCohort ? "next" : "current";
     await db.doc("groups/"+user.uid).set({
       leaderUid:user.uid, leaderSid:v("leaderSid"), leaderName:v("leaderName"),
-      members:members, createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      members:members, cohort:myCohort, createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
     setRosterDisabled(true);
     flash("groupMsg","已送出。",true);
@@ -360,6 +363,12 @@ function rulesEmbed(url,type){
 }
 async function renderRound(){
   const uid=auth.currentUser&&auth.currentUser.uid; if(!uid){ return; }
+  if(myCohort==="next"){
+    $("#upTabs").classList.add("hidden");
+    $("#roundHost").innerHTML='<div class="round-locked">您目前為下一屆分組登錄階段，僅需完成分組名單與洽詢指導老師。檔案上傳將於升上大四上（競賽階段）時開放。</div>';
+    return;
+  }
+  $("#upTabs").classList.remove("hidden");
   let up={}, fin={published:false,groups:[]};
   try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
   try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
