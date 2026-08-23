@@ -84,6 +84,12 @@ main{padding:22px 0 60px}
 .item .full{grid-column:1/-1}
 .item-foot{display:flex;align-items:center;gap:14px;margin-top:10px}
 .chk{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--ink);cursor:pointer;margin:6px 0}
+.setgrp{padding:12px 0;border-top:1px solid var(--line)}
+.setgrp:first-of-type{border-top:0;padding-top:4px}
+.setlabel{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:8px}
+.setrow{display:flex;flex-wrap:wrap;gap:8px 26px}
+.setrow .chk{margin:0}
+.sethint{font-size:12px;color:var(--muted);margin:9px 0 0}
 .chk input{width:16px;height:16px;accent-color:var(--accent)}
 .rowline{display:grid;grid-template-columns:120px 1fr 160px auto;gap:10px;align-items:center;margin-bottom:10px}
 .empty-note{color:var(--muted);font-size:14px;padding:6px 0}
@@ -268,16 +274,24 @@ table.stab .na{color:#b9c2c8}
   <!-- 學生 -->
   <div class="tabpane" data-pane="student">
     <section class="panel">
-      <div class="panel-head"><h2>登錄與上傳設定</h2><span class="hint">控制學生登錄與三輪上傳表單</span></div>
-      <label class="chk"><input type="checkbox" id="fRegOpen"> 開放組長註冊與分組登錄</label>
-      <label class="chk" style="margin-top:8px"><input type="checkbox" id="fNextCohort"> 新登錄的組別歸為【下屆】（僅分組登錄與洽詢指導老師，不進入本屆競賽）</label>
-      <div style="margin-top:8px">
-        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm1Open"> 開放第一次上傳（每組：報告／簡報／補充資料）</label>
-        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm2Open"> 開放第二次上傳（入選組別：發表簡報）</label>
-        <label class="chk" style="margin:12px 0 5px"><input type="checkbox" id="fForm3Open"> 開放第三次上傳（每組：最終成果）</label>
+      <div class="panel-head"><h2>登錄與上傳設定</h2></div>
+      <div class="setgrp">
+        <div class="setlabel">分組登錄</div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fRegOpen"> 開放分組登錄</label>
+          <label class="chk"><input type="checkbox" id="fNextCohort"> 新登錄歸為下屆</label>
+        </div>
+        <p class="sethint">勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽（屆別由系辦控管，學生無法自行更改）。</p>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin:6px 0 0">學生改為直接在系統上傳檔案（Firebase Storage），不再使用 Google 表單連結。</p>
-      <div class="actions"><button class="btn btn-primary" id="saveUploads">儲存登錄與上傳設定</button><span class="msg ok" id="upMsg"></span></div>
+      <div class="setgrp">
+        <div class="setlabel">開放檔案上傳</div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fForm1Open"> 第一次（報告／簡報／補充）</label>
+          <label class="chk"><input type="checkbox" id="fForm2Open"> 第二次（發表簡報·限入選）</label>
+          <label class="chk"><input type="checkbox" id="fForm3Open"> 第三次（最終成果）</label>
+        </div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="saveUploads">儲存設定</button><span class="msg ok" id="upMsg"></span></div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">三次分開，各自顯示於學生入口對應分頁</span></div>
