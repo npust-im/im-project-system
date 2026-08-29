@@ -119,6 +119,11 @@ main{padding:28px 0 60px}
 .round-sec:first-of-type{margin-top:10px}
 .round-sub{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .round-locked.closed{background:#f6e2df;color:#8a3320}
+.statusbar{border-radius:10px;padding:9px 14px;font-size:14px;font-weight:500;margin:0 0 14px}
+.statusbar.sb-open{background:var(--accent-soft);color:var(--accent)}
+.statusbar.sb-notyet{background:#e7ebee;color:#5e6e79}
+.statusbar.sb-closed{background:#f6e2df;color:#8a3320}
+.statusbar.sb-limited{background:#eef1f3;color:#5e6e79}
 
 /* mobile-compat */
 @media (max-width:640px){
@@ -419,6 +424,12 @@ async function renderRound(){
   const rk=curR, def=ROUND_DEFS[rk], n=(rk==="r1"?1:rk==="r2"?2:3);
   const st=roundStatus(rk);
   const dlStr=fmtDL(up["round"+n+"Deadline"]);
+  const sbLabel = st==="open" ? ("開放中"+(dlStr?("（截止時間 "+dlStr+"）"):""))
+    : st==="closed" ? ("已截止"+(dlStr?("（截止時間 "+dlStr+"）"):""))
+    : st==="limited" ? "僅開放入選第二階段之組別"
+    : "尚未開放";
+  const sbCls = st==="open"?"sb-open":st==="closed"?"sb-closed":st==="limited"?"sb-limited":"sb-notyet";
+  const statusBar='<div class="statusbar '+sbCls+'">'+esc(sbLabel)+'</div>';
   const done=roundDone(rk);
   const badge=done?' <span style="font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:999px">已完成</span>':'';
   let slotsHtml;
@@ -445,10 +456,10 @@ async function renderRound(){
           '<label class="btn btn-file"><input type="file" accept="'+esc(s.accept)+'" data-act="pick">'+btnLabel+'</label>'+
         '</div></div>';
     }).join("");
-    if(dlStr) slotsHtml+='<p style="font-size:12px;color:var(--muted);margin:10px 0 0">上傳截止：'+esc(dlStr)+'</p>';
   }
   $("#roundHost").innerHTML=
     '<h2 class="round-h">'+esc(def.no)+'　'+esc(def.title)+badge+'</h2>'+
+    statusBar+
     '<div class="round-sec"><div class="round-sub">規定／注意事項</div>'+rulesEmbed(up["rules"+n+"Url"],up["rules"+n+"Type"])+'</div>'+
     '<div class="round-sec"><div class="round-sub">檔案上傳（單檔上限 50MB）</div>'+slotsHtml+'</div>';
 }

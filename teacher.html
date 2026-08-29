@@ -43,6 +43,10 @@ main{padding:24px 0 60px}
 .tab.on{color:var(--primary);border-bottom-color:var(--primary)}
 .notice{background:#f7ece0;color:#8a5a1c;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px}
 .notice.closed{background:#f6e2df;color:#8a3320}
+.statusbar{border-radius:10px;padding:9px 14px;font-size:14px;font-weight:500;margin-bottom:14px}
+.statusbar.sb-open{background:var(--accent-soft);color:var(--accent)}
+.statusbar.sb-notyet{background:#e7ebee;color:#5e6e79}
+.statusbar.sb-closed{background:#f6e2df;color:#8a3320}
 .tchip{font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
 .tchip.open{background:var(--accent-soft);color:var(--accent)}
 .tchip.notyet{background:#e7ebee;color:#5e6e79}
@@ -116,7 +120,15 @@ let myGroups=[], gradeCache={};
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
 function semStatusOf(s){ if(SCORING["t"+s+"open"]===false) return 'notyet'; if(!notPast(SCORING["t"+s+"Deadline"])) return 'closed'; return 'open'; }
 function semOpen(){ return semStatusOf(sem)==='open'; }
-function semNotice(){ const s=semStatusOf(sem); if(s==='open') return ''; return '<div class="notice'+(s==='closed'?' closed':'')+'">本次成績'+(s==='closed'?'評分已截止，僅供檢視。':'評分尚未開放，僅供檢視，開放後即可儲存。')+'</div>'; }
+function fmtDL(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=x=>String(x).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
+function semNotice(){
+  const s=semStatusOf(sem), dl=fmtDL(SCORING["t"+sem+"Deadline"]);
+  const label = s==='open' ? ('評分開放中'+(dl?('（截止時間 '+dl+'）'):''))
+    : s==='closed' ? ('評分已截止'+(dl?('（截止時間 '+dl+'）'):'')+'，僅供檢視')
+    : '評分尚未開放，僅供檢視';
+  const cls = s==='open'?'sb-open':s==='closed'?'sb-closed':'sb-notyet';
+  return '<div class="statusbar '+cls+'">'+esc(label)+'</div>';
+}
 function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed']}; [1,2].forEach(s=>{ const c=$("#chip"+s); if(!c)return; const [t,cls]=map[semStatusOf(s)]; c.textContent=t; c.className='tchip '+cls; }); }
 function show(v){["bootView","loginView","denyView","teacherView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 
