@@ -241,6 +241,10 @@ table.stab .na{color:#b9c2c8}
         </div>
       </div>
       <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
+      <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+        <label class="chk" style="margin:0"><input type="checkbox" id="scLocked"> <strong style="color:var(--danger)">結算鎖定</strong>：鎖定後委員、指導教授、學生一律無法再修改成績與上傳（僅系辦可調整）</label>
+        <p style="font-size:12px;color:var(--muted);margin:8px 0 0">競賽與評分全部結束、確認無誤後再勾選並儲存，可從資料庫層面防止任何人事後竄改。</p>
+      </div>
     </section>
 
     <section class="panel">
@@ -533,6 +537,7 @@ async function loadAll(){
   const s=sc.exists?sc.data():{};
   $("#t1open").checked=s.t1open!==false;$("#t2open").checked=s.t2open!==false;$("#c1open").checked=s.c1open!==false;$("#c2open").checked=s.c2open!==false;
   $("#t1Deadline").value=s.t1Deadline||""; $("#t2Deadline").value=s.t2Deadline||""; $("#c1Deadline").value=s.c1Deadline||""; $("#c2Deadline").value=s.c2Deadline||"";
+  $("#scLocked").checked = s.locked===true;
   if(ag.exists){const d=ag.data();agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
   $("#agPublished").checked=agenda.published; $("#agTitle").value=agenda.title; $("#agDate").value=agenda.date; $("#agPlace").value=agenda.place; renderAgenda();
   await loadAnnouncements();
@@ -547,7 +552,7 @@ async function loadAll(){
 
 /* 網站設定 */
 $("#saveSite").onclick=async()=>{try{await db.doc("settings/site").set({school:$("#fSchool").value.trim(),academicYear:$("#fYear").value.trim()},{merge:true});flash("siteMsg","已儲存。");}catch(e){flash("siteMsg","儲存失敗："+(e.code||e.message),false);}};
-$("#saveScoring").onclick=async()=>{try{await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||""},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveScoring").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||"",c1DeadlineMs:ms($("#c1Deadline").value),c2DeadlineMs:ms($("#c2Deadline").value),locked:$("#scLocked").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
 /* 委員個人資料（匯款用） */
 let CDOCS={};
 async function loadCommitteeDocs(){
@@ -1080,8 +1085,10 @@ function committeeCompute(stage, usePop){
   if(stage===2) groups=groups.filter(g=>g.groupNo && finNos.includes(g.groupNo));
   const rel=CSCORES.filter(s=>s.stage===stage);
   const gidRaw={}; groups.forEach(g=>gidRaw[g.id]={});
+  rel.forEach(s=>{ if(gidRaw[s.gid] && typeof s.score==="number"){ gidRaw[s.gid][s.committeeUid]=s.score; } });
+  // 每位委員對每組只計一次（以 gidRaw 去重），避免任何重複文件影響常態化
   const rawByC={};
-  rel.forEach(s=>{ if(gidRaw[s.gid] && typeof s.score==="number"){ gidRaw[s.gid][s.committeeUid]=s.score; (rawByC[s.committeeUid]=rawByC[s.committeeUid]||[]).push(s.score); } });
+  groups.forEach(g=>{ const row=gidRaw[g.id]; Object.keys(row).forEach(uid=>{ (rawByC[uid]=rawByC[uid]||[]).push(row[uid]); }); });
   const stat={};
   Object.entries(rawByC).forEach(([uid,arr])=>{
     const n=arr.length, mean=arr.reduce((a,b)=>a+b,0)/n;
