@@ -137,6 +137,14 @@ main{padding:28px 0 60px}
   .topbar .r{font-size:12px;gap:10px}
   .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
 }
+
+/* click-feedback */
+#__np{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:99999;opacity:0;transition:width .25s ease,opacity .3s;box-shadow:0 0 8px var(--accent)}
+#__np.on{opacity:1}
+.btn-busy{position:relative;color:transparent!important}
+.btn-busy::after{content:"";position:absolute;top:50%;left:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--primary);border-top-color:transparent;animation:__spin .6s linear infinite}
+.btn-primary.btn-busy::after,.btn-danger.btn-busy::after{border-color:#fff;border-top-color:transparent}
+@keyframes __spin{to{transform:rotate(360deg)}}
 </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#15455E">
@@ -249,6 +257,7 @@ function flash(id,msg,ok=true){const e=$("#"+id);e.textContent=msg;e.className="
 
 if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#authView").classList.remove("hidden"); }
 const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
+try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(_){}
 const ROSTER_IDS=["leaderSid","leaderName","m1Sid","m1Name","m2Sid","m2Name","m3Sid","m3Name"];
 let myFiles={};  // groupFiles/{uid} 的內容：{r1:{report,slides,extra}, r2:{slides}, r3:{report,slides}}
 let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1", myCohort="current";
@@ -510,5 +519,14 @@ $("#roundHost").addEventListener("change",async e=>{
 });
 </script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+<div id="__np"></div>
+<script>
+(function(){var bar=document.getElementById("__np"),t;
+function start(){if(!bar)return;bar.classList.add("on");bar.style.width="0";requestAnimationFrame(function(){bar.style.width="75%";});}
+function done(){if(!bar)return;bar.style.width="100%";clearTimeout(t);t=setTimeout(function(){bar.classList.remove("on");bar.style.width="0";},280);}
+window.__busy={start:start,done:done};
+document.addEventListener("click",function(e){var b=e.target.closest("button.btn,a.btn");if(!b||b.disabled||b.classList.contains("btn-busy")||b.hasAttribute("data-nobusy"))return;start();b.classList.add("btn-busy");setTimeout(function(){b.classList.remove("btn-busy");done();},700);},true);
+})();
+</script>
 </body>
 </html>
