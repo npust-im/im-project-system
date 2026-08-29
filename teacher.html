@@ -42,6 +42,11 @@ main{padding:24px 0 60px}
 .tab{padding:10px 16px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab.on{color:var(--primary);border-bottom-color:var(--primary)}
 .notice{background:#f7ece0;color:#8a5a1c;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px}
+.notice.closed{background:#f6e2df;color:#8a3320}
+.tchip{font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.tchip.open{background:var(--accent-soft);color:var(--accent)}
+.tchip.notyet{background:#e7ebee;color:#5e6e79}
+.tchip.closed{background:#f6e2df;color:#8a3320}
 .gpanel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
 .gtop{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;flex-wrap:wrap}
 .gno{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500}
@@ -91,7 +96,7 @@ main{padding:24px 0 60px}
 
 <main id="teacherView" class="wrap hidden">
   <p class="intro" id="intro"></p>
-  <div class="tabs"><div class="tab on" id="tab1">第一次成績（大三下）</div><div class="tab" id="tab2">第二次成績（大四上）</div></div>
+  <div class="tabs"><div class="tab on" id="tab1">第一次成績（大三下）<span class="tchip" id="chip1"></span></div><div class="tab" id="tab2">第二次成績（大四上）<span class="tchip" id="chip2"></span></div></div>
   <div id="notice"></div>
   <div id="groupsHost"></div>
 </main>
@@ -109,7 +114,10 @@ const auth=firebase.auth(), db=firebase.firestore();
 let MY_UID=null, sem=1, SCORING={};
 let myGroups=[], gradeCache={};
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
-function semOpen(){ return SCORING["t"+sem+"open"]!==false && notPast(SCORING["t"+sem+"Deadline"]); }
+function semStatusOf(s){ if(SCORING["t"+s+"open"]===false) return 'notyet'; if(!notPast(SCORING["t"+s+"Deadline"])) return 'closed'; return 'open'; }
+function semOpen(){ return semStatusOf(sem)==='open'; }
+function semNotice(){ const s=semStatusOf(sem); if(s==='open') return ''; return '<div class="notice'+(s==='closed'?' closed':'')+'">本次成績'+(s==='closed'?'評分已截止，僅供檢視。':'評分尚未開放，僅供檢視，開放後即可儲存。')+'</div>'; }
+function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed']}; [1,2].forEach(s=>{ const c=$("#chip"+s); if(!c)return; const [t,cls]=map[semStatusOf(s)]; c.textContent=t; c.className='tchip '+cls; }); }
 function show(v){["bootView","loginView","denyView","teacherView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 
 auth.onAuthStateChanged(async user=>{
@@ -143,7 +151,8 @@ function subscribeLiveT(){
   db.doc("settings/scoring").onSnapshot(d=>{
     SCORING=d.exists?d.data():{};
     const open=semOpen();
-    $("#notice").innerHTML = open ? '' : '<div class="notice">本次成績目前未開放評分，僅供檢視。開放後即可儲存。</div>';
+    updateChips();
+    $("#notice").innerHTML = semNotice();
     document.querySelectorAll("#groupsHost .s-score, #groupsHost .s-comment, #groupsHost [data-act=save]").forEach(el=>el.disabled=!open);
   },()=>{});
 }
@@ -166,8 +175,9 @@ function studentsOf(g){
 }
 function render(){
   const host=$("#groupsHost");
+  updateChips();
   const open=semOpen();
-  $("#notice").innerHTML = open ? '' : '<div class="notice">本次成績目前未開放評分，僅供檢視。開放後即可儲存。</div>';
+  $("#notice").innerHTML = semNotice();
   if(!myGroups.length){ host.innerHTML='<div class="empty">目前沒有您指導的組別。待系辦登錄指導老師後，組別會顯示於此。</div>'; return; }
   const semKey="sem"+sem; const dis=open?"":"disabled";
   host.innerHTML=myGroups.map(g=>{

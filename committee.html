@@ -44,6 +44,11 @@ main{padding:24px 0 60px}
 .stage-hint{color:var(--muted);font-size:14px;margin:0 0 14px}
 .filebar{margin:0 0 16px}
 .notice{background:#f7ece0;color:#8a5a1c;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px}
+.notice.closed{background:#f6e2df;color:#8a3320}
+.tchip{font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.tchip.open{background:var(--accent-soft);color:var(--accent)}
+.tchip.notyet{background:#e7ebee;color:#5e6e79}
+.tchip.closed{background:#f6e2df;color:#8a3320}
 .grow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .grow .gno{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:70px}
 .grow .gtitle{font-weight:500;flex:1;min-width:150px}
@@ -118,8 +123,8 @@ main{padding:24px 0 60px}
 
 <main id="cmView" class="wrap hidden">
   <div class="tabs">
-    <div class="tab on" id="tab1">第一階段（書面）</div>
-    <div class="tab" id="tab2">第二階段（口頭）</div>
+    <div class="tab on" id="tab1">第一階段（書面）<span class="tchip" id="chip1"></span></div>
+    <div class="tab" id="tab2">第二階段（口頭）<span class="tchip" id="chip2"></span></div>
     <div class="tab" id="tab3">個人資料（匯款用）</div>
   </div>
   <div id="scoreArea">
@@ -149,7 +154,11 @@ const SLOT_LABEL={report:"報告",slides:"簡報",extra:"補充資料"};
 
 function show(v){["bootView","loginView","denyView","cmView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
-function stageOpen(){ return scoring["c"+stage+"open"]!==false && notPast(scoring["c"+stage+"Deadline"]); }
+function stageStatusOf(st){ if(scoring["c"+st+"open"]===false) return 'notyet'; if(!notPast(scoring["c"+st+"Deadline"])) return 'closed'; return 'open'; }
+function stageStatus(){ return stageStatusOf(stage); }
+function stageOpen(){ return stageStatus()==='open'; }
+function stageNotice(){ const s=stageStatus(); if(s==='open') return ''; return '<div class="notice'+(s==='closed'?' closed':'')+'">本階段評分'+(s==='closed'?'已截止，僅供檢視。':'尚未開放，僅供檢視，開放後即可儲存。')+'</div>'; }
+function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed']}; [1,2].forEach(st=>{ const c=$("#chip"+st); if(!c)return; const [t,cls]=map[stageStatusOf(st)]; c.textContent=t; c.className='tchip '+cls; }); }
 
 auth.onAuthStateChanged(async user=>{
   if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }
@@ -196,8 +205,9 @@ function reRender(){
 let _rrT=null;
 function reRenderD(){ clearTimeout(_rrT); _rrT=setTimeout(reRender,120); }
 function applyScoringState(){
+  updateChips();
   const open=stageOpen();
-  $("#notice").innerHTML = open ? '' : '<div class="notice">本階段評分目前未開放，僅供檢視。開放後即可儲存。</div>';
+  $("#notice").innerHTML = stageNotice();
   document.querySelectorAll("#listHost .grow input, #listHost [data-act=save]").forEach(el=>el.disabled=!open);
 }
 const FR_SLOTS={ r1:[["report","報告"],["slides","簡報"],["extra","補充"]], r2:[["slides","發表簡報"]] };
@@ -276,8 +286,9 @@ function groupsForStage(){
 }
 function render(){
   if(view==="docs") return;
+  updateChips();
   const open=stageOpen();
-  $("#notice").innerHTML = open ? '' : '<div class="notice">本階段評分目前未開放，僅供檢視。開放後即可儲存。</div>';
+  $("#notice").innerHTML = stageNotice();
   const list=groupsForStage();
   const done=list.filter(g=>{const v=myScores[stage+"__"+g.id];return v===0||v;}).length;
   const base = stage===1

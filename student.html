@@ -109,10 +109,16 @@ main{padding:28px 0 60px}
 .tabs{display:flex;gap:6px;margin:22px 0 0;border-bottom:1px solid var(--line)}
 .tab{padding:10px 18px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.tchip{font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.tchip.open{background:var(--accent-soft);color:var(--accent)}
+.tchip.notyet{background:#e7ebee;color:#5e6e79}
+.tchip.closed{background:#f6e2df;color:#8a3320}
+.tchip.limited{background:#eef1f3;color:#5e6e79}
 .round-h{font-family:"Noto Serif TC",serif;font-size:18px;margin:0 0 4px}
 .round-sec{margin-top:18px}
 .round-sec:first-of-type{margin-top:10px}
 .round-sub{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.round-locked.closed{background:#f6e2df;color:#8a3320}
 
 /* mobile-compat */
 @media (max-width:640px){
@@ -215,9 +221,9 @@ main{padding:28px 0 60px}
   </section>
 
   <div class="tabs" id="upTabs">
-    <div class="tab on" data-r="r1">第一次上傳</div>
-    <div class="tab" data-r="r2">第二次上傳</div>
-    <div class="tab" data-r="r3">第三次上傳</div>
+    <div class="tab on" data-r="r1">第一次上傳<span class="tchip" data-chip="r1"></span></div>
+    <div class="tab" data-r="r2">第二次上傳<span class="tchip" data-chip="r2"></span></div>
+    <div class="tab" data-r="r3">第三次上傳<span class="tchip" data-chip="r3"></span></div>
   </div>
   <section class="panel" style="border-top-left-radius:0;border-top-right-radius:0">
     <div id="roundHost"></div>
@@ -398,14 +404,30 @@ async function renderRound(){
   try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
   try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
   const isFinalist = !!fin.published && Array.isArray(fin.groups) && !!myGroupNo && fin.groups.some(g=>g.no===myGroupNo);
-  const openMap={r1:!!up.round1Open && notPast(up.round1Deadline), r2:!!up.round2Open && notPast(up.round2Deadline), r3:!!up.round3Open && notPast(up.round3Deadline)};
+  const fmtDL=iso=>{ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=x=>String(x).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); };
+  function roundStatus(r){
+    const nn=(r==="r1"?1:r==="r2"?2:3);
+    if(r==="r2" && !isFinalist) return "limited";
+    if(!up["round"+nn+"Open"]) return "notyet";
+    if(!notPast(up["round"+nn+"Deadline"])) return "closed";
+    return "open";
+  }
+  // 分頁狀態標籤
+  const chipMap={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed'],limited:['限入選','limited']};
+  ["r1","r2","r3"].forEach(r=>{ const c=document.querySelector('[data-chip="'+r+'"]'); if(c){ const [t,cls]=chipMap[roundStatus(r)]; c.textContent=t; c.className='tchip '+cls; } });
+
   const rk=curR, def=ROUND_DEFS[rk], n=(rk==="r1"?1:rk==="r2"?2:3);
-  let locked=!openMap[rk], lockMsg="本次上傳尚未開放。";
-  if(rk==="r2" && !isFinalist){ locked=true; lockMsg="第二次上傳僅開放入選第二階段之組別。"; }
+  const st=roundStatus(rk);
+  const dlStr=fmtDL(up["round"+n+"Deadline"]);
   const done=roundDone(rk);
   const badge=done?' <span style="font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:999px">已完成</span>':'';
   let slotsHtml;
-  if(locked){ slotsHtml='<div class="round-locked">'+esc(lockMsg)+'</div>'; }
+  if(st!=="open"){
+    const msg = st==="limited" ? "第二次上傳僅開放入選第二階段之組別。"
+      : st==="closed" ? ("本次上傳已截止"+(dlStr?("（截止時間 "+dlStr+"）"):"")+"，無法再上傳。")
+      : "本次上傳尚未開放。";
+    slotsHtml='<div class="round-locked'+(st==="closed"?" closed":"")+'">'+esc(msg)+'</div>';
+  }
   else{
     const rec=myFiles[rk]||{};
     slotsHtml=def.slots.map(s=>{
@@ -423,6 +445,7 @@ async function renderRound(){
           '<label class="btn btn-file"><input type="file" accept="'+esc(s.accept)+'" data-act="pick">'+btnLabel+'</label>'+
         '</div></div>';
     }).join("");
+    if(dlStr) slotsHtml+='<p style="font-size:12px;color:var(--muted);margin:10px 0 0">上傳截止：'+esc(dlStr)+'</p>';
   }
   $("#roundHost").innerHTML=
     '<h2 class="round-h">'+esc(def.no)+'　'+esc(def.title)+badge+'</h2>'+
