@@ -128,11 +128,13 @@ a{color:inherit;text-decoration:none}
 }
 
 /* click-feedback */
-#__np{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:99999;opacity:0;transition:width .25s ease,opacity .3s;box-shadow:0 0 8px var(--accent)}
+#__np{position:fixed;top:0;left:0;height:4px;width:0;background:var(--accent);z-index:99999;opacity:0;transition:width .25s ease,opacity .3s;box-shadow:0 0 12px var(--accent),0 0 5px var(--accent)}
 #__np.on{opacity:1}
-.btn-busy{position:relative;color:transparent!important}
-.btn-busy::after{content:"";position:absolute;top:50%;left:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--primary);border-top-color:transparent;animation:__spin .6s linear infinite}
-.btn-primary.btn-busy::after,.btn-danger.btn-busy::after{border-color:#fff;border-top-color:transparent}
+#__toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);background:#10222E;color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;z-index:99999;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.28);display:flex;align-items:center;gap:10px}
+#__toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#__toast .s{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:__spin .6s linear infinite;flex:0 0 auto}
+.btn-loading{position:relative;pointer-events:none;opacity:.7}
+.btn-loading::before{content:"";display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:__spin .6s linear infinite;margin-right:7px;vertical-align:-1px}
 @keyframes __spin{to{transform:rotate(360deg)}}
 </style>
 <link rel="manifest" href="manifest.json">
@@ -304,12 +306,28 @@ load();
 </script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 <div id="__np"></div>
+<div id="__toast"><span class="s"></span><span>處理中…</span></div>
 <script>
-(function(){var bar=document.getElementById("__np"),t;
-function start(){if(!bar)return;bar.classList.add("on");bar.style.width="0";requestAnimationFrame(function(){bar.style.width="75%";});}
-function done(){if(!bar)return;bar.style.width="100%";clearTimeout(t);t=setTimeout(function(){bar.classList.remove("on");bar.style.width="0";},280);}
-window.__busy={start:start,done:done};
-document.addEventListener("click",function(e){var b=e.target.closest("button.btn,a.btn");if(!b||b.disabled||b.classList.contains("btn-busy")||b.hasAttribute("data-nobusy"))return;start();b.classList.add("btn-busy");setTimeout(function(){b.classList.remove("btn-busy");done();},700);},true);
+(function(){
+var bar=document.getElementById("__np"),toast=document.getElementById("__toast");
+var pending=0,lastBtn=null,fb=null,tt=null;
+function npStart(){if(bar){bar.classList.add("on");bar.style.width="0";requestAnimationFrame(function(){bar.style.width="88%";});}}
+function npDone(){if(bar){bar.style.width="100%";setTimeout(function(){bar.classList.remove("on");bar.style.width="0";},260);}}
+function setBtn(b,on){if(!b)return;if(on){if(b.__l)return;b.__l=1;b.classList.add("btn-loading");b.setAttribute("aria-busy","true");}else if(b.__l){b.__l=0;b.classList.remove("btn-loading");b.removeAttribute("aria-busy");}}
+function toastOn(on){clearTimeout(tt);if(on){if(toast)toast.classList.add("on");}else{tt=setTimeout(function(){if(toast)toast.classList.remove("on");setBtn(lastBtn,false);},180);}}
+function begin(){npStart();toastOn(true);}
+function end(){npDone();toastOn(false);}
+document.addEventListener("click",function(e){var b=e.target.closest("button.btn,a.btn");if(!b||b.disabled)return;lastBtn=b;setBtn(b,true);begin();clearTimeout(fb);fb=setTimeout(function(){if(pending===0)end();},600);},true);
+function inc(){if(pending===0){clearTimeout(fb);begin();}pending++;}
+function dec(){pending=Math.max(0,pending-1);if(pending===0)end();}
+function wrap(proto,name){if(!proto)return;var o=proto[name];if(typeof o!=="function"||o.__w)return;proto[name]=function(){var r=o.apply(this,arguments);if(r&&typeof r.then==="function"){inc();r.then(dec,dec);}return r;};proto[name].__w=1;}
+try{if(window.firebase&&firebase.firestore){var F=firebase.firestore;
+wrap(F.DocumentReference&&F.DocumentReference.prototype,"set");
+wrap(F.DocumentReference&&F.DocumentReference.prototype,"update");
+wrap(F.DocumentReference&&F.DocumentReference.prototype,"delete");
+wrap(F.WriteBatch&&F.WriteBatch.prototype,"commit");
+wrap(F.CollectionReference&&F.CollectionReference.prototype,"add");
+}}catch(_){}
 })();
 </script>
 </body>
