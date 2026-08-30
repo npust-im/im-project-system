@@ -570,7 +570,7 @@ function renderCommitteeDocs(){
   const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
   if(!list.length){ host.innerHTML='<p class="empty-note">尚無委員帳號。</p>'; return; }
   const na='<span style="color:var(--muted)">未填</span>';
-  const fileLink=(f,label)=> f&&f.url ? '<a href="'+esc(safeUrl(f.url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+label+'</a>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
+  const fileLink=(f,label,uid)=> hasFile(f) ? '<span class="cdoc-file" data-uid="'+esc(uid)+'" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px;cursor:pointer">'+label+'</span>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
   const acctText=d=>{
     if(d.payType==="bank"){ const b=[d.bankCode,d.bankBranch,d.bankAccount].filter(Boolean).join(" / "); return '銀行　'+(b?esc(b):na); }
     if(d.payType==="post"){ return '郵局　'+(d.postAccount?esc(d.postAccount):na); }
@@ -587,12 +587,14 @@ function renderCommitteeDocs(){
         row("戶籍地址", d.householdAddr?esc(d.householdAddr):na)+
         row("匯款帳戶", acctText(d))+
         '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">'+
-          fileLink(d.passbook,"存簿封面")+
+          fileLink(d.passbook,"存簿封面",c.uid)+
         '</div></div></div>';
   }).join("");
 }
 document.addEventListener("click",e=>{
   if(e.target&&e.target.id==="reloadCDocs"){ loadCommitteeDocs(); }
+  const cf=e.target.closest&&e.target.closest(".cdoc-file");
+  if(cf){ const d=CDOCS[cf.dataset.uid]||{}; const f=d.passbook; if(hasFile(f)){ const t=cf.textContent; cf.style.opacity=".6"; urlOf(f).then(u=>{ if(u){ const su=safeUrl(u); if(su!=="#") window.open(su,"_blank","noopener"); } }).finally(()=>{cf.style.opacity="";}); } }
 });
 
 /* ===== 檔案分頁（學生上傳，資料夾＋下載） ===== */
@@ -609,6 +611,9 @@ async function downloadAs(url,filename){
     setTimeout(()=>URL.revokeObjectURL(u),4000);
   }catch(e){ var su=safeUrl(url); if(su!=="#") window.open(su,"_blank","noopener"); }
 }
+// 由 Storage 路徑即時取得下載連結；不信任使用者存的 url 欄位
+async function urlOf(f){ if(f&&f.path){ try{ return await storage.ref(f.path).getDownloadURL(); }catch(e){ return null; } } return null; }
+function hasFile(f){ return !!(f&&(f.path||f.url)); }
 async function loadFilesTab(){
   try{
     const [gs,gf]=await Promise.all([db.collection("groups").get(), db.collection("groupFiles").get()]);
@@ -625,11 +630,11 @@ function renderFilesTab(){
   host.innerHTML=groups.map(g=>{
     const rec=(FILES_MAP[g.id]||{})[rk]||{};
     const label=folderName(g);
-    const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+    const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return hasFile(f)?{sk,tag,f}:null; }).filter(Boolean);
     if(!present.length){ return '<div class="files-grouprow"><div class="fg-label">'+esc(label)+'</div><span class="file-none">尚無上傳</span></div>'; }
     if(single){
       const f=present[0].f; const dl=safeName(label)+extOf(f.name||f.path||"");
-      return '<div class="files-grouprow"><span class="file-single" data-url="'+esc(f.url)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span></div>';
+      return '<div class="files-grouprow"><span class="file-single" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" data-slot="'+esc(present[0].sk)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span></div>';
     }
     return '<div class="folder" data-gid="'+esc(g.id)+'" data-rk="'+rk+'">📁 <span class="flabel">'+esc(label)+'</span><span class="dlall">下載整個資料夾 ⬇</span><span class="fmsg" data-fmsg></span></div>';
   }).join("");
@@ -641,14 +646,14 @@ async function zipFolder(el, getGroup, getRec){
   const gid=el.dataset.gid, rk=el.dataset.rk;
   const g=getGroup(gid); if(!g) return;
   const rec=getRec(gid,rk); const slots=FILE_ROUND_SLOTS[rk];
-  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return hasFile(f)?{tag,f}:null; }).filter(Boolean);
   const msg=el.querySelector("[data-fmsg]");
   if(!present.length){ if(msg) msg.textContent="（無檔案）"; return; }
   el.dataset.busy="1"; if(msg) msg.textContent="打包中…";
   try{
     const label=folderName(g);
     const zip=new JSZip(); const dir=zip.folder(safeName(label));
-    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
+    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const url=await urlOf(f); if(!url) throw new Error("nourl"); const r=await fetch(url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
     blobs.forEach(({tag,ext,blob})=>dir.file(safeName(label)+"--"+tag+ext, blob));
     const blob=await zip.generateAsync({type:"blob"});
     const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=safeName(label)+".zip"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
@@ -656,9 +661,16 @@ async function zipFolder(el, getGroup, getRec){
   }catch(err){ if(msg) msg.textContent="下載失敗（可能需先設定 CORS）"; }
   finally{ delete el.dataset.busy; }
 }
+async function downloadSingleFromMap(el, getRec){
+  const gid=el.dataset.gid, rk=el.dataset.rk, slot=el.dataset.slot;
+  const f=(getRec(gid,rk)||{})[slot]; if(!f)return;
+  const t=el.textContent; el.style.opacity=".6"; el.textContent="下載中…";
+  try{ const url=await urlOf(f); if(url) await downloadAs(url, el.dataset.dl); }
+  finally{ el.textContent=t; el.style.opacity=""; }
+}
 $("#filesHost").addEventListener("click",e=>{
   const single=e.target.closest(".file-single");
-  if(single){ const t=single.textContent; single.style.opacity=".6"; single.textContent="下載中…"; Promise.resolve(downloadAs(single.dataset.url, single.dataset.dl)).finally(()=>{ single.textContent=t; single.style.opacity=""; }); return; }
+  if(single){ downloadSingleFromMap(single, (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); return; }
   const folder=e.target.closest(".folder");
   if(folder){ zipFolder(folder, gid=>(FILES_GROUPS||[]).find(x=>x.id===gid), (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); }
 });
@@ -759,7 +771,7 @@ $("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-i
 $("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 登錄與上傳 */
-$("#saveUploads").onclick=async()=>{try{await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||""},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveUploads").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||"",round1DeadlineMs:ms($("#fForm1Deadline").value),round2DeadlineMs:ms($("#fForm2Deadline").value),round3DeadlineMs:ms($("#fForm3Deadline").value)},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 專題規定／說明文件（三次分開，上傳到 Storage，內嵌於學生入口對應分頁） */
 function renderRulesCurrent(upd){
@@ -875,8 +887,9 @@ function filesBlock(gid){
   let any=false;
   const rows=rounds.map(([rk,label,slots])=>{
     const rec=gf[rk]||{};
-    const items=slots.map(([sk,sl])=>{ const f=rec[sk]; if(!f||!f.url) return ""; any=true;
-      return '<a href="'+esc(safeUrl(f.url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+esc(sl)+'：'+esc(f.name||"檔案")+'</a>'; }).filter(Boolean).join("");
+    const items=slots.map(([sk,sl])=>{ const f=rec[sk]; if(!hasFile(f)) return ""; any=true;
+      const dl=safeName(folderName(GROUPMAP[gid]||{}))+"--"+sl+extOf(f.name||f.path||"");
+      return '<span class="acc-filelink" data-gid="'+esc(gid)+'" data-rk="'+esc(rk)+'" data-slot="'+esc(sk)+'" data-dl="'+esc(dl)+'" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px;cursor:pointer">'+esc(sl)+'：'+esc(f.name||"檔案")+'</span>'; }).filter(Boolean).join("");
     return items?'<div style="margin:3px 0"><span style="display:inline-block;min-width:52px;font-size:12px;color:var(--muted)">'+label+'</span>'+items+'</div>':"";
   }).filter(Boolean).join("");
   return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)"><div style="font-size:13px;color:var(--muted);margin-bottom:4px">上傳檔案</div>'+(any?rows:'<span style="font-size:13px;color:var(--muted)">尚無上傳檔案。</span>')+'</div>';
@@ -976,6 +989,8 @@ $("#forgotPw").onclick=(e)=>{
   auth.sendPasswordResetEmail(em).then(()=>set("重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",true)).catch(err=>{const c=err.code||"";set(c==="auth/user-not-found"?"此信箱尚未註冊為系統帳號，請確認或洽系辦。":c==="auth/invalid-email"?"電子郵件格式不正確。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":c==="auth/missing-email"?"請輸入電子郵件。":"寄送失敗："+(c||err.message),false);});
 };
 $("#groupsHost").addEventListener("click",async e=>{
+  const fl=e.target.closest(".acc-filelink");
+  if(fl){ downloadSingleFromMap(fl,(gid,rk)=>(GFILES[gid]||{})[rk]||{}); return; }
   const head=e.target.closest(".acc-head");
   if(head){ head.parentElement.classList.toggle("open"); return; }
   const item=e.target.closest(".acc-item"); if(!item)return; const gid=item.dataset.id;

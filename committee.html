@@ -247,15 +247,21 @@ async function downloadAs(url,filename){
     setTimeout(()=>URL.revokeObjectURL(u),4000);
   }catch(e){ var su=safeUrl(url); if(su!=="#") window.open(su,"_blank","noopener"); }
 }
+// 由 Storage 路徑即時取得下載連結；不信任學生存的 url 欄位
+async function urlOf(f){
+  if(f && f.path){ try{ return await storage.ref(f.path).getDownloadURL(); }catch(e){ return null; } }
+  return null;
+}
+function hasFile(f){ return !!(f && (f.path || f.url)); }
 function filesWidget(g,rk){
   const rec=(gfilesMap[g.id]||{})[rk]||{};
   const label=folderName(g);
   const slots=FR_SLOTS[rk]||[];
-  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return hasFile(f)?{tag,f}:null; }).filter(Boolean);
   if(!present.length) return '<span class="nofile">未上傳</span>';
   if(rk==="r2"){
     const f=present[0].f; const dl=safeName(label)+(String(f.name||f.path||"").toLowerCase().match(/\.[a-z0-9]+$/)||[""])[0];
-    return '<span class="file-single" data-url="'+esc(f.url)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span>';
+    return '<span class="file-single" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" data-slot="slides" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span>';
   }
   return '<div class="folder" data-gid="'+esc(g.id)+'" data-rk="'+rk+'">📁 <span class="flabel">'+esc(label)+'</span><span class="dlall">下載整個資料夾 ⬇</span><span class="fmsg" data-fmsg></span></div>';
 }
@@ -264,20 +270,27 @@ async function zipFolder(el){
   const gid=el.dataset.gid, rk=el.dataset.rk;
   const g=(allGroups||[]).find(x=>x.id===gid); if(!g) return;
   const rec=(gfilesMap[gid]||{})[rk]||{}; const slots=FR_SLOTS[rk]||[];
-  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return f&&f.url?{tag,f}:null; }).filter(Boolean);
+  const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return hasFile(f)?{tag,f}:null; }).filter(Boolean);
   const msg=el.querySelector("[data-fmsg]");
   if(!present.length){ if(msg) msg.textContent="（無檔案）"; return; }
   el.dataset.busy="1"; if(msg) msg.textContent="打包中…";
   try{
     const label=folderName(g);
     const zip=new JSZip(); const dir=zip.folder(safeName(label));
-    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const r=await fetch(f.url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
+    const blobs=await Promise.all(present.map(async ({tag,f})=>{ const url=await urlOf(f); if(!url) throw new Error("nourl"); const r=await fetch(url); if(!r.ok) throw new Error("fetch"); return {tag, ext:extOf(f.name||f.path||""), blob:await r.blob()}; }));
     blobs.forEach(({tag,ext,blob})=>dir.file(safeName(label)+"--"+tag+ext, blob));
     const blob=await zip.generateAsync({type:"blob"});
     const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=safeName(label)+".zip"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
     if(msg) msg.textContent="";
   }catch(err){ if(msg) msg.textContent="下載失敗（可能需先設定 CORS）"; }
   finally{ delete el.dataset.busy; }
+}
+async function downloadSingle(el){
+  const gid=el.dataset.gid, rk=el.dataset.rk, slot=el.dataset.slot;
+  const f=((gfilesMap[gid]||{})[rk]||{})[slot]; if(!f){ return; }
+  const t=el.textContent; el.style.opacity=".6"; el.textContent="下載中…";
+  try{ const url=await urlOf(f); if(url) await downloadAs(url, el.dataset.dl); }
+  finally{ el.textContent=t; el.style.opacity=""; }
 }
 function subscribeLive(){
   if(subscribeLive.done)return; subscribeLive.done=true;
@@ -436,7 +449,7 @@ $("#docsArea").addEventListener("click",async e=>{
 });
 $("#listHost").addEventListener("click",e=>{
   const single=e.target.closest(".file-single");
-  if(single){ const t=single.textContent; single.style.opacity=".6"; single.textContent="下載中…"; Promise.resolve(downloadAs(single.dataset.url, single.dataset.dl)).finally(()=>{ single.textContent=t; single.style.opacity=""; }); return; }
+  if(single){ downloadSingle(single); return; }
   const folder=e.target.closest(".folder");
   if(folder){ zipFolder(folder); }
 });
