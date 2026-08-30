@@ -226,6 +226,17 @@ table.stab .na{color:#b9c2c8}
     </section>
 
     <section class="panel">
+      <div class="panel-head"><h2>修改管理員密碼</h2><span class="hint">變更目前登入之管理員帳號密碼</span></div>
+      <div class="grid2">
+        <div><label>目前密碼</label><input id="cpw" type="password" autocomplete="current-password"></div>
+        <div></div>
+        <div><label>新密碼（至少 6 碼）</label><input id="npw1" type="password" autocomplete="new-password"></div>
+        <div><label>再次輸入新密碼</label><input id="npw2" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="changePw">更新密碼</button><span class="msg" id="pwMsg"></span></div>
+    </section>
+
+    <section class="panel">
       <div class="panel-head"><h2>開放評分設定</h2><span class="hint">避免分數填錯學期或階段</span></div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 8px">關閉後，該次評分對教授／委員仍可檢視但無法儲存。請在對應時間開放。</p>
       <div class="grid2">
@@ -557,6 +568,23 @@ async function loadAll(){
 
 /* 網站設定 */
 $("#saveSite").onclick=async()=>{try{await db.doc("settings/site").set({school:$("#fSchool").value.trim(),academicYear:$("#fYear").value.trim()},{merge:true});flash("siteMsg","已儲存。");}catch(e){flash("siteMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#changePw").onclick=async()=>{
+  const cur=$("#cpw").value, a=$("#npw1").value, b=$("#npw2").value;
+  if(!cur){ flash("pwMsg","請輸入目前密碼。",false); return; }
+  if(a.length<6){ flash("pwMsg","新密碼至少 6 碼。",false); return; }
+  if(a!==b){ flash("pwMsg","兩次新密碼不一致。",false); return; }
+  const btn=$("#changePw"); btn.disabled=true;
+  try{
+    const cred=firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, cur);
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(a);
+    $("#cpw").value=""; $("#npw1").value=""; $("#npw2").value="";
+    flash("pwMsg","密碼已更新。下次登入請使用新密碼。",true);
+  }catch(e){
+    const c=e.code||"";
+    flash("pwMsg", c==="auth/wrong-password"?"目前密碼不正確。":c==="auth/weak-password"?"新密碼太弱（至少 6 碼）。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":"更新失敗："+(c||e.message), false);
+  }finally{ btn.disabled=false; }
+};
 $("#saveScoring").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||"",c1DeadlineMs:ms($("#c1Deadline").value),c2DeadlineMs:ms($("#c2Deadline").value),locked:$("#scLocked").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
 /* 委員個人資料（匯款用） */
 let CDOCS={};

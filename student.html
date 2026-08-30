@@ -237,12 +237,12 @@ main{padding:28px 0 60px}
     <div class="advisor-box" id="advisorBox"></div>
   </section>
 
-  <div class="tabs" id="upTabs">
+  <div class="tabs hidden" id="upTabs">
     <div class="tab on" data-r="r1">第一次上傳<span class="tchip" data-chip="r1"></span></div>
     <div class="tab" data-r="r2">第二次上傳<span class="tchip" data-chip="r2"></span></div>
     <div class="tab" data-r="r3">第三次上傳<span class="tchip" data-chip="r3"></span></div>
   </div>
-  <section class="panel" style="border-top-left-radius:0;border-top-right-radius:0">
+  <section class="panel hidden" id="uploadSection" style="border-top-left-radius:0;border-top-right-radius:0">
     <div id="roundHost"></div>
   </section>
 
@@ -265,7 +265,7 @@ const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
 try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(_){}
 const ROSTER_IDS=["leaderSid","leaderName","m1Sid","m1Name","m2Sid","m2Name","m3Sid","m3Name"];
 let myFiles={};  // groupFiles/{uid} 的內容：{r1:{report,slides,extra}, r2:{slides}, r3:{report,slides}}
-let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1", myCohort="current";
+let myGroupNo="", mySubmitted={}, myLeaderSid="", myLeaderName="", curR="r1", myCohort="current", hasGroup=false;
 
 $("#tabLogin").onclick=()=>{$("#tabLogin").classList.add("on");$("#tabReg").classList.remove("on");$("#loginForm").classList.remove("hidden");$("#regForm").classList.add("hidden");};
 $("#tabReg").onclick=()=>{$("#tabReg").classList.add("on");$("#tabLogin").classList.remove("on");$("#regForm").classList.remove("hidden");$("#loginForm").classList.add("hidden");};
@@ -325,7 +325,7 @@ function setRosterDisabled(locked){
 async function loadGroup(user){
   const doc=await db.doc("groups/"+user.uid).get();
   if(doc.exists){
-    const g=doc.data(); myGroupNo=g.groupNo||""; mySubmitted=g.submitted||{};
+    const g=doc.data(); hasGroup=true; myGroupNo=g.groupNo||""; mySubmitted=g.submitted||{};
     myLeaderSid=g.leaderSid||""; myLeaderName=g.leaderName||""; myCohort=g.cohort==="next"?"next":"current";
     $("#leaderSid").value=g.leaderSid||""; $("#leaderName").value=g.leaderName||"";
     const m=g.members||[];
@@ -335,7 +335,7 @@ async function loadGroup(user){
     setRosterDisabled(true);
     renderAdvisor(g.advisorName||"");
   }else{
-    myGroupNo=""; mySubmitted={}; myLeaderSid=""; myLeaderName=""; myCohort="current"; setRosterDisabled(false); renderAdvisor("");
+    hasGroup=false; myGroupNo=""; mySubmitted={}; myLeaderSid=""; myLeaderName=""; myCohort="current"; setRosterDisabled(false); renderAdvisor("");
   }
 }
 $("#saveGroup").onclick=async()=>{
@@ -358,6 +358,7 @@ $("#saveGroup").onclick=async()=>{
       leaderUid:user.uid, leaderSid:v("leaderSid"), leaderName:v("leaderName"),
       members:members, cohort:myCohort, createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
+    hasGroup=true;
     setRosterDisabled(true);
     flash("groupMsg","已送出。",true);
     await renderRound();
@@ -413,12 +414,15 @@ function rulesEmbed(url,type){
 }
 async function renderRound(){
   const uid=auth.currentUser&&auth.currentUser.uid; if(!uid){ return; }
-  if(myCohort==="next"){
+  // 初始（尚未送出分組名單）或非應屆競賽組別 → 隱藏整個上傳區塊，只保留分組名單與指導老師
+  if(!hasGroup || myCohort==="next"){
     $("#upTabs").classList.add("hidden");
-    $("#roundHost").innerHTML='<div class="round-locked">您目前為下一屆分組登錄階段，僅需完成分組名單與洽詢指導老師。檔案上傳將於升上大四上（競賽階段）時開放。</div>';
+    $("#uploadSection").classList.add("hidden");
+    $("#roundHost").innerHTML="";
     return;
   }
   $("#upTabs").classList.remove("hidden");
+  $("#uploadSection").classList.remove("hidden");
   let up={}, fin={published:false,groups:[]};
   try{ const d=await db.doc("settings/uploads").get(); if(d.exists) up=d.data(); }catch(e){}
   try{ const d=await db.doc("settings/finalists").get(); if(d.exists) fin=d.data(); }catch(e){}
