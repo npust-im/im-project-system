@@ -160,6 +160,7 @@ main{padding:24px 0 60px}
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function safeUrl(u){u=String(u==null?"":u);return /^https?:\/\//i.test(u)?u:"#";}
 if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
 const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
 try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(_){}
@@ -244,7 +245,7 @@ async function downloadAs(url,filename){
     const b=await r.blob(); const u=URL.createObjectURL(b);
     const a=document.createElement("a"); a.href=u; a.download=filename||"file"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(u),4000);
-  }catch(e){ window.open(url,"_blank","noopener"); }
+  }catch(e){ var su=safeUrl(url); if(su!=="#") window.open(su,"_blank","noopener"); }
 }
 function filesWidget(g,rk){
   const rec=(gfilesMap[g.id]||{})[rk]||{};
@@ -350,7 +351,7 @@ function captureDocInputs(){
 function renderDocs(){
   const d=myDocs||{};
   const pb=d.passbook;
-  const pbState = pb&&pb.url?'<a class="fname" href="'+esc(pb.url)+'" target="_blank" rel="noopener">'+esc(pb.name||"檔案")+'</a>':'<span class="nofile">尚未上傳</span>';
+  const pbState = pb&&pb.url?'<a class="fname" href="'+esc(safeUrl(pb.url))+'" target="_blank" rel="noopener">'+esc(pb.name||"檔案")+'</a>':'<span class="nofile">尚未上傳</span>';
   const pay=d.payType||"post";
   $("#docsArea").innerHTML=
     '<div class="notice" style="background:#eef1f3;color:var(--muted)">僅供系辦匯款作業，只有本人與系辦可見。存簿封面：JPG／PNG／PDF，單檔 50MB。</div>'+
@@ -408,7 +409,7 @@ $("#docsArea").addEventListener("change",async e=>{
     if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
     // 保留已輸入但尚未儲存的文字欄，並就地更新存簿列（不重繪整個表單）
     captureDocInputs();
-    stateEl.innerHTML='<a class="fname" href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(file.name)+'</a> <span style="color:var(--accent);font-size:12px">已上傳 ✓</span>';
+    stateEl.innerHTML='<a class="fname" href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener">'+esc(file.name)+'</a> <span style="color:var(--accent);font-size:12px">已上傳 ✓</span>';
     const lbl=inp.closest("label"); if(lbl && lbl.lastChild && lbl.lastChild.nodeType===3){ lbl.lastChild.nodeValue="重新上傳"; }
   }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
   finally{ inp.value=""; }

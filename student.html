@@ -256,6 +256,7 @@ main{padding:28px 0 60px}
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function safeUrl(u){u=String(u==null?"":u);return /^https?:\/\//i.test(u)?u:"#";}
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
 function flash(id,msg,ok=true){const e=$("#"+id);e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(ok&&msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2600);}
 
@@ -406,9 +407,9 @@ function roundDone(rk){
 }
 function rulesEmbed(url,type){
   if(!url) return '<p class="rules-none">系辦尚未上傳本次規定文件。</p>';
-  if(type==="image") return '<div class="rules-embed"><img src="'+esc(url)+'" alt="專題規定"></div>';
-  return '<div class="rules-embed"><iframe src="'+esc(url)+'#toolbar=1" title="專題規定"></iframe></div>'+
-    '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">若下方無法顯示，可 <a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:var(--primary)">另開新分頁檢視</a>。</p>';
+  if(type==="image") return '<div class="rules-embed"><img src="'+esc(safeUrl(url))+'" alt="專題規定"></div>';
+  return '<div class="rules-embed"><iframe src="'+esc(safeUrl(url))+'#toolbar=1" title="專題規定"></iframe></div>'+
+    '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">若下方無法顯示，可 <a href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener" style="color:var(--primary)">另開新分頁檢視</a>。</p>';
 }
 async function renderRound(){
   const uid=auth.currentUser&&auth.currentUser.uid; if(!uid){ return; }
@@ -457,7 +458,7 @@ async function renderRound(){
     slotsHtml=def.slots.map(s=>{
       const f=rec[s.key];
       const stateHtml = f&&f.url
-        ? '<a class="fname" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>'
+        ? '<a class="fname" href="'+esc(safeUrl(f.url))+'" target="_blank" rel="noopener">'+esc(f.name||"檔案")+'</a>'
         : '<span class="fnone">'+(s.required?'尚未上傳':'（未上傳）')+'</span>';
       const btnLabel = f&&f.url ? '重新上傳' : '上傳';
       return '<div class="slot" data-round="'+rk+'" data-slot="'+esc(s.key)+'">'+

@@ -470,6 +470,7 @@ table.stab .na{color:#b9c2c8}
 const $=(s,el=document)=>el.querySelector(s);
 const $$=(s,el=document)=>[...el.querySelectorAll(s)];
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function safeUrl(u){u=String(u==null?"":u);return /^https?:\/\//i.test(u)?u:"#";}
 const today=()=>new Date().toISOString().slice(0,10);
 function flash(id,msg,ok=true){const e=$("#"+id);if(!e)return;e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2800);}
 
@@ -569,7 +570,7 @@ function renderCommitteeDocs(){
   const list=(COMMITTEE||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
   if(!list.length){ host.innerHTML='<p class="empty-note">尚無委員帳號。</p>'; return; }
   const na='<span style="color:var(--muted)">未填</span>';
-  const fileLink=(f,label)=> f&&f.url ? '<a href="'+esc(f.url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+label+'</a>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
+  const fileLink=(f,label)=> f&&f.url ? '<a href="'+esc(safeUrl(f.url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+label+'</a>' : '<span style="color:var(--muted);margin-right:14px;font-size:13px">'+label+'：未上傳</span>';
   const acctText=d=>{
     if(d.payType==="bank"){ const b=[d.bankCode,d.bankBranch,d.bankAccount].filter(Boolean).join(" / "); return '銀行　'+(b?esc(b):na); }
     if(d.payType==="post"){ return '郵局　'+(d.postAccount?esc(d.postAccount):na); }
@@ -606,7 +607,7 @@ async function downloadAs(url,filename){
     const b=await r.blob(); const u=URL.createObjectURL(b);
     const a=document.createElement("a"); a.href=u; a.download=filename||"file"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(u),4000);
-  }catch(e){ window.open(url,"_blank","noopener"); }
+  }catch(e){ var su=safeUrl(url); if(su!=="#") window.open(su,"_blank","noopener"); }
 }
 async function loadFilesTab(){
   try{
@@ -767,7 +768,7 @@ function renderRulesCurrent(upd){
     const host=$("#rulesCurrent"+n); if(!host) return;
     const url=upd["rules"+n+"Url"], name=upd["rules"+n+"Name"], type=upd["rules"+n+"Type"];
     host.innerHTML = url
-      ? '目前文件：<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(name||"檢視")+'</a> <span style="color:var(--muted);font-size:12px">（'+(type==="image"?"圖片":"PDF")+'）</span>'
+      ? '目前文件：<a href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(name||"檢視")+'</a> <span style="color:var(--muted);font-size:12px">（'+(type==="image"?"圖片":"PDF")+'）</span>'
       : '<span style="color:var(--muted)">尚未上傳。</span>';
   });
 }
@@ -789,7 +790,7 @@ $("#adminView").addEventListener("change",async e=>{
     const patch={}; patch["rules"+n+"Url"]=url; patch["rules"+n+"Path"]=path; patch["rules"+n+"Name"]=file.name; patch["rules"+n+"Type"]=isPdf?"pdf":"image";
     await db.doc("settings/uploads").set(patch,{merge:true});
     if(oldPath&&oldPath!==path){ try{ await storage.ref(oldPath).delete(); }catch(_){}}
-    const cur=$("#rulesCurrent"+n); if(cur) cur.innerHTML='目前文件：<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(file.name)+'</a> <span style="color:var(--muted);font-size:12px">（'+(isPdf?"PDF":"圖片")+'）</span>';
+    const cur=$("#rulesCurrent"+n); if(cur) cur.innerHTML='目前文件：<a href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(file.name)+'</a> <span style="color:var(--muted);font-size:12px">（'+(isPdf?"PDF":"圖片")+'）</span>';
     flash(msgId,"已上傳。");
   }catch(err){ flash(msgId,"上傳失敗："+(err.code||err.message),false); }
   finally{ inp.value=""; }
@@ -875,7 +876,7 @@ function filesBlock(gid){
   const rows=rounds.map(([rk,label,slots])=>{
     const rec=gf[rk]||{};
     const items=slots.map(([sk,sl])=>{ const f=rec[sk]; if(!f||!f.url) return ""; any=true;
-      return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+esc(sl)+'：'+esc(f.name||"檔案")+'</a>'; }).filter(Boolean).join("");
+      return '<a href="'+esc(safeUrl(f.url))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;margin-right:14px;font-size:13px">'+esc(sl)+'：'+esc(f.name||"檔案")+'</a>'; }).filter(Boolean).join("");
     return items?'<div style="margin:3px 0"><span style="display:inline-block;min-width:52px;font-size:12px;color:var(--muted)">'+label+'</span>'+items+'</div>':"";
   }).filter(Boolean).join("");
   return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)"><div style="font-size:13px;color:var(--muted);margin-bottom:4px">上傳檔案</div>'+(any?rows:'<span style="font-size:13px;color:var(--muted)">尚無上傳檔案。</span>')+'</div>';
