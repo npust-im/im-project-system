@@ -28,7 +28,7 @@ a{color:inherit;text-decoration:none}
 .site-header{position:sticky;top:0;z-index:20;background:rgba(238,242,245,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1040px;margin:0 auto;padding:14px 24px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand-mark{flex:none;width:40px;height:40px;border-radius:10px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:.5px}
+.brand-mark{flex:none;width:44px;height:44px;object-fit:contain;display:block;background:transparent}
 .brand-text{display:flex;flex-direction:column;min-width:0}
 .brand-dept{font-size:12px;color:var(--muted);letter-spacing:.04em}
 .brand-title{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px;line-height:1.2}
@@ -151,7 +151,7 @@ a{color:inherit;text-decoration:none}
 <header class="site-header">
   <div class="header-inner">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">IM</div>
+      <img class="brand-mark" src="logo.svg" alt="工業管理系系徽">
       <div class="brand-text">
         <span class="brand-dept" id="brandDept">工業管理系</span>
         <span class="brand-title">實務專題系統</span>

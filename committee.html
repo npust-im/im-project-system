@@ -328,7 +328,7 @@ function render(){
     return '<div class="grow" data-id="'+esc(g.id)+'">'+
       '<span class="gno mono">'+esc(g.groupNo||"未編號")+'</span>'+
       '<span class="gtitle">'+esc(g.topic||"（未填題目）")+'</span>'+
-      '<span class="gscore"><input type="number" min="0" max="100" value="'+v+'" placeholder="0–100" '+(open?"":"disabled")+'><span class="unit">分</span></span>'+
+      '<span class="gscore"><input type="number" min="0" max="100" step="1" inputmode="numeric" value="'+v+'" placeholder="0–100 整數" '+(open?"":"disabled")+'><span class="unit">分</span></span>'+
       '<button class="btn btn-primary btn-sm" data-act="save" '+(open?"":"disabled")+'>儲存</button>'+
       '<span class="rmsg msg" data-msg></span>'+
       '<div class="gfiles">'+filesWidget(g,rk)+'</div>'+
@@ -446,7 +446,7 @@ $("#listHost").addEventListener("click",async e=>{
   const raw=$("input",row).value.trim();
   if(raw===""){ msg.textContent="請輸入分數。"; msg.className="rmsg msg err"; return; }
   const n=Number(raw);
-  if(!Number.isFinite(n)||n<0||n>100){ msg.textContent="0–100"; msg.className="rmsg msg err"; return; }
+  if(!Number.isInteger(n)||n<0||n>100){ msg.textContent="需 0–100 整數"; msg.className="rmsg msg err"; return; }
   b.disabled=true;
   try{
     const id=stage+"__"+gid+"__"+MY_UID;

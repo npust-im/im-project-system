@@ -1113,15 +1113,16 @@ function committeeRowsRaw(stage, modeOverride){
       advisor:g.advisorName||"",topic:g.topic||""};
     COMMITTEE.forEach(c=>{ row["raw_"+c.uid]=""; row["z_"+c.uid]=""; row["nrm_"+c.uid]=""; });
     let rawSum=0,rawN=0,normSum=0,normN=0;
+    const r4=x=>Math.round(x*10000)/10000;
     Object.entries(gidRaw[g.id]).forEach(([uid,raw])=>{
       const st=stat[uid]; if(!st) return;
       const z=(st.sd>0)?((raw-st.mean)/st.sd):0;
       const nv=(st.sd>0)?(75+5*z):75;
-      row["raw_"+uid]=raw; row["z_"+uid]=Math.round(z*10000)/10000; row["nrm_"+uid]=Math.round(nv*100)/100;
+      row["raw_"+uid]=raw; row["z_"+uid]=r4(z); row["nrm_"+uid]=r4(nv);
       rawSum+=raw; rawN++; normSum+=nv; normN++;
     });
-    row.rawAvg = rawN?Math.round(rawSum/rawN*100)/100 : "";
-    row.normAvg = normN?Math.round(normSum/normN*100)/100 : "";
+    row.rawAvg = rawN?r4(rawSum/rawN) : "";
+    row.normAvg = normN?r4(normSum/normN) : "";
     row._n=normN; row._normFull=normN?normSum/normN:-Infinity;
     return row;
   });
@@ -1146,11 +1147,11 @@ function committeeCols(){
   ];
   COMMITTEE.forEach((c,i)=>{
     cols.push({key:"raw_"+c.uid,label:c.name+"·原始",kind:"num",groupStart:true,sortable:true});
-    cols.push({key:"z_"+c.uid,label:c.name+"·標準化",kind:"num"});
-    cols.push({key:"nrm_"+c.uid,label:c.name+"·常態化",kind:"num"});
+    cols.push({key:"z_"+c.uid,label:c.name+"·標準化",kind:"num",dp:4});
+    cols.push({key:"nrm_"+c.uid,label:c.name+"·常態化",kind:"num",dp:4});
   });
-  cols.push({key:"rawAvg",label:"原始平均",kind:"num",groupStart:true,sortable:true});
-  cols.push({key:"normAvg",label:"常態化平均",kind:"num",keyCol:true,sortable:true});
+  cols.push({key:"rawAvg",label:"原始平均",kind:"num",groupStart:true,sortable:true,dp:4});
+  cols.push({key:"normAvg",label:"常態化平均",kind:"num",keyCol:true,sortable:true,dp:4});
   cols.push({key:"rank",label:"名次",kind:"num",keyCol:true,sortable:true});
   return cols;
 }
@@ -1217,7 +1218,7 @@ function drawScore(hostId){
       const w=STICKY_W[c.key]||90;
       const style=c.sticky?('left:'+offsets[c.key]+'px;min-width:'+w+'px;max-width:'+w+'px'):'';
       const v=r[c.key];
-      const inner=(c.kind==='num')?((v===0||v)?esc(v):'<span class="na">–</span>'):esc(v);
+      const inner=(c.kind==='num')?((v===0||v)?esc((c.dp!=null&&typeof v==='number')?v.toFixed(c.dp):v):'<span class="na">–</span>'):esc(v);
       const title=((c.sticky||c.kind==='ellip')&&v)?(' title="'+esc(v)+'"'):'';
       return '<td class="'+cl.join(' ')+'"'+(style?' style="'+style+'"':'')+title+'>'+inner+'</td>';
     }).join("");
