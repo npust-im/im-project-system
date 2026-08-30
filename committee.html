@@ -215,8 +215,8 @@ function setTab(which){
   $("#scoreArea").classList.toggle("hidden",isDocs);
   $("#docsArea").classList.toggle("hidden",!isDocs);
 }
-$("#tab1").onclick=()=>{stage=1;setTab("s1");render();};
-$("#tab2").onclick=()=>{stage=2;setTab("s2");render();};
+$("#tab1").onclick=()=>{if(view==="docs")captureDocInputs();stage=1;setTab("s1");render();};
+$("#tab2").onclick=()=>{if(view==="docs")captureDocInputs();stage=2;setTab("s2");render();};
 $("#tab3").onclick=()=>{setTab("docs");renderDocs();};
 function reRender(){
   if(view==="docs"){ return; }
@@ -335,6 +335,16 @@ function render(){
 }
 
 /* ===== 個人資料（匯款用） ===== */
+function captureDocInputs(){
+  const g=id=>{const el=document.getElementById(id);return el?el.value:undefined;};
+  if(document.getElementById("dId")) myDocs.idNumber=g("dId");
+  if(document.getElementById("dAddr")) myDocs.householdAddr=g("dAddr");
+  const pe=document.querySelector('input[name="payType"]:checked'); if(pe) myDocs.payType=pe.value;
+  if(document.getElementById("dPost")) myDocs.postAccount=g("dPost");
+  if(document.getElementById("dBankCode")) myDocs.bankCode=g("dBankCode");
+  if(document.getElementById("dBranch")) myDocs.bankBranch=g("dBranch");
+  if(document.getElementById("dAcct")) myDocs.bankAccount=g("dAcct");
+}
 function renderDocs(){
   const d=myDocs||{};
   const pb=d.passbook;
@@ -394,8 +404,10 @@ $("#docsArea").addEventListener("change",async e=>{
     myDocs[key]={name:file.name,path:path,url:url,size:file.size,at:Date.now()};
     await db.doc("committeeDocs/"+MY_UID).set({[key]:myDocs[key],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
     if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
-    prog.textContent="已上傳 ✓";
-    setTimeout(renderDocs,700);
+    // 保留已輸入但尚未儲存的文字欄，並就地更新存簿列（不重繪整個表單）
+    captureDocInputs();
+    stateEl.innerHTML='<a class="fname" href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(file.name)+'</a> <span style="color:var(--accent);font-size:12px">已上傳 ✓</span>';
+    const lbl=inp.closest("label"); if(lbl && lbl.lastChild && lbl.lastChild.nodeType===3){ lbl.lastChild.nodeValue="重新上傳"; }
   }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
   finally{ inp.value=""; }
 });
