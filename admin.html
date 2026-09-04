@@ -203,6 +203,18 @@ table.stab .na{color:#b9c2c8}
 #toTop{position:fixed;right:18px;bottom:20px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--primary);box-shadow:0 4px 14px rgba(16,34,46,.18);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:22px;line-height:1;z-index:60;padding:0}
 #toTop.show{display:flex}
 #toTop:hover{border-color:var(--primary)}
+
+/* form-control overflow hardening (RWD) */
+input,select,textarea{max-width:100%;min-width:0}
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local],input[type=number]{width:100%}
+  .score-controls>input,.score-controls>select{flex:1 1 100%}
+  .setrow .dl{flex:1 1 100%}
+  .dl input,.dl-row input{width:100%}
+  .dl-row{flex-wrap:wrap;padding-left:0}
+  .grid3{grid-template-columns:1fr}
+  .stu{grid-template-columns:1fr 1fr}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
