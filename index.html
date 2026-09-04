@@ -74,6 +74,10 @@ a{color:inherit;text-decoration:none}
 .ann-body h3{margin:0 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
 .pin-flag{font-size:11px;font-weight:500;color:var(--gold);background:var(--gold-soft);padding:1px 8px;border-radius:999px}
 .ann-body p{margin:0;font-size:14px;color:var(--muted);white-space:pre-wrap}
+.ann-embed{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafcfd;max-width:640px}
+.ann-embed img{width:100%;display:block}
+.ann-embed iframe{width:100%;height:460px;border:0;display:block}
+.ann-dl{font-size:13px;color:var(--primary);text-decoration:underline}
 
 .finalists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-top:3px solid var(--gold)}
@@ -247,7 +251,20 @@ function renderAnnouncements(){
   host.innerHTML=list.map(a=>'<article class="ann '+(a.pinned?'pinned':'')+'">'+
     '<div class="ann-date mono">'+esc(a.date)+'</div>'+
     '<div class="ann-body"><h3>'+esc(a.title)+(a.pinned?'<span class="pin-flag">置頂</span>':'')+'</h3>'+
-    '<p>'+esc(a.body)+'</p></div></article>').join("");
+    (a.body?'<p>'+esc(a.body)+'</p>':'')+annFile(a)+'</div></article>').join("");
+}
+function safeUrl(u){u=String(u==null?"":u);return /^https?:\/\//i.test(u)?u:"#";}
+function annFile(a){
+  if(!a||!a.fileUrl) return "";
+  const url=safeUrl(a.fileUrl); if(url==="#") return "";
+  const dl='<div style="margin-top:8px"><a class="ann-dl" href="'+esc(url)+'" target="_blank" rel="noopener" download>⬇ 下載附件'+(a.fileName?'（'+esc(a.fileName)+'）':'')+'</a></div>';
+  if(a.fileType==="image"){
+    return '<div class="ann-embed"><img src="'+esc(url)+'" alt="'+esc(a.fileName||"公告附圖")+'"></div>'+dl;
+  }
+  if(a.fileType==="pdf"){
+    return '<div class="ann-embed"><iframe src="'+esc(url)+'#toolbar=1" title="'+esc(a.fileName||"公告附件")+'"></iframe></div>'+dl;
+  }
+  return dl;
 }
 function renderAgenda(){
   const sec=$("#agendaSection");const a=data.agenda;

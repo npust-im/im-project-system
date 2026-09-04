@@ -106,6 +106,11 @@ main{padding:22px 0 60px}
 
 .gsummary{font-size:13px;color:var(--muted);margin-bottom:10px}
 .acc-item{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fff}
+.stage-bar{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);background:#f6f9fb}
+.drag-handle{cursor:grab;color:var(--muted);font-size:18px;line-height:1;user-select:none;padding:2px 6px;border-radius:6px}
+.drag-handle:hover{background:#e7ecef}
+.stage-item.dragover{outline:2px dashed var(--accent);outline-offset:-2px}
+.stage-item.dragging{opacity:.45}
 .acc-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
 .acc-head:hover{background:#f7fafb}
 .acc-no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:64px}
@@ -337,9 +342,10 @@ table.stab .na{color:#b9c2c8}
         <div class="setrow">
           <label class="chk"><input type="checkbox" id="fRegOpen"> 開放分組登錄</label>
           <label class="chk"><input type="checkbox" id="fNextCohort"> 新登錄歸為下屆</label>
+          <label class="dl">登錄開始 <input type="datetime-local" id="fRegStart"></label>
           <label class="dl">登錄截止 <input type="datetime-local" id="fRegDeadline"></label>
         </div>
-        <p class="sethint">勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽（屆別由系辦控管，學生無法自行更改）。設了截止時間，到點自動關閉；留空＝僅用勾選控制。</p>
+        <p class="sethint">勾「開放分組登錄」為總開關；另可設「開始／截止時間」自動控制：未到開始時間或已過截止時間，學生皆無法送出分組名單（留空＝不限制該端）。勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽。</p>
       </div>
       <div class="setgrp">
         <div class="setlabel">開放檔案上傳（可各自設截止時間）</div>
@@ -546,6 +552,7 @@ async function loadAll(){
   $("#fPublished").checked=state.finalists.published; $("#fIntro").value=state.finalists.intro||""; $("#fFoot").value=state.finalists.foot||""; renderFinalists();
   $("#fRegOpen").checked = reg.exists ? !!reg.data().open : false;
   $("#fNextCohort").checked = reg.exists ? reg.data().nextCohort===true : false;
+  $("#fRegStart").value = (reg.exists && reg.data().regStart) || "";
   $("#fRegDeadline").value = (reg.exists && reg.data().regDeadline) || "";
   const upd=up.exists?up.data():{}; $("#fForm1Open").checked=!!upd.round1Open; $("#fForm2Open").checked=!!upd.round2Open; $("#fForm3Open").checked=!!upd.round3Open;
   $("#fForm1Deadline").value=upd.round1Deadline||""; $("#fForm2Deadline").value=upd.round2Deadline||""; $("#fForm3Deadline").value=upd.round3Deadline||"";
@@ -706,7 +713,15 @@ function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
 function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));state.currentStageId=$("#fCurrent").value;}
 function renderStages(){
   const host=$("#stagesHost");
-  host.innerHTML=state.stages.map(s=>`<div class="item" data-id="${esc(s.id||stageId())}"><div class="item-grid">
+  host.innerHTML=state.stages.map((s,idx)=>`<div class="item stage-item" data-id="${esc(s.id||stageId())}" data-idx="${idx}">
+    <div class="stage-bar">
+      <span class="drag-handle" draggable="true" title="按住拖曳排序">⠿</span>
+      <span style="font-size:13px;color:var(--muted)">階段 ${idx+1}</span>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn btn-sm" data-act="up" title="上移">▲</button>
+      <button class="btn btn-sm" data-act="down" title="下移">▼</button>
+    </div>
+    <div class="item-grid">
     <div><label>學期</label><input class="f-term" type="text" value="${esc(s.term)}" placeholder="大三下學期"></div>
     <div><label>階段名稱</label><input class="f-name" type="text" value="${esc(s.name)}"></div>
     <div><label>日期</label><input class="f-date" type="text" value="${esc(s.date)}" placeholder="例如：2026 · 10月"></div>
@@ -715,9 +730,20 @@ function renderStages(){
     || '<p class="empty-note">尚無階段。可按「載入預設流程」帶入標準七階段，再修改日期。</p>';
   const sel=$("#fCurrent"); sel.innerHTML='<option value="">（未指定）</option>'+state.stages.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(""); sel.value=state.currentStageId||"";
 }
+function moveStage(from,to){ if(from===to||from<0||to<0||from>=state.stages.length||to>=state.stages.length)return; const a=state.stages.splice(from,1)[0]; state.stages.splice(to,0,a); renderStages(); }
 $("#addStage").onclick=()=>{syncStagesFromDOM();state.stages.push({id:stageId(),term:"",name:"",date:"",desc:""});renderStages();};
-$("#seedStages").onclick=()=>{state.stages=DEFAULT_STAGES.map(s=>({...s}));state.currentStageId="";renderStages();};
-$("#stagesHost").addEventListener("click",e=>{const b=e.target.closest("[data-act=del-stage]");if(!b)return;syncStagesFromDOM();const id=b.closest(".item").dataset.id;state.stages=state.stages.filter(s=>s.id!==id);renderStages();});
+$("#seedStages").onclick=()=>{syncStagesFromDOM();state.stages=DEFAULT_STAGES.map(s=>({...s}));state.currentStageId="";renderStages();};
+$("#stagesHost").addEventListener("click",e=>{
+  const item=e.target.closest(".stage-item"); if(!item) return; const idx=+item.dataset.idx;
+  if(e.target.closest("[data-act=del-stage]")){ syncStagesFromDOM(); state.stages=state.stages.filter(s=>s.id!==item.dataset.id); renderStages(); return; }
+  if(e.target.closest("[data-act=up]")){ syncStagesFromDOM(); moveStage(idx, idx-1); return; }
+  if(e.target.closest("[data-act=down]")){ syncStagesFromDOM(); moveStage(idx, idx+1); return; }
+});
+let DRAG_IDX=-1;
+$("#stagesHost").addEventListener("dragstart",e=>{ const h=e.target.closest(".drag-handle"); if(!h){ e.preventDefault(); return; } const item=h.closest(".stage-item"); syncStagesFromDOM(); DRAG_IDX=+item.dataset.idx; item.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",String(DRAG_IDX));}catch(_){} });
+$("#stagesHost").addEventListener("dragover",e=>{ const item=e.target.closest(".stage-item"); if(!item||DRAG_IDX<0)return; e.preventDefault(); e.dataTransfer.dropEffect="move"; $$("#stagesHost .stage-item").forEach(x=>x.classList.toggle("dragover",x===item)); });
+$("#stagesHost").addEventListener("drop",e=>{ const item=e.target.closest(".stage-item"); if(!item||DRAG_IDX<0)return; e.preventDefault(); const to=+item.dataset.idx; moveStage(DRAG_IDX,to); DRAG_IDX=-1; });
+$("#stagesHost").addEventListener("dragend",()=>{ DRAG_IDX=-1; $$("#stagesHost .stage-item").forEach(x=>x.classList.remove("dragover","dragging")); });
 $("#saveFlow").onclick=async()=>{syncStagesFromDOM();try{await db.doc("settings/flow").set({currentStageId:state.currentStageId,stages:state.stages});flash("flowMsg","已儲存。");}catch(e){flash("flowMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 公告 */
@@ -728,15 +754,60 @@ async function loadAnnouncements(){
     <div><label>日期</label><input class="a-date" type="date" value="${esc(a.date)}"></div>
     <div><label>標題</label><input class="a-title" type="text" value="${esc(a.title)}"></div>
     <div class="full"><label>內容</label><textarea class="a-body">${esc(a.body)}</textarea></div>
+    <div class="full"><label>附加檔案（圖片或 PDF，選填；會顯示並可下載於首頁）</label>
+      <div class="ann-file" data-annfile>${annFileHtml(a)}</div>
+      <label class="btn btn-sm" style="margin-top:8px"><input type="file" class="a-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none">上傳／更換檔案</label>
+      <span class="msg" data-annfmsg style="margin-left:8px"></span>
+    </div>
     </div><div class="item-foot"><label class="chk"><input type="checkbox" class="a-pin" ${a.pinned?"checked":""}> 置頂</label>
     <span class="spacer" style="flex:1"></span><button class="btn btn-sm btn-primary" data-act="save-ann">儲存這則</button>
     <button class="btn btn-sm btn-danger" data-act="del-ann">刪除</button></div></div>`).join("") || '<p class="empty-note">目前沒有公告。</p>';
 }
+function annFileHtml(a){
+  if(a&&a.fileUrl){ const tag=a.fileType==="image"?"圖片":a.fileType==="pdf"?"PDF":"檔案";
+    return '目前：<a href="'+esc(safeUrl(a.fileUrl))+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">'+esc(a.fileName||"檔案")+'</a>（'+tag+'） <button class="btn btn-sm btn-danger" data-act="del-annfile">移除檔案</button>';
+  }
+  return '<span style="color:var(--muted)">尚未附加</span>';
+}
 $("#addAnn").onclick=async()=>{try{await db.collection("announcements").add({date:today(),title:"",body:"",pinned:false});await loadAnnouncements();flash("annMsg","已新增，請填寫後儲存。");}catch(e){flash("annMsg","新增失敗："+(e.code||e.message),false);}};
 $("#annHost").addEventListener("click",async e=>{
   const item=e.target.closest(".item"); if(!item)return; const id=item.dataset.id;
-  if(e.target.closest("[data-act=save-ann]")){try{await db.doc("announcements/"+id).set({date:$(".a-date",item).value,title:$(".a-title",item).value.trim(),body:$(".a-body",item).value.trim(),pinned:$(".a-pin",item).checked});flash("annMsg","已儲存。");}catch(err){flash("annMsg","儲存失敗："+(err.code||err.message),false);}}
-  if(e.target.closest("[data-act=del-ann]")){if(!confirm("確定刪除這則公告？"))return;try{await db.doc("announcements/"+id).delete();await loadAnnouncements();flash("annMsg","已刪除。");}catch(err){flash("annMsg","刪除失敗："+(err.code||err.message),false);}}
+  if(e.target.closest("[data-act=save-ann]")){try{await db.doc("announcements/"+id).set({date:$(".a-date",item).value,title:$(".a-title",item).value.trim(),body:$(".a-body",item).value.trim(),pinned:$(".a-pin",item).checked},{merge:true});flash("annMsg","已儲存。");}catch(err){flash("annMsg","儲存失敗："+(err.code||err.message),false);}}
+  if(e.target.closest("[data-act=del-ann]")){if(!confirm("確定刪除這則公告？"))return;try{ let d=null; try{d=(await db.doc("announcements/"+id).get()).data();}catch(_){}
+    await db.doc("announcements/"+id).delete(); if(d&&d.filePath){ try{ await storage.ref(d.filePath).delete(); }catch(_){}}
+    await loadAnnouncements();flash("annMsg","已刪除。");}catch(err){flash("annMsg","刪除失敗："+(err.code||err.message),false);}}
+  if(e.target.closest("[data-act=del-annfile]")){ const msg=$("[data-annfmsg]",item);
+    try{ let d=null; try{d=(await db.doc("announcements/"+id).get()).data();}catch(_){}
+      const del=firebase.firestore.FieldValue.delete();
+      await db.doc("announcements/"+id).set({fileUrl:del,filePath:del,fileName:del,fileType:del},{merge:true});
+      if(d&&d.filePath){ try{ await storage.ref(d.filePath).delete(); }catch(_){}}
+      $("[data-annfile]",item).innerHTML=annFileHtml({}); if(msg){msg.textContent="已移除。";msg.className="msg ok";}
+    }catch(err){ if(msg){msg.textContent="移除失敗："+(err.code||err.message);msg.className="msg err";} }
+  }
+});
+$("#annHost").addEventListener("change",async e=>{
+  const inp=e.target.closest(".a-file"); if(!inp)return;
+  const item=inp.closest(".item"); const id=item.dataset.id; const msg=$("[data-annfmsg]",item);
+  const file=inp.files&&inp.files[0]; if(!file)return;
+  const ext=(file.name.toLowerCase().match(/\.[a-z0-9]+$/)||[""])[0];
+  const isImg=[".jpg",".jpeg",".png"].includes(ext), isPdf=ext===".pdf";
+  const setMsg=(m,ok)=>{ if(msg){msg.textContent=m;msg.className="msg "+(ok?"ok":"err");} };
+  if(!isImg&&!isPdf){ setMsg("僅支援 圖片(PNG/JPG) 或 PDF。",false); inp.value=""; return; }
+  if(file.size>=20*1024*1024){ setMsg("檔案超過 20MB。",false); inp.value=""; return; }
+  setMsg("上傳中…",true);
+  try{
+    let oldPath=""; try{ const d=(await db.doc("announcements/"+id).get()).data(); if(d) oldPath=d.filePath||""; }catch(_){}
+    const path="public/announcements/"+id+"_"+Date.now()+ext;
+    const ref=storage.ref(path);
+    await ref.put(file,{contentType:file.type||(isPdf?"application/pdf":"image/*")});
+    const url=await ref.getDownloadURL();
+    const ftype=isImg?"image":"pdf";
+    await db.doc("announcements/"+id).set({fileUrl:url,filePath:path,fileName:file.name,fileType:ftype},{merge:true});
+    if(oldPath&&oldPath!==path){ try{ await storage.ref(oldPath).delete(); }catch(_){}}
+    $("[data-annfile]",item).innerHTML=annFileHtml({fileUrl:url,fileName:file.name,fileType:ftype});
+    setMsg("已上傳。",true);
+  }catch(err){ setMsg("上傳失敗："+(err.code||err.message),false); }
+  finally{ inp.value=""; }
 });
 
 /* 入選名單 */
@@ -799,7 +870,7 @@ $("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-i
 $("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 登錄與上傳 */
-$("#saveUploads").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||"",round1DeadlineMs:ms($("#fForm1Deadline").value),round2DeadlineMs:ms($("#fForm2Deadline").value),round3DeadlineMs:ms($("#fForm3Deadline").value)},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveUploads").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regStart:$("#fRegStart").value||"",regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||"",round1DeadlineMs:ms($("#fForm1Deadline").value),round2DeadlineMs:ms($("#fForm2Deadline").value),round3DeadlineMs:ms($("#fForm3Deadline").value)},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 專題規定／說明文件（三次分開，上傳到 Storage，內嵌於學生入口對應分頁） */
 function renderRulesCurrent(upd){

@@ -258,6 +258,8 @@ const $=(s,el=document)=>el.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function safeUrl(u){u=String(u==null?"":u);return /^https?:\/\//i.test(u)?u:"#";}
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
+function afterStart(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()>=t; }
+function fmtWhen(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=x=>String(x).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
 function flash(id,msg,ok=true){const e=$("#"+id);e.textContent=msg;e.className="msg "+(ok?"ok":"err");if(ok&&msg)setTimeout(()=>{if(e.textContent===msg)e.textContent="";},2600);}
 
 if(typeof firebase==="undefined"||!firebase.apps.length){ $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。"; $("#bootView").classList.add("hidden"); $("#authView").classList.remove("hidden"); }
@@ -307,7 +309,9 @@ $("#regBtn").onclick=async()=>{
   try{
     const reg=await db.doc("settings/registration").get();
     const rd=reg.exists?reg.data():{};
-    if(rd.open!==true || !notPast(rd.regDeadline)){ flash("regMsg","目前未開放分組登錄，請於公告期間再試。",false); return; }
+    if(rd.open!==true){ flash("regMsg","目前未開放分組登錄。",false); return; }
+    if(!afterStart(rd.regStart)){ flash("regMsg","分組登錄尚未開始（開始時間："+fmtWhen(rd.regStart)+"）。",false); return; }
+    if(!notPast(rd.regDeadline)){ flash("regMsg","分組登錄已截止（截止時間："+fmtWhen(rd.regDeadline)+"）。",false); return; }
     const cred=await auth.createUserWithEmailAndPassword(em,pw);
     try{ await db.doc("users/"+cred.user.uid).set({role:"student",email:em}); }
     catch(werr){ try{ await cred.user.delete(); }catch(_){}; throw werr; }
