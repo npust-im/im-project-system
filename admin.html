@@ -111,6 +111,17 @@ main{padding:22px 0 60px}
 .drag-handle:hover{background:#e7ecef}
 .stage-item.dragover{outline:2px dashed var(--accent);outline-offset:-2px}
 .stage-item.dragging{opacity:.45}
+.stage-item{padding:0!important}
+.stage-item .stage-bar{border-bottom:0}
+.stage-item .item-grid,.stage-item .item-foot{display:none;padding:0 14px}
+.stage-item .item-foot{padding-bottom:12px}
+.stage-item.open .stage-bar{border-bottom:1px solid var(--line)}
+.stage-item.open .item-grid{display:grid;padding:12px 14px 0}
+.stage-item.open .item-foot{display:flex}
+.stage-title{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-sum{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-item .schev{color:var(--muted);transition:transform .15s}
+.stage-item.open .schev{transform:rotate(90deg)}
 .acc-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
 .acc-head:hover{background:#f7fafb}
 .acc-no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);font-weight:500;min-width:64px}
@@ -714,12 +725,14 @@ function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:
 function renderStages(){
   const host=$("#stagesHost");
   host.innerHTML=state.stages.map((s,idx)=>`<div class="item stage-item" data-id="${esc(s.id||stageId())}" data-idx="${idx}">
-    <div class="stage-bar">
+    <div class="stage-bar" data-act="toggle-stage">
       <span class="drag-handle" draggable="true" title="按住拖曳排序">⠿</span>
-      <span style="font-size:13px;color:var(--muted)">階段 ${idx+1}</span>
+      <span class="stage-title" data-title>${esc(s.name)||'（未命名階段）'}</span>
+      <span class="stage-sum" data-sum>${esc([s.term,s.date].filter(Boolean).join(' · '))}</span>
       <span class="spacer" style="flex:1"></span>
       <button class="btn btn-sm" data-act="up" title="上移">▲</button>
       <button class="btn btn-sm" data-act="down" title="下移">▼</button>
+      <span class="acc-chev schev">▸</span>
     </div>
     <div class="item-grid">
     <div><label>學期</label><input class="f-term" type="text" value="${esc(s.term)}" placeholder="大三下學期"></div>
@@ -731,13 +744,20 @@ function renderStages(){
   const sel=$("#fCurrent"); sel.innerHTML='<option value="">（未指定）</option>'+state.stages.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(""); sel.value=state.currentStageId||"";
 }
 function moveStage(from,to){ if(from===to||from<0||to<0||from>=state.stages.length||to>=state.stages.length)return; const a=state.stages.splice(from,1)[0]; state.stages.splice(to,0,a); renderStages(); }
-$("#addStage").onclick=()=>{syncStagesFromDOM();state.stages.push({id:stageId(),term:"",name:"",date:"",desc:""});renderStages();};
+$("#addStage").onclick=()=>{syncStagesFromDOM();state.stages.push({id:stageId(),term:"",name:"",date:"",desc:""});renderStages();const items=$$("#stagesHost .stage-item");if(items.length)items[items.length-1].classList.add("open");};
 $("#seedStages").onclick=()=>{syncStagesFromDOM();state.stages=DEFAULT_STAGES.map(s=>({...s}));state.currentStageId="";renderStages();};
 $("#stagesHost").addEventListener("click",e=>{
   const item=e.target.closest(".stage-item"); if(!item) return; const idx=+item.dataset.idx;
   if(e.target.closest("[data-act=del-stage]")){ syncStagesFromDOM(); state.stages=state.stages.filter(s=>s.id!==item.dataset.id); renderStages(); return; }
   if(e.target.closest("[data-act=up]")){ syncStagesFromDOM(); moveStage(idx, idx-1); return; }
   if(e.target.closest("[data-act=down]")){ syncStagesFromDOM(); moveStage(idx, idx+1); return; }
+  if(e.target.closest(".drag-handle")) return;
+  if(e.target.closest("[data-act=toggle-stage]")){ item.classList.toggle("open"); return; }
+});
+$("#stagesHost").addEventListener("input",e=>{
+  const item=e.target.closest(".stage-item"); if(!item) return;
+  if(e.target.classList.contains("f-name")){ const t=$("[data-title]",item); if(t) t.textContent=e.target.value||"（未命名階段）"; }
+  if(e.target.classList.contains("f-term")||e.target.classList.contains("f-date")){ const sum=$("[data-sum]",item); if(sum) sum.textContent=[$(".f-term",item).value,$(".f-date",item).value].filter(Boolean).join(" · "); }
 });
 let DRAG_IDX=-1;
 $("#stagesHost").addEventListener("dragstart",e=>{ const h=e.target.closest(".drag-handle"); if(!h){ e.preventDefault(); return; } const item=h.closest(".stage-item"); syncStagesFromDOM(); DRAG_IDX=+item.dataset.idx; item.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",String(DRAG_IDX));}catch(_){} });
