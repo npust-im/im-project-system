@@ -81,6 +81,16 @@ main{padding:22px 0 60px}
 .panel-head h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0}
 .panel-head .hint{font-size:12px;color:var(--muted)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.score-col-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.score-item{padding:12px 0;border-top:1px solid var(--line)}
+.score-item:first-of-type{border-top:0;padding-top:2px}
+.dl-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-left:26px}
+.dl-row .dl-label{font-size:12px;color:var(--muted);white-space:nowrap}
+.dl-row input[type=datetime-local]{width:100%;max-width:240px}
+.usage-bar{height:14px;border-radius:8px;background:#e7ecef;overflow:hidden;margin:8px 0}
+.usage-bar > span{display:block;height:100%;background:var(--accent);transition:width .4s}
+.usage-bar.warn > span{background:var(--gold)}
+.usage-bar.danger > span{background:var(--danger)}
 .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
 .spacer{flex:1}
 
@@ -163,7 +173,7 @@ table.stab tbody tr.top td.sticky-c{background:#f3e4cf}
 table.stab tbody tr.top:hover td{background:#f0dfc2}
 table.stab .na{color:#b9c2c8}
 
-@media (max-width:640px){.grid2{grid-template-columns:1fr}.item .item-grid{grid-template-columns:1fr}.rowline{grid-template-columns:1fr}}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}.item .item-grid{grid-template-columns:1fr}.rowline{grid-template-columns:1fr}.score-open>div{border-right:0!important;padding-right:0!important}}
 
 /* mobile-compat */
 @media (max-width:640px){
@@ -261,20 +271,28 @@ table.stab .na{color:#b9c2c8}
     <section class="panel">
       <div class="panel-head"><h2>開放評分設定</h2><span class="hint">避免分數填錯學期或階段</span></div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 8px">關閉後，該次評分對教授／委員仍可檢視但無法儲存。請在對應時間開放。</p>
-      <div class="grid2">
-        <div style="border-right:1px solid var(--line);padding-right:16px">
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px">指導教授</div>
-          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
-          <label class="dl" style="margin:0 0 16px">截止 <input type="datetime-local" id="t1Deadline"></label>
-          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
-          <label class="dl" style="margin:0">截止 <input type="datetime-local" id="t2Deadline"></label>
+      <div class="grid2 score-open">
+        <div style="border-right:1px solid var(--line);padding-right:18px">
+          <div class="score-col-title">指導教授</div>
+          <div class="score-item">
+            <label class="chk" style="margin:0"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t1Deadline"></div>
+          </div>
+          <div class="score-item">
+            <label class="chk" style="margin:0"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t2Deadline"></div>
+          </div>
         </div>
         <div>
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px">校外委員</div>
-          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
-          <label class="dl" style="margin:0 0 16px">截止 <input type="datetime-local" id="c1Deadline"></label>
-          <label class="chk" style="margin:0 0 4px"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
-          <label class="dl" style="margin:0">截止 <input type="datetime-local" id="c2Deadline"></label>
+          <div class="score-col-title">校外委員</div>
+          <div class="score-item">
+            <label class="chk" style="margin:0"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c1Deadline"></div>
+          </div>
+          <div class="score-item">
+            <label class="chk" style="margin:0"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c2Deadline"></div>
+          </div>
         </div>
       </div>
       <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
@@ -448,6 +466,11 @@ table.stab .na{color:#b9c2c8}
 
   <!-- 檔案 -->
   <div class="tabpane" data-pane="files">
+    <section class="panel">
+      <div class="panel-head"><h2>儲存空間用量</h2><button class="btn btn-sm" id="calcUsage">計算目前用量</button></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px">Firebase 免費額度為 5 GB。按「計算目前用量」會掃描實際檔案並統計，避免超量。</p>
+      <div id="usageHost"><span style="color:var(--muted);font-size:14px">尚未計算。</span></div>
+    </section>
     <section class="panel">
       <div class="panel-head"><h2>學生上傳檔案</h2><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost" id="reloadFiles">重新整理</button></div></div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">點資料夾即下載整包 zip，檔名為「小組編號--專題題目」（取自「學生」分頁所填編號與題目）。</p>
@@ -693,6 +716,42 @@ function renderFilesTab(){
 }
 $("#fileSubtabs").addEventListener("click",e=>{ const b=e.target.closest(".subtab"); if(!b)return; curFR=b.dataset.fr; $$(".subtab").forEach(x=>x.classList.toggle("on",x===b)); renderFilesTab(); });
 $("#reloadFiles").onclick=loadFilesTab;
+/* 儲存空間用量 */
+async function folderSize(ref){
+  let total=0,count=0;
+  const res=await ref.listAll();
+  const metas=await Promise.all(res.items.map(it=>it.getMetadata().then(m=>+m.size||0).catch(()=>0)));
+  metas.forEach(s=>{ total+=s; count++; });
+  for(const p of res.prefixes){ const sub=await folderSize(p); total+=sub.total; count+=sub.count; }
+  return {total,count};
+}
+function fmtBytes(n){ if(n>=1073741824) return (n/1073741824).toFixed(2)+" GB"; if(n>=1048576) return (n/1048576).toFixed(1)+" MB"; if(n>=1024) return (n/1024).toFixed(0)+" KB"; return n+" B"; }
+async function usageFromFirestore(){
+  let total=0,count=0;
+  try{ const gf=await db.collection("groupFiles").get(); gf.docs.forEach(d=>{const v=d.data();["r1","r2","r3"].forEach(rk=>{const rec=v[rk]||{};Object.values(rec).forEach(f=>{if(f&&f.size){total+=+f.size;count++;}});});}); }catch(e){}
+  try{ const cd=await db.collection("committeeDocs").get(); cd.docs.forEach(d=>{const f=(d.data()||{}).passbook; if(f&&f.size){total+=+f.size;count++;}}); }catch(e){}
+  return {total,count,estimate:true};
+}
+$("#calcUsage").onclick=async()=>{
+  const host=$("#usageHost"); const btn=$("#calcUsage"); btn.disabled=true;
+  host.innerHTML='<span style="color:var(--muted);font-size:14px">計算中…（掃描檔案可能需數秒）</span>';
+  let total=0,count=0,estimate=false;
+  try{
+    const parts=await Promise.all([folderSize(storage.ref("groups")),folderSize(storage.ref("committee")),folderSize(storage.ref("public"))]);
+    parts.forEach(p=>{ total+=p.total; count+=p.count; });
+  }catch(e){
+    const fb=await usageFromFirestore(); total=fb.total; count=fb.count; estimate=true;
+  }
+  const LIMIT=5*1073741824;
+  const pct=Math.min(100, total/LIMIT*100);
+  const cls=pct>=90?"danger":pct>=70?"warn":"";
+  host.innerHTML=
+    '<div style="font-size:22px;font-weight:700;color:var(--ink)">'+fmtBytes(total)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">／ 5 GB（'+pct.toFixed(1)+'%）</span></div>'+
+    '<div class="usage-bar '+cls+'"><span style="width:'+pct.toFixed(1)+'%"></span></div>'+
+    '<div style="font-size:13px;color:var(--muted)">共 '+count+' 個檔案'+(estimate?'（估算：依已登錄檔案，未含孤兒檔）':'（實際掃描）')+'　·　剩餘約 '+fmtBytes(Math.max(0,LIMIT-total))+'</div>'+
+    (pct>=70?'<p style="font-size:13px;color:'+(pct>=90?'var(--danger)':'var(--gold)')+';margin:8px 0 0">已使用 '+pct.toFixed(0)+'%，建議年度結束後用下方「年度重置」與「清空 Storage 檔案」清理舊屆檔案。</p>':'');
+  btn.disabled=false;
+};
 async function zipFolder(el, getGroup, getRec){
   if(el.dataset.busy) return;
   const gid=el.dataset.gid, rk=el.dataset.rk;
