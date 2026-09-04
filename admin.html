@@ -187,6 +187,12 @@ table.stab .na{color:#b9c2c8}
 .btn-loading{position:relative;pointer-events:none;opacity:.7}
 .btn-loading::before{content:"";display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:__spin .6s linear infinite;margin-right:7px;vertical-align:-1px}
 @keyframes __spin{to{transform:rotate(360deg)}}
+
+/* polish: sticky header + back-to-top */
+.topbar,.site-header{position:sticky;top:0;z-index:50}
+#toTop{position:fixed;right:18px;bottom:20px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--primary);box-shadow:0 4px 14px rgba(16,34,46,.18);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:22px;line-height:1;z-index:60;padding:0}
+#toTop.show{display:flex}
+#toTop:hover{border-color:var(--primary)}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -1489,6 +1495,14 @@ wrap(F.DocumentReference&&F.DocumentReference.prototype,"delete");
 wrap(F.WriteBatch&&F.WriteBatch.prototype,"commit");
 wrap(F.CollectionReference&&F.CollectionReference.prototype,"add");
 }}catch(_){}
+})();
+</script>
+<button id="toTop" title="回到頂端" aria-label="回到頂端">↑</button>
+<script>
+(function(){var b=document.getElementById("toTop");if(!b)return;
+function upd(){ (window.scrollY>320) ? b.classList.add("show") : b.classList.remove("show"); }
+window.addEventListener("scroll",upd,{passive:true}); upd();
+b.addEventListener("click",function(){ window.scrollTo({top:0,behavior:"smooth"}); });
 })();
 </script>
 </body>
