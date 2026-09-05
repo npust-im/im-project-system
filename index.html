@@ -177,6 +177,11 @@ html,body{overflow-x:hidden}
   .item .item-grid>div{min-width:0}
   .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
 }
+
+/* kill iOS date/datetime intrinsic width (mobile only) */
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local]{-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box;height:40px}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">

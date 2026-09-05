@@ -91,6 +91,9 @@ main{padding:22px 0 60px}
 .usage-bar > span{display:block;height:100%;background:var(--accent);transition:width .4s}
 .usage-bar.warn > span{background:var(--gold)}
 .usage-bar.danger > span{background:var(--danger)}
+.ubanner{padding:10px 16px;font-size:14px;font-weight:500;border-radius:10px;margin-bottom:14px;text-align:center}
+.ubanner.warn{background:#f7ece0;color:#8a5a1c}
+.ubanner.danger{background:#f6e2df;color:#8a3320}
 .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
 .spacer{flex:1}
 
@@ -234,6 +237,11 @@ html,body{overflow-x:hidden}
   .item .item-grid>div{min-width:0}
   .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
 }
+
+/* kill iOS date/datetime intrinsic width (mobile only) */
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local]{-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box;height:40px}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -276,6 +284,7 @@ html,body{overflow-x:hidden}
     <button class="tabbtn" data-tab="files">檔案</button>
     <button class="tabbtn" data-tab="score">評分</button>
   </div>
+  <div id="usageBanner" class="ubanner hidden"></div>
 
   <!-- 網站設定 -->
   <div class="tabpane on" data-pane="site">
@@ -598,7 +607,7 @@ $$(".tabbtn").forEach(b=>b.onclick=()=>{
   $$(".tabpane").forEach(p=>p.classList.toggle("on",p.dataset.pane===b.dataset.tab));
   $("#adminView").classList.toggle("wide", b.dataset.tab==="score");
   if(b.dataset.tab==="score") refreshScores();
-  if(b.dataset.tab==="files"){ loadFilesTab(); loadStorageUsage(); }
+  if(b.dataset.tab==="files"){ loadFilesTab(); (async()=>{ await loadStorageUsage(); $("#calcUsage")&&$("#calcUsage").click(); })(); }
 });
 
 function show(view){["bootView","loginView","denyView","adminView"].forEach(v=>$("#"+v).classList.toggle("hidden",v!==view));}
@@ -656,6 +665,7 @@ async function loadAll(){
   await loadLeaders();
   await loadCommitteeDocs();
   loadStorageUsage();
+  startStorageBanner();
   startCommitteeListener();
   startGradesListener();
 }
@@ -794,6 +804,14 @@ function renderUsage(total,opts){
     '<div style="font-size:13px;color:var(--muted)">'+(opts.count!=null?('共 '+opts.count+' 個檔案'+(opts.estimate?'（估算）':'（實際掃描）')+'　·　'):'')+
       (opts.at?('更新於 '+opts.at+'　·　'):'')+'剩餘約 '+fmtBytes(Math.max(0,LIMIT-total))+'</div>'+flag;
 }
+function updateUsageBanner(s){
+  const b=$("#usageBanner"); if(!b) return;
+  const bytes=(+s.bytes)||0, cap=(+s.capBytes)||0, warn=(+s.warnBytes)||0;
+  if(cap && bytes>=cap){ b.className="ubanner danger"; b.textContent="⚠ 儲存空間已達阻擋上限（上限 "+fmtBytes(cap)+"，已用 "+fmtBytes(bytes)+"）：學生上傳已自動暫停。請至「檔案」分頁清理舊檔或調高上限。"; }
+  else if(warn && bytes>=warn){ b.className="ubanner warn"; b.textContent="⚠ 儲存空間已達警示門檻（已用 "+fmtBytes(bytes)+"）：建議至「檔案」分頁清理舊屆檔案。"; }
+  else { b.className="ubanner hidden"; }
+}
+function startStorageBanner(){ if(startStorageBanner.done)return; startStorageBanner.done=true; db.doc("settings/storage").onSnapshot(d=>{ if(d.exists) updateUsageBanner(d.data()); },()=>{}); }
 async function loadStorageUsage(){
   try{
     const d=await db.doc("settings/storage").get();
