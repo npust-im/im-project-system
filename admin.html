@@ -223,6 +223,17 @@ html,body{overflow-x:hidden}
   .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
   .grow,.setrow,.score-controls{max-width:100%}
 }
+
+/* mobile: force date/datetime + stack setting rows */
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local]{display:block;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
+  .dl{display:block!important;width:100%;margin:0}
+  .dl input{width:100%!important}
+  .setrow{display:block}
+  .setrow>.chk,.setrow>.dl{display:block;width:100%;margin:8px 0 0}
+  .item .item-grid>div{min-width:0}
+  .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -496,8 +507,13 @@ html,body{overflow-x:hidden}
   <div class="tabpane" data-pane="files">
     <section class="panel">
       <div class="panel-head"><h2>儲存空間用量</h2><button class="btn btn-sm" id="calcUsage">計算目前用量</button></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 6px">Firebase 免費額度為 5 GB。按「計算目前用量」會掃描實際檔案並統計，避免超量。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px">Firebase 免費額度 5 GB。可設「阻擋上限」與「警示門檻」：達警示門檻會提醒，達阻擋上限則<strong>自動暫停學生上傳</strong>（每次上傳前後端也會即時累加用量估算）。</p>
       <div id="usageHost"><span style="color:var(--muted);font-size:14px">尚未計算。</span></div>
+      <div class="grid2" style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+        <div><label>阻擋上限（MB）</label><input id="capMB" type="number" min="0" step="1" placeholder="例如 4800"></div>
+        <div><label>警示門檻（MB）</label><input id="warnMB" type="number" min="0" step="1" placeholder="例如 4000"></div>
+      </div>
+      <div class="actions"><button class="btn btn-sm btn-primary" id="saveCap">儲存上限設定</button><span class="msg" id="capMsg"></span></div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>學生上傳檔案</h2><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost" id="reloadFiles">重新整理</button></div></div>
@@ -582,7 +598,7 @@ $$(".tabbtn").forEach(b=>b.onclick=()=>{
   $$(".tabpane").forEach(p=>p.classList.toggle("on",p.dataset.pane===b.dataset.tab));
   $("#adminView").classList.toggle("wide", b.dataset.tab==="score");
   if(b.dataset.tab==="score") refreshScores();
-  if(b.dataset.tab==="files") loadFilesTab();
+  if(b.dataset.tab==="files"){ loadFilesTab(); loadStorageUsage(); }
 });
 
 function show(view){["bootView","loginView","denyView","adminView"].forEach(v=>$("#"+v).classList.toggle("hidden",v!==view));}
@@ -639,6 +655,7 @@ async function loadAll(){
   renderFinalists(); renderAgenda();
   await loadLeaders();
   await loadCommitteeDocs();
+  loadStorageUsage();
   startCommitteeListener();
   startGradesListener();
 }
@@ -762,24 +779,53 @@ async function usageFromFirestore(){
   try{ const cd=await db.collection("committeeDocs").get(); cd.docs.forEach(d=>{const f=(d.data()||{}).passbook; if(f&&f.size){total+=+f.size;count++;}}); }catch(e){}
   return {total,count,estimate:true};
 }
+function renderUsage(total,opts){
+  opts=opts||{}; const host=$("#usageHost"); if(!host) return;
+  const LIMIT=5*1073741824;
+  const cap=(+opts.capBytes)||0, warn=(+opts.warnBytes)||0;
+  const pct=Math.min(100, total/LIMIT*100);
+  let cls="", flag="";
+  if(cap && total>=cap){ cls="danger"; flag='<p style="font-size:13px;color:var(--danger);margin:8px 0 0;font-weight:500">⚠ 已達阻擋上限（'+fmtBytes(cap)+'），學生上傳已自動暫停，請清理舊檔或調高上限。</p>'; }
+  else if(warn && total>=warn){ cls="warn"; flag='<p style="font-size:13px;color:var(--gold);margin:8px 0 0;font-weight:500">已達警示門檻（'+fmtBytes(warn)+'），建議清理舊屆檔案。</p>'; }
+  else if(pct>=70){ cls="warn"; flag='<p style="font-size:13px;color:var(--gold);margin:8px 0 0">已使用 '+pct.toFixed(0)+'%，可考慮清理舊檔。</p>'; }
+  host.innerHTML=
+    '<div style="font-size:22px;font-weight:700;color:var(--ink)">'+fmtBytes(total)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">／ 5 GB（'+pct.toFixed(1)+'%）</span></div>'+
+    '<div class="usage-bar '+cls+'"><span style="width:'+pct.toFixed(1)+'%"></span></div>'+
+    '<div style="font-size:13px;color:var(--muted)">'+(opts.count!=null?('共 '+opts.count+' 個檔案'+(opts.estimate?'（估算）':'（實際掃描）')+'　·　'):'')+
+      (opts.at?('更新於 '+opts.at+'　·　'):'')+'剩餘約 '+fmtBytes(Math.max(0,LIMIT-total))+'</div>'+flag;
+}
+async function loadStorageUsage(){
+  try{
+    const d=await db.doc("settings/storage").get();
+    if(d.exists){ const s=d.data();
+      $("#capMB").value = s.capBytes?Math.round(s.capBytes/1048576):"";
+      $("#warnMB").value = s.warnBytes?Math.round(s.warnBytes/1048576):"";
+      const at=s.at&&s.at.toDate?s.at.toDate():null; const atStr=at?(at.getFullYear()+"/"+String(at.getMonth()+1).padStart(2,"0")+"/"+String(at.getDate()).padStart(2,"0")+" "+String(at.getHours()).padStart(2,"0")+":"+String(at.getMinutes()).padStart(2,"0")):"";
+      renderUsage(+s.bytes||0,{capBytes:s.capBytes,warnBytes:s.warnBytes,at:atStr});
+    }else{
+      // 自動建立預設（僅系辦可建）
+      try{ await db.doc("settings/storage").set({bytes:0,capBytes:4800*1048576,warnBytes:4000*1048576,at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(_){}
+      $("#capMB").value=4800; $("#warnMB").value=4000; renderUsage(0,{capBytes:4800*1048576,warnBytes:4000*1048576});
+    }
+  }catch(e){}
+}
+$("#saveCap").onclick=async()=>{
+  const cap=Math.max(0,Math.round((+$("#capMB").value||0)))*1048576;
+  const warn=Math.max(0,Math.round((+$("#warnMB").value||0)))*1048576;
+  try{ await db.doc("settings/storage").set({capBytes:cap,warnBytes:warn},{merge:true}); flash("capMsg","已儲存。"); loadStorageUsage(); }
+  catch(e){ flash("capMsg","儲存失敗："+(e.code||e.message),false); }
+};
 $("#calcUsage").onclick=async()=>{
-  const host=$("#usageHost"); const btn=$("#calcUsage"); btn.disabled=true;
-  host.innerHTML='<span style="color:var(--muted);font-size:14px">計算中…（掃描檔案可能需數秒）</span>';
+  const btn=$("#calcUsage"); btn.disabled=true;
+  $("#usageHost").innerHTML='<span style="color:var(--muted);font-size:14px">計算中…（掃描檔案可能需數秒）</span>';
   let total=0,count=0,estimate=false;
   try{
     const parts=await Promise.all([folderSize(storage.ref("groups")),folderSize(storage.ref("committee")),folderSize(storage.ref("public"))]);
     parts.forEach(p=>{ total+=p.total; count+=p.count; });
-  }catch(e){
-    const fb=await usageFromFirestore(); total=fb.total; count=fb.count; estimate=true;
-  }
-  const LIMIT=5*1073741824;
-  const pct=Math.min(100, total/LIMIT*100);
-  const cls=pct>=90?"danger":pct>=70?"warn":"";
-  host.innerHTML=
-    '<div style="font-size:22px;font-weight:700;color:var(--ink)">'+fmtBytes(total)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">／ 5 GB（'+pct.toFixed(1)+'%）</span></div>'+
-    '<div class="usage-bar '+cls+'"><span style="width:'+pct.toFixed(1)+'%"></span></div>'+
-    '<div style="font-size:13px;color:var(--muted)">共 '+count+' 個檔案'+(estimate?'（估算：依已登錄檔案，未含孤兒檔）':'（實際掃描）')+'　·　剩餘約 '+fmtBytes(Math.max(0,LIMIT-total))+'</div>'+
-    (pct>=70?'<p style="font-size:13px;color:'+(pct>=90?'var(--danger)':'var(--gold)')+';margin:8px 0 0">已使用 '+pct.toFixed(0)+'%，建議年度結束後用下方「年度重置」與「清空 Storage 檔案」清理舊屆檔案。</p>':'');
+  }catch(e){ const fb=await usageFromFirestore(); total=fb.total; count=fb.count; estimate=true; }
+  const cap=Math.round((+$("#capMB").value||0))*1048576, warn=Math.round((+$("#warnMB").value||0))*1048576;
+  try{ await db.doc("settings/storage").set({bytes:total,capBytes:cap,warnBytes:warn,at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); }catch(_){}
+  renderUsage(total,{count,estimate,capBytes:cap,warnBytes:warn});
   btn.disabled=false;
 };
 async function zipFolder(el, getGroup, getRec){

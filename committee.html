@@ -137,6 +137,17 @@ html,body{overflow-x:hidden}
   .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
   .grow,.setrow,.score-controls{max-width:100%}
 }
+
+/* mobile: force date/datetime + stack setting rows */
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local]{display:block;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
+  .dl{display:block!important;width:100%;margin:0}
+  .dl input{width:100%!important}
+  .setrow{display:block}
+  .setrow>.chk,.setrow>.dl{display:block;width:100%;margin:8px 0 0}
+  .item .item-grid>div{min-width:0}
+  .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">

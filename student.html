@@ -173,6 +173,17 @@ html,body{overflow-x:hidden}
   .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
   .grow,.setrow,.score-controls{max-width:100%}
 }
+
+/* mobile: force date/datetime + stack setting rows */
+@media (max-width:640px){
+  input[type=date],input[type=datetime-local]{display:block;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
+  .dl{display:block!important;width:100%;margin:0}
+  .dl input{width:100%!important}
+  .setrow{display:block}
+  .setrow>.chk,.setrow>.dl{display:block;width:100%;margin:8px 0 0}
+  .item .item-grid>div{min-width:0}
+  .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -537,6 +548,13 @@ $("#roundHost").addEventListener("change",async e=>{
   const showErr=m=>{ prog.style.display=""; prog.style.color="var(--danger)"; prog.textContent=m; };
   if(!accepts.includes(ext)){ showErr("檔案格式須為 "+def.accept); inp.value=""; return; }
   if(file.size >= 50*1024*1024){ showErr("檔案超過 50MB。"); inp.value=""; return; }
+  // 儲存空間上限保護：接近上限時暫停上傳
+  try{
+    const sd=await db.doc("settings/storage").get();
+    if(sd.exists){ const s=sd.data(); const cap=(+s.capBytes)||0; const used=(+s.bytes)||0;
+      if(cap>0 && used+file.size>cap){ showErr("系統儲存空間已接近上限，暫時無法上傳，請洽系辦處理。"); inp.value=""; return; }
+    }
+  }catch(_){}
   const uid=auth.currentUser.uid;
   const path="groups/"+uid+"/"+rk+"/"+sk+"_"+Date.now()+ext;
   const dlName=friendlyName(rk,sk,ext);
@@ -554,6 +572,8 @@ $("#roundHost").addEventListener("change",async e=>{
     await db.doc("groupFiles/"+uid).set({[rk]:rec},{merge:true});
     myFiles[rk]=rec;
     if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
+    // 累加用量估算（best-effort，供上限保護即時參考）
+    try{ await db.doc("settings/storage").set({bytes:firebase.firestore.FieldValue.increment(file.size),at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); }catch(_){}
     prog.textContent="已上傳 ✓";
     setTimeout(renderRound,700);
   }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
