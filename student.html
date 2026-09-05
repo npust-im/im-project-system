@@ -165,6 +165,14 @@ input,select,textarea{max-width:100%;min-width:0}
   .grid3{grid-template-columns:1fr}
   .stu{grid-template-columns:1fr 1fr}
 }
+
+/* rwd grid collapse + page overflow guard */
+html,body{overflow-x:hidden}
+@media (max-width:640px){
+  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
+  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
+  .grow,.setrow,.score-controls{max-width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -454,17 +462,19 @@ async function renderRound(){
     const nn=(r==="r1"?1:r==="r2"?2:3);
     if(r==="r2" && !isFinalist) return "limited";
     if(!up["round"+nn+"Open"]) return "notyet";
+    if(!afterStart(up["round"+nn+"Start"])) return "notstarted";
     if(!notPast(up["round"+nn+"Deadline"])) return "closed";
     return "open";
   }
   // 分頁狀態標籤
-  const chipMap={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed'],limited:['限入選','limited']};
+  const chipMap={open:['開放中','open'],notyet:['未開放','notyet'],notstarted:['未開始','notyet'],closed:['已截止','closed'],limited:['限入選','limited']};
   ["r1","r2","r3"].forEach(r=>{ const c=document.querySelector('[data-chip="'+r+'"]'); if(c){ const [t,cls]=chipMap[roundStatus(r)]; c.textContent=t; c.className='tchip '+cls; } });
 
   const rk=curR, def=ROUND_DEFS[rk], n=(rk==="r1"?1:rk==="r2"?2:3);
   const st=roundStatus(rk);
-  const dlStr=fmtDL(up["round"+n+"Deadline"]);
+  const dlStr=fmtDL(up["round"+n+"Deadline"]); const stStr=fmtDL(up["round"+n+"Start"]);
   const sbLabel = st==="open" ? ("開放中"+(dlStr?("（截止時間 "+dlStr+"）"):""))
+    : st==="notstarted" ? ("尚未開始"+(stStr?("（開始時間 "+stStr+"）"):""))
     : st==="closed" ? ("已截止"+(dlStr?("（截止時間 "+dlStr+"）"):""))
     : st==="limited" ? "僅開放入選第二階段之組別"
     : "尚未開放";
@@ -475,6 +485,7 @@ async function renderRound(){
   let slotsHtml;
   if(st!=="open"){
     const msg = st==="limited" ? "第二次上傳僅開放入選第二階段之組別。"
+      : st==="notstarted" ? ("本次上傳尚未開始"+(stStr?("（開始時間 "+stStr+"）"):"")+"，時間到才可上傳。")
       : st==="closed" ? ("本次上傳已截止"+(dlStr?("（截止時間 "+dlStr+"）"):"")+"，無法再上傳。")
       : "本次上傳尚未開放。";
     slotsHtml='<div class="round-locked'+(st==="closed"?" closed":"")+'">'+esc(msg)+'</div>';

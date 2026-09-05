@@ -158,6 +158,14 @@ input,select,textarea{max-width:100%;min-width:0}
   .grid3{grid-template-columns:1fr}
   .stu{grid-template-columns:1fr 1fr}
 }
+
+/* rwd grid collapse + page overflow guard */
+html,body{overflow-x:hidden}
+@media (max-width:640px){
+  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
+  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
+  .grow,.setrow,.score-controls{max-width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">

@@ -129,6 +129,14 @@ input,select,textarea{max-width:100%;min-width:0}
   .grid3{grid-template-columns:1fr}
   .stu{grid-template-columns:1fr 1fr}
 }
+
+/* rwd grid collapse + page overflow guard */
+html,body{overflow-x:hidden}
+@media (max-width:640px){
+  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
+  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
+  .grow,.setrow,.score-controls{max-width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -190,19 +198,21 @@ const SLOT_LABEL={report:"報告",slides:"簡報",extra:"補充資料"};
 
 function show(v){["bootView","loginView","denyView","cmView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
-function stageStatusOf(st){ if(scoring["c"+st+"open"]===false) return 'notyet'; if(!notPast(scoring["c"+st+"Deadline"])) return 'closed'; return 'open'; }
+function afterStart(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()>=t; }
+function stageStatusOf(st){ if(scoring["c"+st+"open"]===false) return 'notyet'; if(!afterStart(scoring["c"+st+"Start"])) return 'notstarted'; if(!notPast(scoring["c"+st+"Deadline"])) return 'closed'; return 'open'; }
 function stageStatus(){ return stageStatusOf(stage); }
 function stageOpen(){ return stageStatus()==='open'; }
 function fmtDL(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=x=>String(x).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
 function stageNotice(){
-  const s=stageStatus(), dl=fmtDL(scoring["c"+stage+"Deadline"]);
+  const s=stageStatus(), dl=fmtDL(scoring["c"+stage+"Deadline"]), st=fmtDL(scoring["c"+stage+"Start"]);
   const label = s==='open' ? ('評分開放中'+(dl?('（截止時間 '+dl+'）'):''))
+    : s==='notstarted' ? ('評分尚未開始'+(st?('（開始時間 '+st+'）'):'')+'，僅供檢視')
     : s==='closed' ? ('評分已截止'+(dl?('（截止時間 '+dl+'）'):'')+'，僅供檢視')
     : '評分尚未開放，僅供檢視';
   const cls = s==='open'?'sb-open':s==='closed'?'sb-closed':'sb-notyet';
   return '<div class="statusbar '+cls+'">'+esc(label)+'</div>';
 }
-function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed']}; [1,2].forEach(st=>{ const c=$("#chip"+st); if(!c)return; const [t,cls]=map[stageStatusOf(st)]; c.textContent=t; c.className='tchip '+cls; }); }
+function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],notstarted:['未開始','notyet'],closed:['已截止','closed']}; [1,2].forEach(st=>{ const c=$("#chip"+st); if(!c)return; const [t,cls]=map[stageStatusOf(st)]; c.textContent=t; c.className='tchip '+cls; }); }
 
 auth.onAuthStateChanged(async user=>{
   if(!user){ $("#topRight").innerHTML='<a href="index.html">回首頁</a>'; show("loginView"); return; }

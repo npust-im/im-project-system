@@ -215,6 +215,14 @@ input,select,textarea{max-width:100%;min-width:0}
   .grid3{grid-template-columns:1fr}
   .stu{grid-template-columns:1fr 1fr}
 }
+
+/* rwd grid collapse + page overflow guard */
+html,body{overflow-x:hidden}
+@media (max-width:640px){
+  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
+  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
+  .grow,.setrow,.score-controls{max-width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -288,10 +296,12 @@ input,select,textarea{max-width:100%;min-width:0}
           <div class="score-col-title">指導教授</div>
           <div class="score-item">
             <label class="chk" style="margin:0"><input type="checkbox" id="t1open"> 開放「第一次成績」評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="t1Start"></div>
             <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t1Deadline"></div>
           </div>
           <div class="score-item">
             <label class="chk" style="margin:0"><input type="checkbox" id="t2open"> 開放「第二次成績」評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="t2Start"></div>
             <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t2Deadline"></div>
           </div>
         </div>
@@ -299,14 +309,17 @@ input,select,textarea{max-width:100%;min-width:0}
           <div class="score-col-title">校外委員</div>
           <div class="score-item">
             <label class="chk" style="margin:0"><input type="checkbox" id="c1open"> 開放「第一階段」評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="c1Start"></div>
             <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c1Deadline"></div>
           </div>
           <div class="score-item">
             <label class="chk" style="margin:0"><input type="checkbox" id="c2open"> 開放「第二階段」評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="c2Start"></div>
             <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c2Deadline"></div>
           </div>
         </div>
       </div>
+      <p style="font-size:12px;color:var(--muted);margin:2px 0 0">開始時間留空＝即刻套用（立即開放）；截止時間留空＝不自動關閉。</p>
       <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
       <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
         <label class="chk" style="margin:0"><input type="checkbox" id="scLocked"> <strong style="color:var(--danger)">結算鎖定</strong>：鎖定後委員、指導教授、學生一律無法再修改成績與上傳（僅系辦可調整）</label>
@@ -398,14 +411,17 @@ input,select,textarea{max-width:100%;min-width:0}
         <div class="setlabel">開放檔案上傳（可各自設截止時間）</div>
         <div class="setrow">
           <label class="chk"><input type="checkbox" id="fForm1Open"> 第一次（報告／簡報／補充）</label>
+          <label class="dl">開始 <input type="datetime-local" id="fForm1Start"></label>
           <label class="dl">截止 <input type="datetime-local" id="fForm1Deadline"></label>
         </div>
         <div class="setrow" style="margin-top:8px">
           <label class="chk"><input type="checkbox" id="fForm2Open"> 第二次（發表簡報·限入選）</label>
+          <label class="dl">開始 <input type="datetime-local" id="fForm2Start"></label>
           <label class="dl">截止 <input type="datetime-local" id="fForm2Deadline"></label>
         </div>
         <div class="setrow" style="margin-top:8px">
           <label class="chk"><input type="checkbox" id="fForm3Open"> 第三次（最終成果）</label>
+          <label class="dl">開始 <input type="datetime-local" id="fForm3Start"></label>
           <label class="dl">截止 <input type="datetime-local" id="fForm3Deadline"></label>
         </div>
       </div>
@@ -607,10 +623,12 @@ async function loadAll(){
   $("#fRegStart").value = (reg.exists && reg.data().regStart) || "";
   $("#fRegDeadline").value = (reg.exists && reg.data().regDeadline) || "";
   const upd=up.exists?up.data():{}; $("#fForm1Open").checked=!!upd.round1Open; $("#fForm2Open").checked=!!upd.round2Open; $("#fForm3Open").checked=!!upd.round3Open;
+  $("#fForm1Start").value=upd.round1Start||""; $("#fForm2Start").value=upd.round2Start||""; $("#fForm3Start").value=upd.round3Start||"";
   $("#fForm1Deadline").value=upd.round1Deadline||""; $("#fForm2Deadline").value=upd.round2Deadline||""; $("#fForm3Deadline").value=upd.round3Deadline||"";
   renderRulesCurrent(upd);
   const s=sc.exists?sc.data():{};
   $("#t1open").checked=s.t1open!==false;$("#t2open").checked=s.t2open!==false;$("#c1open").checked=s.c1open!==false;$("#c2open").checked=s.c2open!==false;
+  $("#t1Start").value=s.t1Start||""; $("#t2Start").value=s.t2Start||""; $("#c1Start").value=s.c1Start||""; $("#c2Start").value=s.c2Start||"";
   $("#t1Deadline").value=s.t1Deadline||""; $("#t2Deadline").value=s.t2Deadline||""; $("#c1Deadline").value=s.c1Deadline||""; $("#c2Deadline").value=s.c2Deadline||"";
   $("#scLocked").checked = s.locked===true;
   if(ag.exists){const d=ag.data();agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}
@@ -644,7 +662,7 @@ $("#changePw").onclick=async()=>{
     flash("pwMsg", c==="auth/wrong-password"?"目前密碼不正確。":c==="auth/weak-password"?"新密碼太弱（至少 6 碼）。":c==="auth/too-many-requests"?"嘗試過於頻繁，請稍後再試。":"更新失敗："+(c||e.message), false);
   }finally{ btn.disabled=false; }
 };
-$("#saveScoring").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||"",c1DeadlineMs:ms($("#c1Deadline").value),c2DeadlineMs:ms($("#c2Deadline").value),locked:$("#scLocked").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveScoring").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/scoring").set({t1open:$("#t1open").checked,t2open:$("#t2open").checked,c1open:$("#c1open").checked,c2open:$("#c2open").checked,t1Start:$("#t1Start").value||"",t2Start:$("#t2Start").value||"",c1Start:$("#c1Start").value||"",c2Start:$("#c2Start").value||"",t1Deadline:$("#t1Deadline").value||"",t2Deadline:$("#t2Deadline").value||"",c1Deadline:$("#c1Deadline").value||"",c2Deadline:$("#c2Deadline").value||"",c1StartMs:ms($("#c1Start").value),c2StartMs:ms($("#c2Start").value),c1DeadlineMs:ms($("#c1Deadline").value),c2DeadlineMs:ms($("#c2Deadline").value),locked:$("#scLocked").checked},{merge:true});flash("scoringMsg","已儲存。");}catch(e){flash("scoringMsg","儲存失敗："+(e.code||e.message),false);}};
 /* 委員個人資料（匯款用） */
 let CDOCS={};
 async function loadCommitteeDocs(){
@@ -967,7 +985,7 @@ $("#agendaHost").addEventListener("change",e=>{const it=e.target.closest(".acc-i
 $("#saveAgenda").onclick=async()=>{syncAgendaFromDOM();try{await db.doc("settings/agenda").set(agenda);flash("agMsg","已儲存。");}catch(e){flash("agMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 登錄與上傳 */
-$("#saveUploads").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regStart:$("#fRegStart").value||"",regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||"",round1DeadlineMs:ms($("#fForm1Deadline").value),round2DeadlineMs:ms($("#fForm2Deadline").value),round3DeadlineMs:ms($("#fForm3Deadline").value)},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
+$("#saveUploads").onclick=async()=>{try{const ms=v=>{const t=Date.parse(v);return isFinite(t)?t:0;};await db.doc("settings/registration").set({open:$("#fRegOpen").checked,nextCohort:$("#fNextCohort").checked,regStart:$("#fRegStart").value||"",regDeadline:$("#fRegDeadline").value||""},{merge:true});await db.doc("settings/uploads").set({round1Open:$("#fForm1Open").checked,round2Open:$("#fForm2Open").checked,round3Open:$("#fForm3Open").checked,round1Start:$("#fForm1Start").value||"",round2Start:$("#fForm2Start").value||"",round3Start:$("#fForm3Start").value||"",round1Deadline:$("#fForm1Deadline").value||"",round2Deadline:$("#fForm2Deadline").value||"",round3Deadline:$("#fForm3Deadline").value||"",round1StartMs:ms($("#fForm1Start").value),round2StartMs:ms($("#fForm2Start").value),round3StartMs:ms($("#fForm3Start").value),round1DeadlineMs:ms($("#fForm1Deadline").value),round2DeadlineMs:ms($("#fForm2Deadline").value),round3DeadlineMs:ms($("#fForm3Deadline").value)},{merge:true});flash("upMsg","已儲存。");}catch(e){flash("upMsg","儲存失敗："+(e.code||e.message),false);}};
 
 /* 專題規定／說明文件（三次分開，上傳到 Storage，內嵌於學生入口對應分頁） */
 function renderRulesCurrent(upd){

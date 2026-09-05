@@ -102,6 +102,14 @@ input,select,textarea{max-width:100%;min-width:0}
   .grid3{grid-template-columns:1fr}
   .stu{grid-template-columns:1fr 1fr}
 }
+
+/* rwd grid collapse + page overflow guard */
+html,body{overflow-x:hidden}
+@media (max-width:640px){
+  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
+  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
+  .grow,.setrow,.score-controls{max-width:100%}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -149,18 +157,20 @@ try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(_){}
 let MY_UID=null, sem=1, SCORING={};
 let myGroups=[], gradeCache={};
 function notPast(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()<t; }
-function semStatusOf(s){ if(SCORING["t"+s+"open"]===false) return 'notyet'; if(!notPast(SCORING["t"+s+"Deadline"])) return 'closed'; return 'open'; }
+function afterStart(iso){ if(!iso) return true; const t=new Date(iso).getTime(); return isNaN(t) || Date.now()>=t; }
+function semStatusOf(s){ if(SCORING["t"+s+"open"]===false) return 'notyet'; if(!afterStart(SCORING["t"+s+"Start"])) return 'notstarted'; if(!notPast(SCORING["t"+s+"Deadline"])) return 'closed'; return 'open'; }
 function semOpen(){ return semStatusOf(sem)==='open'; }
 function fmtDL(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=x=>String(x).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
 function semNotice(){
-  const s=semStatusOf(sem), dl=fmtDL(SCORING["t"+sem+"Deadline"]);
+  const s=semStatusOf(sem), dl=fmtDL(SCORING["t"+sem+"Deadline"]), st=fmtDL(SCORING["t"+sem+"Start"]);
   const label = s==='open' ? ('評分開放中'+(dl?('（截止時間 '+dl+'）'):''))
+    : s==='notstarted' ? ('評分尚未開始'+(st?('（開始時間 '+st+'）'):'')+'，僅供檢視')
     : s==='closed' ? ('評分已截止'+(dl?('（截止時間 '+dl+'）'):'')+'，僅供檢視')
     : '評分尚未開放，僅供檢視';
   const cls = s==='open'?'sb-open':s==='closed'?'sb-closed':'sb-notyet';
   return '<div class="statusbar '+cls+'">'+esc(label)+'</div>';
 }
-function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],closed:['已截止','closed']}; [1,2].forEach(s=>{ const c=$("#chip"+s); if(!c)return; const [t,cls]=map[semStatusOf(s)]; c.textContent=t; c.className='tchip '+cls; }); }
+function updateChips(){ const map={open:['開放中','open'],notyet:['未開放','notyet'],notstarted:['未開始','notyet'],closed:['已截止','closed']}; [1,2].forEach(s=>{ const c=$("#chip"+s); if(!c)return; const [t,cls]=map[semStatusOf(s)]; c.textContent=t; c.className='tchip '+cls; }); }
 function show(v){["bootView","loginView","denyView","teacherView"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));}
 
 auth.onAuthStateChanged(async user=>{
