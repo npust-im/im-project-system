@@ -73,7 +73,11 @@ main{padding:22px 0 60px}
 .file-single:hover{border-color:var(--primary);color:var(--primary)}
 .file-none{color:var(--muted);font-size:13px}
 .files-grouprow{margin-bottom:12px}
-.files-grouprow .fg-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.files-grouprow .fg-label{font-size:14px;font-weight:500;margin-bottom:4px}
+.ffiles{margin-top:6px}
+.ffile{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:#fff;font-size:13px}
+.ffile .ftag{font-size:11px;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px;flex:0 0 auto}
+.ffile .fnm{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46%}
 .tabpane{display:none}.tabpane.on{display:block}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
@@ -367,7 +371,7 @@ html,body{overflow-x:hidden}
 
     <section class="panel" style="border-color:#e6ccc8">
       <div class="panel-head"><h2 style="color:var(--danger)">年度重置（升屆）</h2><span class="hint">本屆競賽結束後執行</span></div>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除【應屆競賽】屆別的：分組、組長帳號資料、各組上傳檔案中繼、指導老師成績、校外委員評分、公告。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除【應屆競賽】屆別的：分組、組長帳號資料、各組上傳檔案中繼、指導老師成績、校外委員評分。<strong>公告保留不刪除。</strong></p>
       <p style="font-size:14px;color:var(--muted);margin:0 0 6px"><strong>並把【下屆】的所有組別自動升為【應屆競賽】</strong>（下屆的登錄與名單完整保留，隔年接著使用）。</p>
       <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、規定文件，以及指導教授／校外委員／管理員帳號與其個人資料。</p>
       <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。Authentication 的登入帳號不會被刪除。</p>
@@ -589,7 +593,9 @@ const auth=firebase.auth(), db=firebase.firestore(), storage=firebase.storage();
 try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(_){}
 
 const DEFAULT_STAGES=[
-  {id:"group",  term:"大三下學期",name:"分組與洽詢指導老師",date:"",desc:"每組 3–4 人，推派組長登錄組員名單，並洽詢指導老師。"},
+  {id:"group",      term:"大三上學期",name:"分組",           date:"",desc:"每組 3–4 人（得跨班），推派 1 名組長於指定期限內登錄組員名單。"},
+  {id:"advisorAsk", term:"大三上學期",name:"洽詢指導老師",   date:"",desc:"各組主動洽詢本系教師，說明專題方向並徵詢指導意願。"},
+  {id:"advisorOk",  term:"大三上學期",name:"確定指導老師",   date:"",desc:"經同意後填具「實務專題指導同意書」，簽章後繳交系辦完成確認。"},
   {id:"exec",   term:"大三下學期",name:"專題執行",         date:"",desc:"定期與指導老師討論，進行資料蒐集、分析與系統建置。"},
   {id:"grade1", term:"大三下學期",name:"第一次成績評定",   date:"",desc:"由指導老師依執行情形評定第一次專題成績。"},
   {id:"review1",term:"大四上學期",name:"第一階段 · 書面評審",date:"",desc:"各組上傳報告與簡報，由校外委員書面審查，取約半數晉級。"},
@@ -763,13 +769,29 @@ function renderFilesTab(){
     const rec=(FILES_MAP[g.id]||{})[rk]||{};
     const label=folderName(g);
     const present=slots.map(([sk,tag])=>{ const f=rec[sk]; return hasFile(f)?{sk,tag,f}:null; }).filter(Boolean);
-    if(!present.length){ return '<div class="files-grouprow"><div class="fg-label">'+esc(label)+'</div><span class="file-none">尚無上傳</span></div>'; }
-    if(single){
-      const f=present[0].f; const dl=safeName(label)+extOf(f.name||f.path||"");
-      return '<div class="files-grouprow"><span class="file-single" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" data-slot="'+esc(present[0].sk)+'" data-dl="'+esc(dl)+'">⬇ '+esc(label)+'</span></div>';
-    }
-    return '<div class="folder" data-gid="'+esc(g.id)+'" data-rk="'+rk+'">📁 <span class="flabel">'+esc(label)+'</span><span class="dlall">下載整個資料夾 ⬇</span><span class="fmsg" data-fmsg></span></div>';
+    let head;
+    if(!present.length){ head='<div class="fg-label">'+esc(label)+'　<span class="file-none">尚無上傳</span></div>'; }
+    else if(single){ head='<div class="fg-label">'+esc(label)+'</div>'; }
+    else { head='<div class="folder" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" style="max-width:none">📁 <span class="flabel">'+esc(label)+'</span><span class="dlall">下載整包 zip ⬇</span><span class="fmsg" data-fmsg></span></div>'; }
+    const fileList=present.map(({sk,tag,f})=>{
+      const dl=safeName(label)+"--"+tag+extOf(f.name||f.path||"");
+      return '<div class="ffile"><span class="ftag">'+esc(tag)+'</span><span class="fnm" title="'+esc(f.name||"")+'">'+esc(f.name||"檔案")+'</span><span style="flex:1"></span>'+
+        '<button class="btn btn-sm" data-act="filedl" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" data-slot="'+esc(sk)+'" data-dl="'+esc(dl)+'">下載</button>'+
+        '<button class="btn btn-sm btn-danger" data-act="filedel" data-gid="'+esc(g.id)+'" data-rk="'+rk+'" data-slot="'+esc(sk)+'">刪除</button></div>';
+    }).join("");
+    return '<div class="files-grouprow">'+head+(fileList?'<div class="ffiles">'+fileList+'</div>':'')+'</div>';
   }).join("");
+}
+async function deleteFile(gid,rk,slot){
+  const rec=(FILES_MAP[gid]||{})[rk]||{}; const f=rec[slot]; if(!f) return;
+  if(!confirm("確定刪除此檔案？（"+(f.name||"檔案")+"）\\n將同時從 Firebase Storage 移除，無法復原。")) return;
+  try{
+    if(f.path){ try{ await storage.ref(f.path).delete(); }catch(_){}}
+    await db.doc("groupFiles/"+gid).update({[rk+"."+slot]: firebase.firestore.FieldValue.delete()});
+    if(FILES_MAP[gid] && FILES_MAP[gid][rk]) delete FILES_MAP[gid][rk][slot];
+    if(f.size){ try{ await db.doc("settings/storage").set({bytes:firebase.firestore.FieldValue.increment(-(+f.size||0))},{merge:true}); }catch(_){}}
+    renderFilesTab();
+  }catch(e){ alert("刪除失敗："+(e.code||e.message)); }
 }
 $("#fileSubtabs").addEventListener("click",e=>{ const b=e.target.closest(".subtab"); if(!b)return; curFR=b.dataset.fr; $$(".subtab").forEach(x=>x.classList.toggle("on",x===b)); renderFilesTab(); });
 $("#reloadFiles").onclick=loadFilesTab;
@@ -874,8 +896,10 @@ async function downloadSingleFromMap(el, getRec){
   finally{ el.textContent=t; el.style.opacity=""; }
 }
 $("#filesHost").addEventListener("click",e=>{
-  const single=e.target.closest(".file-single");
-  if(single){ downloadSingleFromMap(single, (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); return; }
+  const dlBtn=e.target.closest("[data-act=filedl]");
+  if(dlBtn){ downloadSingleFromMap(dlBtn, (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); return; }
+  const delBtn=e.target.closest("[data-act=filedel]");
+  if(delBtn){ deleteFile(delBtn.dataset.gid, delBtn.dataset.rk, delBtn.dataset.slot); return; }
   const folder=e.target.closest(".folder");
   if(folder){ zipFolder(folder, gid=>(FILES_GROUPS||[]).find(x=>x.id===gid), (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); }
 });
@@ -1282,8 +1306,14 @@ $("#groupsHost").addEventListener("click",async e=>{
     catch(err){ flash("asgMsg","儲存失敗："+(err.code||err.message),false); }
   }
   if(e.target.closest("[data-act=del-group]")){
-    if(!confirm("確定刪除這一組？此動作無法復原。"))return;
-    try{ await db.doc("groups/"+gid).delete(); await loadGroups(); await loadLeaders(); flash("asgMsg","已刪除。"); }
+    if(!confirm("確定刪除這一組？將一併刪除其上傳檔案，且無法復原。"))return;
+    try{
+      // 先刪 Storage 內該組所有檔案，避免留下孤兒檔
+      try{ await deleteFolderDeep(storage.ref("groups/"+gid)); }catch(_){}
+      await db.doc("groupFiles/"+gid).delete().catch(()=>{});
+      await db.doc("groups/"+gid).delete();
+      await loadGroups(); await loadLeaders(); flash("asgMsg","已刪除（含上傳檔案）。");
+    }
     catch(err){ flash("asgMsg","刪除失敗："+(err.code||err.message),false); }
   }
 });
@@ -1575,9 +1605,9 @@ $("#resetYear").onclick=async()=>{
   if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
   $("#resetYear").disabled=true; msg.textContent="處理中…"; msg.className="msg";
   try{
-    const [studs,groups,grades,cscores,anns,gfiles]=await Promise.all([
+    const [studs,groups,grades,cscores,gfiles]=await Promise.all([
       db.collection("users").where("role","==","student").get(), db.collection("groups").get(),
-      db.collection("grades").get(), db.collection("committeeScores").get(), db.collection("announcements").get(),
+      db.collection("grades").get(), db.collection("committeeScores").get(),
       db.collection("groupFiles").get()
     ]);
     const curGids=new Set(), nextGroupDocs=[];
@@ -1591,8 +1621,7 @@ $("#resetYear").onclick=async()=>{
     grades.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
     gfiles.docs.forEach(d=>{ if(curGids.has(d.id)) refs.push(d.ref); });
     cscores.docs.forEach(d=>{ const gid=(d.data()||{}).gid; if(gid && curGids.has(gid)) refs.push(d.ref); });
-    // 公告全部清除（屬本屆競賽）
-    anns.docs.forEach(d=>refs.push(d.ref));
+    // 公告：保留不刪除
     for(let i=0;i<refs.length;i+=400){ const batch=db.batch(); refs.slice(i,i+400).forEach(r=>batch.delete(r)); await batch.commit(); }
     // 下屆升為應屆
     for(let i=0;i<nextGroupDocs.length;i+=400){ const batch=db.batch(); nextGroupDocs.slice(i,i+400).forEach(d=>batch.set(d.ref,{cohort:"current"},{merge:true})); await batch.commit(); }
