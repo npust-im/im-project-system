@@ -1175,8 +1175,19 @@ document.addEventListener("click",async e=>{
     try{ await auth.sendPasswordResetEmail(email); msg.textContent="已寄出密碼重設信至 "+email; msg.className="msg ok"; }
     catch(err){ msg.textContent="寄送失敗："+(err.code||err.message); msg.className="msg err"; }
   }else if(e.target.closest("[data-act=del-acc]")){
-    if(!confirm("確定刪除此帳號？將移除其角色（登入帳號記錄需另於 Firebase 主控台或清除腳本移除）。"))return;
-    try{ await db.doc("users/"+uid).delete(); await loadAccounts(); await loadGroups(); }
+    const isCommittee = !!row.closest("#committeeAccList");
+    if(!confirm("確定刪除此帳號？將移除其角色"+(isCommittee?"、個人資料（身分證字號、存簿封面等）與其評分":"")+"。\n（登入帳號記錄需另於 Firebase 主控台移除。）"))return;
+    try{
+      if(isCommittee){
+        try{ await deleteFolderDeep(storage.ref("committee/"+uid)); }catch(_){}
+        await db.doc("committeeDocs/"+uid).delete().catch(()=>{});
+        try{ const cs=await db.collection("committeeScores").where("committeeUid","==",uid).get();
+          for(let i=0;i<cs.docs.length;i+=400){ const b=db.batch(); cs.docs.slice(i,i+400).forEach(d=>b.delete(d.ref)); await b.commit(); } }catch(_){}
+      }
+      await db.doc("users/"+uid).delete();
+      await loadAccounts(); await loadGroups();
+      if(typeof loadCommitteeDocs==="function") loadCommitteeDocs();
+    }
     catch(err){ msg.textContent="刪除失敗："+(err.code||err.message); msg.className="msg err"; }
   }
 });
