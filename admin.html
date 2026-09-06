@@ -293,7 +293,7 @@ html,body{overflow-x:hidden}
   <!-- 網站設定 -->
   <div class="tabpane on" data-pane="site">
     <section class="panel">
-      <div class="panel-head"><h2>網站設定</h2><span class="hint">顯示於首頁頁首與標題列</span></div>
+      <div class="panel-head"><h2>網站設定</h2><span class="hint">設定首頁顯示的校名與學年度</span></div>
       <div class="grid2">
         <div><label for="fSchool">學校名稱</label><input id="fSchool" type="text" placeholder="例如：國立○○大學"></div>
         <div><label for="fYear">學年度標籤</label><input id="fYear" type="text" placeholder="例如：115 學年度"></div>
@@ -302,7 +302,7 @@ html,body{overflow-x:hidden}
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>修改管理員密碼</h2><span class="hint">變更目前登入之管理員帳號密碼</span></div>
+      <div class="panel-head"><h2>修改管理員密碼</h2><span class="hint">變更目前登入帳號的密碼</span></div>
       <div class="grid2">
         <div><label>目前密碼</label><input id="cpw" type="password" autocomplete="current-password"></div>
         <div></div>
@@ -313,8 +313,8 @@ html,body{overflow-x:hidden}
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>開放評分設定</h2><span class="hint">避免分數填錯學期或階段</span></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 8px">關閉後，該次評分對教授／委員仍可檢視但無法儲存。請在對應時間開放。</p>
+      <div class="panel-head"><h2>開放評分設定</h2><span class="hint">控制教授／委員各次評分的開放時間</span></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 8px">未開放時，教授／委員可檢視但無法儲存分數；到截止時間會自動關閉。</p>
       <div class="grid2 score-open">
         <div style="border-right:1px solid var(--line);padding-right:18px">
           <div class="score-col-title">指導教授</div>
@@ -343,16 +343,16 @@ html,body{overflow-x:hidden}
           </div>
         </div>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin:2px 0 0">開始時間留空＝即刻套用（立即開放）；截止時間留空＝不自動關閉。</p>
+      <p style="font-size:12px;color:var(--muted);margin:2px 0 0">留空：開始＝立即開放、截止＝不自動關閉。</p>
       <div class="actions"><button class="btn btn-primary" id="saveScoring">儲存開放設定</button><span class="msg ok" id="scoringMsg"></span></div>
       <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
         <label class="chk" style="margin:0"><input type="checkbox" id="scLocked"> <strong style="color:var(--danger)">結算鎖定</strong>：鎖定後委員、指導教授、學生一律無法再修改成績與上傳（僅系辦可調整）</label>
-        <p style="font-size:12px;color:var(--muted);margin:8px 0 0">競賽與評分全部結束、確認無誤後再勾選並儲存，可從資料庫層面防止任何人事後竄改。</p>
+        <p style="font-size:12px;color:var(--muted);margin:8px 0 0">成績全部確認無誤後再勾選並儲存，可從資料庫層防止事後竄改。</p>
       </div>
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>流程與日程</h2><span class="hint">首頁時間軸的各階段與日期</span></div>
+      <div class="panel-head"><h2>流程與日程</h2><span class="hint">編輯首頁時間軸的階段與日期</span></div>
       <label for="fCurrent">目前進行到</label><select id="fCurrent"></select>
       <div id="stagesHost" style="margin-top:16px"></div>
       <div class="actions">
@@ -364,7 +364,7 @@ html,body{overflow-x:hidden}
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>公告</h2><span class="hint">新增後即顯示於首頁</span></div>
+      <div class="panel-head"><h2>公告</h2><span class="hint">發布後顯示於首頁</span></div>
       <div id="annHost"></div>
       <div class="actions"><button class="btn btn-accent btn-sm" id="addAnn">＋ 新增公告</button><span class="msg ok" id="annMsg"></span></div>
     </section>
@@ -377,7 +377,7 @@ html,body{overflow-x:hidden}
       <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。Authentication 的登入帳號不會被刪除。</p>
       <button class="btn btn-danger" id="resetYear">執行年度重置（升屆）</button><span class="msg" id="resetMsg" style="display:block;margin-bottom:14px"></span>
       <div style="border-top:1px solid var(--line);padding-top:12px">
-        <p style="font-size:13px;color:var(--muted);margin:0 0 8px">另外：Firebase Storage 內的實體檔案（各組上傳檔）不會隨上方按鈕刪除。若要一併清空儲存空間，按下方（也需輸入 RESET 確認）。委員個人資料檔案不受影響。</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Storage 內的實體檔不會隨上方按鈕刪除；要一併清空請按下方（需輸入 RESET）。委員個人資料不受影響。</p>
         <button class="btn btn-sm btn-danger" id="wipeStorage">清空所有各組上傳檔案（Storage）</button><span class="msg" id="wipeMsg" style="margin-left:10px"></span>
       </div>
     </section>
@@ -386,7 +386,7 @@ html,body{overflow-x:hidden}
   <!-- 競賽發表 -->
   <div class="tabpane" data-pane="contest">
     <section class="panel">
-      <div class="panel-head"><h2>入選第二階段名單</h2><span class="hint">未勾選發布時，首頁顯示「尚未公布」</span></div>
+      <div class="panel-head"><h2>入選第二階段名單</h2><span class="hint">選出並發布晉級口頭發表的組別</span></div>
       <label class="chk"><input type="checkbox" id="fPublished"> 發布名單至首頁</label>
       <label for="fIntro">名單上方說明（可換行，顯示於表格上方）</label>
       <textarea id="fIntro" placeholder="例如：&#10;1. 依據本系實務專題競賽辦法，下列 N 組進入第二階段：口頭發表競賽。&#10;2. 第二階段舉辦日期為 114年12月8日（星期一），未進入第二階段之組別仍需出席當天活動。"></textarea>
@@ -404,7 +404,7 @@ html,body{overflow-x:hidden}
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>口頭發表當天議程</h2><span class="hint">勾選顯示後置頂於首頁</span></div>
+      <div class="panel-head"><h2>口頭發表當天議程</h2><span class="hint">編排發表當天的時間流程</span></div>
       <label class="chk"><input type="checkbox" id="agPublished"> 顯示於首頁（置頂）</label>
       <div class="grid2" style="margin-top:8px">
         <div><label for="agTitle">標題</label><input id="agTitle" type="text" placeholder="例如：114 學年度實務專題第二階段口頭發表競賽"></div>
@@ -429,10 +429,10 @@ html,body{overflow-x:hidden}
           <label class="dl">登錄開始 <input type="datetime-local" id="fRegStart"></label>
           <label class="dl">登錄截止 <input type="datetime-local" id="fRegDeadline"></label>
         </div>
-        <p class="sethint">勾「開放分組登錄」為總開關；另可設「開始／截止時間」自動控制：未到開始時間或已過截止時間，學生皆無法送出分組名單（留空＝不限制該端）。勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽。</p>
+        <p class="sethint">「開放分組登錄」為總開關；可另設開始／截止時間自動控制（留空＝不限制）。勾「下屆」後，之後登錄的組別只做分組與洽詢老師，不進入本屆競賽。</p>
       </div>
       <div class="setgrp">
-        <div class="setlabel">開放檔案上傳（可各自設截止時間）</div>
+        <div class="setlabel">開放檔案上傳（可各自設開始／截止時間）</div>
         <div class="setrow">
           <label class="chk"><input type="checkbox" id="fForm1Open"> 第一次（報告／簡報／補充）</label>
           <label class="dl">開始 <input type="datetime-local" id="fForm1Start"></label>
@@ -452,14 +452,14 @@ html,body{overflow-x:hidden}
       <div class="actions"><button class="btn btn-primary" id="saveUploads">儲存設定</button><span class="msg ok" id="upMsg"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">三次分開，各自顯示於學生入口對應分頁</span></div>
+      <div class="panel-head"><h2>專題規定／說明文件</h2><span class="hint">各次上傳的規定，顯示於學生對應分頁</span></div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 10px">PDF 或圖片（PNG／JPG），單檔 50MB；上傳新檔取代舊檔，三次可各自不同。</p>
       <div data-rblock="1" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第一次上傳規定（報告／簡報／補充資料）</div><div id="rulesCurrent1" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="1" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="1" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg1" style="margin-left:10px"></span></div>
       <div data-rblock="2" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第二次上傳規定（入選組別：發表簡報）</div><div id="rulesCurrent2" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="2" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="2" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg2" style="margin-left:10px"></span></div>
       <div data-rblock="3" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第三次上傳規定（最終成果：報告／簡報）</div><div id="rulesCurrent3" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="3" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="3" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg3" style="margin-left:10px"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開編輯</span></div>
+      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開，編輯名單／題目／指導老師</span></div>
       <div class="gsummary" id="gsummary"></div>
       <div class="score-controls" style="margin-bottom:12px">
         <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師…">
@@ -478,7 +478,8 @@ html,body{overflow-x:hidden}
       <div class="actions"><button class="btn btn-sm btn-ghost" id="reloadGroups">重新整理</button><span class="msg ok" id="asgMsg"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>組長帳號</h2><span class="hint">重設密碼或刪除組長帳號</span></div>
+      <div class="panel-head"><h2>組長帳號</h2><span class="hint">寄送密碼重設信或刪除組長帳號</span></div>
+      <div class="seg" id="leaderCohortSeg" style="margin-bottom:12px"><button class="on" data-lc="all">全部</button><button data-lc="current">應屆</button><button data-lc="next">下屆</button></div>
       <div id="leaderHost"></div>
     </section>
   </div>
@@ -511,7 +512,7 @@ html,body{overflow-x:hidden}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>委員個人資料（匯款用）</h2><div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="reloadCDocs">重新整理</button><button class="btn btn-sm" id="csvCDocs" data-xlsx="cdocs">下載 Excel</button></div></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">委員於委員入口自行上傳。此區僅系辦可見。CSV 僅含文字欄位；證件與存簿為檔案連結。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">委員於委員入口自行上傳，僅系辦可見。Excel 匯出含文字欄位，存簿為檔案連結。</p>
       <div id="cdocsHost"></div>
     </section>
   </div>
@@ -530,7 +531,7 @@ html,body{overflow-x:hidden}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>學生上傳檔案</h2><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost" id="reloadFiles">重新整理</button></div></div>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">點資料夾即下載整包 zip，檔名為「小組編號--專題題目」（取自「學生」分頁所填編號與題目）。</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">點檔案可下載或刪除、資料夾可下載整包 zip；命名為「小組編號--專題題目」（取自「學生」分頁所填欄位）。</p>
       <div class="subtabs" id="fileSubtabs">
         <button class="subtab on" data-fr="r1">第一次</button>
         <button class="subtab" data-fr="r2">第二次</button>
@@ -1326,14 +1327,19 @@ async function loadLeaders(){
   const host=$("#leaderHost");
   if(!leaders.length){host.innerHTML='<p class="empty-note">尚無組長帳號。</p>';return;}
   host.innerHTML=leaders.map(u=>{const g=gmap[u.uid];const info=g?esc((g.groupNo||"未編號")+"　"+(g.leaderName||"")):"（尚未送出分組）";
-    return '<div class="accrow" data-uid="'+esc(u.uid)+'" data-email="'+esc(u.email||"")+'">'+
-      '<span style="font-weight:500;min-width:170px">'+esc(u.email||"（無 email）")+'</span>'+
+    const coh=g?(g.cohort==="next"?"next":"current"):"";
+    const badge=coh==="next"?'<span class="cohort-badge next">下屆</span>':coh==="current"?'<span class="cohort-badge cur">應屆</span>':'';
+    return '<div class="accrow" data-uid="'+esc(u.uid)+'" data-email="'+esc(u.email||"")+'" data-cohort="'+coh+'">'+
+      '<span style="font-weight:500;min-width:170px">'+esc(u.email||"（無 email）")+'</span>'+badge+
       '<span class="ac-email">'+info+'</span><span class="spacer" style="flex:1"></span>'+
       '<button class="btn btn-sm" data-act="reset-pw">寄送密碼重設信</button>'+
       '<button class="btn btn-sm btn-danger" data-act="del-acc-leader">刪除</button>'+
       '<span class="msg" data-msg style="flex-basis:100%"></span></div>';
   }).join("");
+  filterLeaders();
 }
+function filterLeaders(){ const seg=$("#leaderCohortSeg"); const on=seg&&seg.querySelector("button.on"); const v=on?on.dataset.lc:"all"; $$("#leaderHost .accrow").forEach(r=>{ r.style.display=(v==="all"||r.dataset.cohort===v)?"":"none"; }); }
+$("#leaderCohortSeg")&&$("#leaderCohortSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; $$("#leaderCohortSeg button").forEach(x=>x.classList.toggle("on",x===b)); filterLeaders(); });
 $("#leaderHost").addEventListener("click",async e=>{
   if(e.target.closest("[data-act=reset-pw]")){
     const row=e.target.closest(".accrow"); const msg=$("[data-msg]",row); const email=row.dataset.email;
@@ -1344,8 +1350,8 @@ $("#leaderHost").addEventListener("click",async e=>{
   }
   const del=e.target.closest("[data-act=del-acc-leader]"); if(!del)return;
   const row=e.target.closest(".accrow"); const uid=row.dataset.uid; const msg=$("[data-msg]",row);
-  if(!confirm("確定刪除此組長？將移除其角色與分組資料。\\n（登入帳號記錄需另於主控台或清除腳本移除。）"))return;
-  try{ await db.doc("groups/"+uid).delete().catch(()=>{}); await db.doc("users/"+uid).delete(); await loadLeaders(); await loadGroups(); }
+  if(!confirm("確定刪除此組長？將移除其角色、分組與上傳檔案。\\n（登入帳號記錄需另於主控台移除。）"))return;
+  try{ try{ await deleteFolderDeep(storage.ref("groups/"+uid)); }catch(_){} await db.doc("groupFiles/"+uid).delete().catch(()=>{}); await db.doc("groups/"+uid).delete().catch(()=>{}); await db.doc("users/"+uid).delete(); await loadLeaders(); await loadGroups(); }
   catch(err){ msg.textContent="刪除失敗："+(err.code||err.message); msg.className="msg err"; }
 });
 
