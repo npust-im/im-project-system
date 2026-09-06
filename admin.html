@@ -371,13 +371,11 @@ html,body{overflow-x:hidden}
 
     <section class="panel" style="border-color:#e6ccc8">
       <div class="panel-head"><h2 style="color:var(--danger)">年度重置（升屆）</h2><span class="hint">本屆競賽結束後執行</span></div>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 6px">將刪除【應屆競賽】屆別的：分組、組長帳號資料、各組上傳檔案中繼、指導老師成績、校外委員評分。<strong>公告保留不刪除。</strong></p>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 6px"><strong>並把【下屆】的所有組別自動升為【應屆競賽】</strong>（下屆的登錄與名單完整保留，隔年接著使用）。</p>
-      <p style="font-size:14px;color:var(--muted);margin:0 0 12px">保留：網站設定、流程與日程、規定文件，以及指導教授／校外委員／管理員帳號與其個人資料。</p>
-      <p style="font-size:13px;color:var(--danger);margin:0 0 14px">此動作無法復原。Authentication 的登入帳號不會被刪除。</p>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 8px">刪除【應屆競賽】屆別的分組、上傳中繼、教授成績、委員評分與組長帳號資料，並將【下屆】升為【應屆】。<strong>公告、各項設定與帳號皆保留。</strong></p>
+      <p style="font-size:13px;color:var(--danger);margin:0 0 14px">無法復原。登入帳號與 Storage 實體檔不會被刪除。</p>
       <button class="btn btn-danger" id="resetYear">執行年度重置（升屆）</button><span class="msg" id="resetMsg" style="display:block;margin-bottom:14px"></span>
       <div style="border-top:1px solid var(--line);padding-top:12px">
-        <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Storage 內的實體檔不會隨上方按鈕刪除；要一併清空請按下方（需輸入 RESET）。委員個人資料不受影響。</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 8px">上方不會刪除 Storage 實體檔；要一併清空按下方（需輸入 RESET），委員個人資料不受影響。</p>
         <button class="btn btn-sm btn-danger" id="wipeStorage">清空所有各組上傳檔案（Storage）</button><span class="msg" id="wipeMsg" style="margin-left:10px"></span>
       </div>
     </section>
@@ -785,7 +783,7 @@ function renderFilesTab(){
 }
 async function deleteFile(gid,rk,slot){
   const rec=(FILES_MAP[gid]||{})[rk]||{}; const f=rec[slot]; if(!f) return;
-  if(!confirm("確定刪除此檔案？（"+(f.name||"檔案")+"）\\n將同時從 Firebase Storage 移除，無法復原。")) return;
+  if(!confirm("確定刪除此檔案？（"+(f.name||"檔案")+"）\n將同時從 Firebase Storage 移除，無法復原。")) return;
   try{
     if(f.path){ try{ await storage.ref(f.path).delete(); }catch(_){}}
     await db.doc("groupFiles/"+gid).update({[rk+"."+slot]: firebase.firestore.FieldValue.delete()});
@@ -1350,7 +1348,7 @@ $("#leaderHost").addEventListener("click",async e=>{
   }
   const del=e.target.closest("[data-act=del-acc-leader]"); if(!del)return;
   const row=e.target.closest(".accrow"); const uid=row.dataset.uid; const msg=$("[data-msg]",row);
-  if(!confirm("確定刪除此組長？將移除其角色、分組與上傳檔案。\\n（登入帳號記錄需另於主控台移除。）"))return;
+  if(!confirm("確定刪除此組長？將移除其角色、分組與上傳檔案。\n（登入帳號記錄需另於主控台移除。）"))return;
   try{ try{ await deleteFolderDeep(storage.ref("groups/"+uid)); }catch(_){} await db.doc("groupFiles/"+uid).delete().catch(()=>{}); await db.doc("groups/"+uid).delete().catch(()=>{}); await db.doc("users/"+uid).delete(); await loadLeaders(); await loadGroups(); }
   catch(err){ msg.textContent="刪除失敗："+(err.code||err.message); msg.className="msg err"; }
 });
@@ -1606,7 +1604,7 @@ document.addEventListener("click",e=>{
 /* 年度重置 */
 $("#resetYear").onclick=async()=>{
   const msg=$("#resetMsg");
-  const typed=prompt("此操作會刪除【應屆競賽】屆別的分組與成績等資料，並把【下屆】升為【應屆競賽】，無法復原。\\n確定請輸入大寫 RESET：");
+  const typed=prompt("此操作會刪除【應屆競賽】屆別的分組與成績等資料，並把【下屆】升為【應屆競賽】，無法復原。\n確定請輸入大寫 RESET：");
   if(typed===null) return;
   if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
   $("#resetYear").disabled=true; msg.textContent="處理中…"; msg.className="msg";
@@ -1648,7 +1646,7 @@ async function deleteFolderDeep(ref){
 }
 $("#wipeStorage").onclick=async()=>{
   const msg=$("#wipeMsg");
-  const typed=prompt("此操作會刪除 Storage 內【所有各組上傳的實體檔案】（groups/ 資料夾），無法復原。\\n委員個人資料與規定文件不受影響。\\n確定請輸入大寫 RESET：");
+  const typed=prompt("此操作會刪除 Storage 內【所有各組上傳的實體檔案】（groups/ 資料夾），無法復原。\n委員個人資料與規定文件不受影響。\n確定請輸入大寫 RESET：");
   if(typed===null) return;
   if(typed.trim()!=="RESET"){ msg.textContent="未輸入 RESET，已取消。"; msg.className="msg err"; return; }
   $("#wipeStorage").disabled=true; msg.textContent="清除中…"; msg.className="msg";
