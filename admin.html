@@ -351,15 +351,29 @@ html,body{overflow-x:hidden}
       </div>
     </section>
 
-    <section class="panel">
-      <div class="panel-head"><h2>流程與日程</h2><span class="hint">編輯首頁時間軸的階段與日期</span></div>
-      <label for="fCurrent">目前進行到</label><select id="fCurrent"></select>
-      <div id="stagesHost" style="margin-top:16px"></div>
+    <section class="panel" data-flow="current">
+      <div class="panel-head"><h2>流程與日程 · 應屆競賽</h2><span class="hint">首頁「應屆」時間軸</span></div>
+      <label>區塊標題（顯示於首頁，可填年度）</label><input class="fl-title" type="text" placeholder="例如：113 學年度 · 應屆競賽日程">
+      <label style="margin-top:10px">目前進行到</label><select class="fl-current"></select>
+      <div class="fl-stages" style="margin-top:16px"></div>
       <div class="actions">
-        <button class="btn btn-sm" id="addStage">＋ 新增階段</button>
-        <button class="btn btn-sm btn-ghost" id="seedStages">載入預設流程</button>
+        <button class="btn btn-sm fl-add">＋ 新增階段</button>
+        <button class="btn btn-sm btn-ghost fl-seed">載入預設流程</button>
         <span class="spacer"></span>
-        <button class="btn btn-primary" id="saveFlow">儲存流程與日程</button><span class="msg ok" id="flowMsg"></span>
+        <button class="btn btn-primary fl-save">儲存應屆日程</button><span class="msg ok" id="flMsg_current"></span>
+      </div>
+    </section>
+
+    <section class="panel" data-flow="next">
+      <div class="panel-head"><h2>流程與日程 · 下屆</h2><span class="hint">首頁「下屆」時間軸；無階段時首頁自動隱藏</span></div>
+      <label>區塊標題（顯示於首頁，可填年度）</label><input class="fl-title" type="text" placeholder="例如：114 學年度 · 下屆日程">
+      <label style="margin-top:10px">目前進行到</label><select class="fl-current"></select>
+      <div class="fl-stages" style="margin-top:16px"></div>
+      <div class="actions">
+        <button class="btn btn-sm fl-add">＋ 新增階段</button>
+        <button class="btn btn-sm btn-ghost fl-seed">載入預設流程</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary fl-save">儲存下屆日程</button><span class="msg ok" id="flMsg_next"></span>
       </div>
     </section>
 
@@ -603,7 +617,8 @@ const DEFAULT_STAGES=[
   {id:"final",  term:"大四上學期",name:"成果繳交與第二次評定",date:"",desc:"繳交完整成果，由指導老師評定第二次專題成績。"}
 ];
 
-let state={stages:[],currentStageId:"",finalists:{published:false,groups:[],intro:"",foot:"※此排序非第一階段成績排序。"}};
+let state={stages:[],currentStageId:"",flows:{current:{title:"",stages:[],currentStageId:""},next:{title:"",stages:[],currentStageId:""}},finalists:{published:false,groups:[],intro:"",foot:"※此排序非第一階段成績排序。"}};
+const FLOW_DEFAULT_TITLE={current:"應屆競賽日程",next:"下屆日程"};
 let TEACHERS=[], COMMITTEE=[], GROUPMAP={}, GRADES={}, CSCORES=[], GFILES={};
 
 /* 分頁 */
@@ -643,9 +658,13 @@ async function loadAll(){
     db.doc("settings/scoring").get(), db.doc("settings/agenda").get()
   ]);
   if(site.exists){$("#fSchool").value=site.data().school||"";$("#fYear").value=site.data().academicYear||"";}
-  state.stages=flow.exists&&Array.isArray(flow.data().stages)?flow.data().stages:[];
-  state.currentStageId=flow.exists?(flow.data().currentStageId||""):"";
-  renderStages();
+  const fd=flow.exists?flow.data():{};
+  const mk=(o,dflt)=>({title:(o&&o.title)||dflt, stages:(o&&Array.isArray(o.stages))?o.stages:[], currentStageId:(o&&o.currentStageId)||""});
+  // 相容舊資料：舊的 {stages,currentStageId} 視為「應屆」
+  state.flows.current = fd.current ? mk(fd.current,FLOW_DEFAULT_TITLE.current)
+    : mk({title:"",stages:fd.stages,currentStageId:fd.currentStageId}, FLOW_DEFAULT_TITLE.current);
+  state.flows.next = mk(fd.next, FLOW_DEFAULT_TITLE.next);
+  renderStages("current"); renderStages("next");
   if(fin.exists){const d=fin.data();state.finalists={published:!!d.published,groups:Array.isArray(d.groups)?d.groups:[],intro:d.intro||"",foot:(d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。")};}
   $("#fPublished").checked=state.finalists.published; $("#fIntro").value=state.finalists.intro||""; $("#fFoot").value=state.finalists.foot||""; renderFinalists();
   $("#fRegOpen").checked = reg.exists ? !!reg.data().open : false;
@@ -903,10 +922,18 @@ $("#filesHost").addEventListener("click",e=>{
   if(folder){ zipFolder(folder, gid=>(FILES_GROUPS||[]).find(x=>x.id===gid), (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}); }
 });
 function stageId(){return "s"+Math.random().toString(36).slice(2,8);}
-function syncStagesFromDOM(){state.stages=$$("#stagesHost .item").map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));state.currentStageId=$("#fCurrent").value;}
-function renderStages(){
-  const host=$("#stagesHost");
-  host.innerHTML=state.stages.map((s,idx)=>`<div class="item stage-item" data-id="${esc(s.id||stageId())}" data-idx="${idx}">
+function flowPanel(flow){ return document.querySelector('[data-flow="'+flow+'"]'); }
+function syncFromDOM(flow){
+  const p=flowPanel(flow); if(!p) return; const f=state.flows[flow];
+  f.title=$(".fl-title",p).value.trim();
+  f.currentStageId=$(".fl-current",p).value;
+  f.stages=$$(".fl-stages .item",p).map(row=>({id:row.dataset.id,term:$(".f-term",row).value.trim(),name:$(".f-name",row).value.trim(),date:$(".f-date",row).value.trim(),desc:$(".f-desc",row).value.trim()}));
+}
+function renderStages(flow){
+  const p=flowPanel(flow); if(!p) return; const f=state.flows[flow];
+  $(".fl-title",p).value=f.title||"";
+  const host=$(".fl-stages",p);
+  host.innerHTML=(f.stages||[]).map((s,idx)=>`<div class="item stage-item" data-id="${esc(s.id||stageId())}" data-idx="${idx}">
     <div class="stage-bar" data-act="toggle-stage">
       <span class="drag-handle" draggable="true" title="按住拖曳排序">⠿</span>
       <span class="stage-title" data-title>${esc(s.name)||'（未命名階段）'}</span>
@@ -922,31 +949,36 @@ function renderStages(){
     <div><label>日期</label><input class="f-date" type="text" value="${esc(s.date)}" placeholder="例如：2026 · 10月"></div>
     <div><label>說明</label><input class="f-desc" type="text" value="${esc(s.desc)}"></div>
     </div><div class="item-foot"><button class="btn btn-sm btn-danger" data-act="del-stage">刪除此階段</button></div></div>`).join("")
-    || '<p class="empty-note">尚無階段。可按「載入預設流程」帶入標準七階段，再修改日期。</p>';
-  const sel=$("#fCurrent"); sel.innerHTML='<option value="">（未指定）</option>'+state.stages.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(""); sel.value=state.currentStageId||"";
+    || '<p class="empty-note">尚無階段。可按「載入預設流程」帶入標準流程，再修改日期。</p>';
+  const sel=$(".fl-current",p); sel.innerHTML='<option value="">（未指定）</option>'+(f.stages||[]).map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(""); sel.value=f.currentStageId||"";
 }
-function moveStage(from,to){ if(from===to||from<0||to<0||from>=state.stages.length||to>=state.stages.length)return; const a=state.stages.splice(from,1)[0]; state.stages.splice(to,0,a); renderStages(); }
-$("#addStage").onclick=()=>{syncStagesFromDOM();state.stages.push({id:stageId(),term:"",name:"",date:"",desc:""});renderStages();const items=$$("#stagesHost .stage-item");if(items.length)items[items.length-1].classList.add("open");};
-$("#seedStages").onclick=()=>{syncStagesFromDOM();state.stages=DEFAULT_STAGES.map(s=>({...s}));state.currentStageId="";renderStages();};
-$("#stagesHost").addEventListener("click",e=>{
-  const item=e.target.closest(".stage-item"); if(!item) return; const idx=+item.dataset.idx;
-  if(e.target.closest("[data-act=del-stage]")){ syncStagesFromDOM(); state.stages=state.stages.filter(s=>s.id!==item.dataset.id); renderStages(); return; }
-  if(e.target.closest("[data-act=up]")){ syncStagesFromDOM(); moveStage(idx, idx-1); return; }
-  if(e.target.closest("[data-act=down]")){ syncStagesFromDOM(); moveStage(idx, idx+1); return; }
-  if(e.target.closest(".drag-handle")) return;
-  if(e.target.closest("[data-act=toggle-stage]")){ item.classList.toggle("open"); return; }
-});
-$("#stagesHost").addEventListener("input",e=>{
-  const item=e.target.closest(".stage-item"); if(!item) return;
-  if(e.target.classList.contains("f-name")){ const t=$("[data-title]",item); if(t) t.textContent=e.target.value||"（未命名階段）"; }
-  if(e.target.classList.contains("f-term")||e.target.classList.contains("f-date")){ const sum=$("[data-sum]",item); if(sum) sum.textContent=[$(".f-term",item).value,$(".f-date",item).value].filter(Boolean).join(" · "); }
-});
-let DRAG_IDX=-1;
-$("#stagesHost").addEventListener("dragstart",e=>{ const h=e.target.closest(".drag-handle"); if(!h){ e.preventDefault(); return; } const item=h.closest(".stage-item"); syncStagesFromDOM(); DRAG_IDX=+item.dataset.idx; item.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",String(DRAG_IDX));}catch(_){} });
-$("#stagesHost").addEventListener("dragover",e=>{ const item=e.target.closest(".stage-item"); if(!item||DRAG_IDX<0)return; e.preventDefault(); e.dataTransfer.dropEffect="move"; $$("#stagesHost .stage-item").forEach(x=>x.classList.toggle("dragover",x===item)); });
-$("#stagesHost").addEventListener("drop",e=>{ const item=e.target.closest(".stage-item"); if(!item||DRAG_IDX<0)return; e.preventDefault(); const to=+item.dataset.idx; moveStage(DRAG_IDX,to); DRAG_IDX=-1; });
-$("#stagesHost").addEventListener("dragend",()=>{ DRAG_IDX=-1; $$("#stagesHost .stage-item").forEach(x=>x.classList.remove("dragover","dragging")); });
-$("#saveFlow").onclick=async()=>{syncStagesFromDOM();try{await db.doc("settings/flow").set({currentStageId:state.currentStageId,stages:state.stages});flash("flowMsg","已儲存。");}catch(e){flash("flowMsg","儲存失敗："+(e.code||e.message),false);}};
+function moveStage(flow,from,to){ const st=state.flows[flow].stages; if(from===to||from<0||to<0||from>=st.length||to>=st.length)return; const a=st.splice(from,1)[0]; st.splice(to,0,a); renderStages(flow); }
+function wireFlowPanel(flow){
+  const p=flowPanel(flow); if(!p||p.__wired) return; p.__wired=true;
+  const host=$(".fl-stages",p);
+  $(".fl-add",p).onclick=()=>{ syncFromDOM(flow); state.flows[flow].stages.push({id:stageId(),term:"",name:"",date:"",desc:""}); renderStages(flow); const items=host.querySelectorAll(".stage-item"); if(items.length) items[items.length-1].classList.add("open"); };
+  $(".fl-seed",p).onclick=()=>{ syncFromDOM(flow); state.flows[flow].stages=DEFAULT_STAGES.map(s=>({...s})); state.flows[flow].currentStageId=""; renderStages(flow); };
+  $(".fl-save",p).onclick=async()=>{ syncFromDOM(flow); const f=state.flows[flow]; try{ await db.doc("settings/flow").set({[flow]:{title:f.title,stages:f.stages,currentStageId:f.currentStageId}},{merge:true}); flash("flMsg_"+flow,"已儲存。"); }catch(e){ flash("flMsg_"+flow,"儲存失敗："+(e.code||e.message),false); } };
+  host.addEventListener("click",e=>{
+    const item=e.target.closest(".stage-item"); if(!item) return; const idx=+item.dataset.idx;
+    if(e.target.closest("[data-act=del-stage]")){ syncFromDOM(flow); state.flows[flow].stages=state.flows[flow].stages.filter(s=>s.id!==item.dataset.id); renderStages(flow); return; }
+    if(e.target.closest("[data-act=up]")){ syncFromDOM(flow); moveStage(flow,idx,idx-1); return; }
+    if(e.target.closest("[data-act=down]")){ syncFromDOM(flow); moveStage(flow,idx,idx+1); return; }
+    if(e.target.closest(".drag-handle")) return;
+    if(e.target.closest("[data-act=toggle-stage]")){ item.classList.toggle("open"); return; }
+  });
+  host.addEventListener("input",e=>{
+    const item=e.target.closest(".stage-item"); if(!item) return;
+    if(e.target.classList.contains("f-name")){ const t=$("[data-title]",item); if(t) t.textContent=e.target.value||"（未命名階段）"; }
+    if(e.target.classList.contains("f-term")||e.target.classList.contains("f-date")){ const sum=$("[data-sum]",item); if(sum) sum.textContent=[$(".f-term",item).value,$(".f-date",item).value].filter(Boolean).join(" · "); }
+  });
+  let dragIdx=-1;
+  host.addEventListener("dragstart",e=>{ const h=e.target.closest(".drag-handle"); if(!h){ e.preventDefault(); return; } const item=h.closest(".stage-item"); syncFromDOM(flow); dragIdx=+item.dataset.idx; item.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",String(dragIdx));}catch(_){} });
+  host.addEventListener("dragover",e=>{ const item=e.target.closest(".stage-item"); if(!item||dragIdx<0)return; e.preventDefault(); e.dataTransfer.dropEffect="move"; host.querySelectorAll(".stage-item").forEach(x=>x.classList.toggle("dragover",x===item)); });
+  host.addEventListener("drop",e=>{ const item=e.target.closest(".stage-item"); if(!item||dragIdx<0)return; e.preventDefault(); moveStage(flow,dragIdx,+item.dataset.idx); dragIdx=-1; });
+  host.addEventListener("dragend",()=>{ dragIdx=-1; host.querySelectorAll(".stage-item").forEach(x=>x.classList.remove("dragover","dragging")); });
+}
+wireFlowPanel("current"); wireFlowPanel("next");
 
 /* 公告 */
 async function loadAnnouncements(){
