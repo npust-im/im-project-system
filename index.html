@@ -183,13 +183,13 @@ html,body{overflow-x:hidden}
   input[type=date],input[type=datetime-local]{-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box;height:40px}
 }
 
-/* flow tabs (timeline current/next) */
-.flow-tabs{display:flex;gap:6px;margin:0 0 2px;border-bottom:1px solid var(--line)}
-.flow-tab{padding:9px 18px;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px}
-.flow-tab.on{color:var(--primary);border-bottom-color:var(--primary)}
-.flow-tab.next.on{color:#C9822E;border-bottom-color:#C9822E}
-.flow-hint{font-size:13px;color:var(--muted);margin:8px 0 14px}
-.flow-title{font-family:"Noto Serif TC",serif;font-size:18px;font-weight:600;margin:0 0 12px;color:var(--ink)}
+/* flow tabs (timeline current/next) — pill segmented */
+.flow-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#fff;margin:0 0 18px;max-width:100%;box-shadow:var(--shadow)}
+.fseg{padding:10px 24px;font-size:15px;font-weight:600;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;overflow:hidden;text-overflow:ellipsis}
+.fseg:hover{color:var(--ink)}
+.fseg.cur.on{background:var(--primary);color:#fff}
+.fseg.nxt.on{background:#C9822E;color:#fff}
+@media (max-width:640px){.flow-seg{width:100%}.fseg{flex:1 1 50%}}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -295,22 +295,17 @@ function renderSpine(){
   const cur=data.flowCurrent, nxt=data.flowNext;
   const hasCur=cur&&cur.stages&&cur.stages.length, hasNext=nxt&&nxt.stages&&nxt.stages.length;
   if(!hasCur && !hasNext){ host.innerHTML='<div class="empty">流程日程尚未公布。</div>'; return; }
-  if(!hasNext){ // 下屆無資料 → 只顯示應屆
-    host.innerHTML=(cur.title?'<div class="flow-title">'+esc(cur.title)+'</div>':'')+spineHtml(cur);
-    return;
-  }
+  if(!hasNext){ host.innerHTML=spineHtml(cur); return; }
   const active=data._flowTab||'current';
   const sel=active==='current'?cur:nxt;
   host.innerHTML=
-    '<div class="flow-tabs">'+
-      '<button class="flow-tab'+(active==='current'?' on':'')+'" data-ft="current">應屆</button>'+
-      '<button class="flow-tab next'+(active==='next'?' on':'')+'" data-ft="next">下屆</button>'+
+    '<div class="flow-seg">'+
+      '<button class="fseg cur'+(active==='current'?' on':'')+'" data-ft="current">'+esc(cur.title||'應屆')+'</button>'+
+      '<button class="fseg nxt'+(active==='next'?' on':'')+'" data-ft="next">'+esc(nxt.title||'下屆')+'</button>'+
     '</div>'+
-    '<p class="flow-hint">應屆：正在競賽的年級（大四上）　·　下屆：新學年開始分組的年級（大三上）</p>'+
-    (sel.title?'<div class="flow-title">'+esc(sel.title)+'</div>':'')+
     '<div id="flowBody">'+spineHtml(sel)+'</div>';
 }
-document.addEventListener("click",e=>{ const t=e.target.closest(".flow-tab"); if(!t)return; data._flowTab=t.dataset.ft; renderSpine(); });
+document.addEventListener("click",e=>{ const t=e.target.closest(".fseg"); if(!t)return; data._flowTab=t.dataset.ft; renderSpine(); });
 function renderAnnouncements(){
   const host=$("#annHost");
   if(!loaded){host.innerHTML='<div class="empty">載入中…</div>';return;}
@@ -383,8 +378,8 @@ async function load(){
       const mk=o=>({title:(o&&o.title)||"",stages:(o&&Array.isArray(o.stages))?o.stages:[],currentStageId:(o&&o.currentStageId)||""});
       data.flowCurrent = d.current ? mk(d.current) : mk({title:"",stages:d.stages,currentStageId:d.currentStageId});
       data.flowNext = mk(d.next);
-      if(!data.flowCurrent.title) data.flowCurrent.title="應屆競賽日程";
-      if(!data.flowNext.title) data.flowNext.title="下屆日程";
+      if(!data.flowCurrent.title) data.flowCurrent.title="應屆";
+      if(!data.flowNext.title) data.flowNext.title="下屆";
     }
     if(fin.exists){const d=fin.data();data.finalists={published:!!d.published,groups:Array.isArray(d.groups)?d.groups:[],intro:d.intro||"",foot:(d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。")};}
     if(ag.exists){const d=ag.data();data.agenda={published:!!d.published,title:d.title||"",date:d.date||"",place:d.place||"",rows:Array.isArray(d.rows)?d.rows:[]};}

@@ -353,7 +353,7 @@ html,body{overflow-x:hidden}
 
     <section class="panel" data-flow="current">
       <div class="panel-head"><h2>流程與日程 · 應屆競賽</h2><span class="hint">首頁「應屆」時間軸</span></div>
-      <label>區塊標題（顯示於首頁，可填年度）</label><input class="fl-title" type="text" placeholder="例如：113 學年度 · 應屆競賽日程">
+      <label>分頁標題（顯示於首頁分頁，建議簡短，可含年度）</label><input class="fl-title" type="text" placeholder="例如：113 應屆">
       <label style="margin-top:10px">目前進行到</label><select class="fl-current"></select>
       <div class="fl-stages" style="margin-top:16px"></div>
       <div class="actions">
@@ -366,7 +366,7 @@ html,body{overflow-x:hidden}
 
     <section class="panel" data-flow="next">
       <div class="panel-head"><h2>流程與日程 · 下屆</h2><span class="hint">首頁「下屆」時間軸；無階段時首頁自動隱藏</span></div>
-      <label>區塊標題（顯示於首頁，可填年度）</label><input class="fl-title" type="text" placeholder="例如：114 學年度 · 下屆日程">
+      <label>分頁標題（顯示於首頁分頁，建議簡短，可含年度）</label><input class="fl-title" type="text" placeholder="例如：114 下屆">
       <label style="margin-top:10px">目前進行到</label><select class="fl-current"></select>
       <div class="fl-stages" style="margin-top:16px"></div>
       <div class="actions">
@@ -618,7 +618,7 @@ const DEFAULT_STAGES=[
 ];
 
 let state={stages:[],currentStageId:"",flows:{current:{title:"",stages:[],currentStageId:""},next:{title:"",stages:[],currentStageId:""}},finalists:{published:false,groups:[],intro:"",foot:"※此排序非第一階段成績排序。"}};
-const FLOW_DEFAULT_TITLE={current:"應屆競賽日程",next:"下屆日程"};
+const FLOW_DEFAULT_TITLE={current:"應屆",next:"下屆"};
 let TEACHERS=[], COMMITTEE=[], GROUPMAP={}, GRADES={}, CSCORES=[], GFILES={};
 
 /* 分頁 */
