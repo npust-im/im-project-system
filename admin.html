@@ -471,7 +471,7 @@ html,body{overflow-x:hidden}
       <div data-rblock="3" style="padding:12px 0;border-top:1px solid var(--line)"><div style="font-weight:500;margin-bottom:8px">第三次上傳規定（最終成果：報告／簡報）</div><div id="rulesCurrent3" style="margin-bottom:8px"></div><label class="btn btn-sm"><input type="file" data-rulesfile="3" accept=".pdf,.png,.jpg,.jpeg" style="display:none">上傳／取代</label><button class="btn btn-sm btn-danger" data-rulesremove="3" style="margin-left:8px">移除</button><span class="msg ok" id="rulesMsg3" style="margin-left:10px"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>分組與指導老師</h2><span class="hint">點各組展開，編輯名單／題目／指導老師</span></div>
+      <div class="panel-head"><h2>分組與指導老師</h2><button class="btn btn-sm" id="xlsxGroups">下載 Excel</button></div>
       <div class="gsummary" id="gsummary"></div>
       <div class="score-controls" style="margin-bottom:12px">
         <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師…">
@@ -1285,6 +1285,25 @@ async function loadGroups(){
   renderCommitteeTables();
 }
 $("#reloadGroups").onclick=()=>loadGroups();
+$("#xlsxGroups")&&($("#xlsxGroups").onclick=()=>{
+  const cf=(($("#cohortFilter")||{}).value)||"all";
+  let list=Object.values(GROUPMAP);
+  if(cf==="current") list=list.filter(isCurrentCohort);
+  else if(cf==="next") list=list.filter(g=>!isCurrentCohort(g));
+  list=list.sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+  const head=["組別編號","屆別","組長學號","組長姓名",
+    "組員1學號","組員1姓名","組員2學號","組員2姓名","組員3學號","組員3姓名",
+    "專題題目","指導老師","第一次繳交","第二次繳交","第三次繳交"];
+  const yn=v=>v?"已繳":"";
+  const rows=list.map(g=>{ const m=g.members||[],sb=g.submitted||{};
+    return [g.groupNo||"", g.cohort==="next"?"下屆":"應屆",
+      g.leaderSid||"", g.leaderName||"",
+      (m[0]||{}).sid||"", (m[0]||{}).name||"", (m[1]||{}).sid||"", (m[1]||{}).name||"", (m[2]||{}).sid||"", (m[2]||{}).name||"",
+      g.topic||"", g.advisorName||"", yn(sb.r1), yn(sb.r2), yn(sb.r3)];
+  });
+  const sheetName = cf==="current"?"應屆":cf==="next"?"下屆":"全部";
+  xlsxDownload([[sheetName, [head, ...rows]]], "分組名單_"+sheetName+".xlsx");
+});
 function filterGroups(){
   const q=(($("#groupSearch")||{}).value||"").trim().toLowerCase();
   const cf=(($("#cohortFilter")||{}).value)||"all";
