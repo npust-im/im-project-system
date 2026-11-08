@@ -3,205 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>學生入口 · 實務專題系統</title>
+<title>管理員後台 · 實務專題系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
-<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#15455E">
+
 <style>
 :root{
-  --bg:#EEF2F5;--surface:#FFFFFF;--ink:#10222E;--muted:#5E6E79;--line:#D5DEE4;
-  --primary:#15455E;--accent:#2E8B84;--gold:#C9822E;--danger:#B4453A;
-  --primary-soft:#E4ECF0;--accent-soft:#E1F0EE;--gold-soft:#F7EBD8;--radius:12px;
+  --bg:#EEF2F5;
+  --surface:#FFFFFF;
+  --ink:#10222E;
+  --muted:#5E6E79;
+  --line:#D5DEE4;
+  --primary:#15455E;
+  --accent:#2E8B84;
+  --gold:#C9822E;
+  --danger:#B4453A;
+  --primary-soft:#E4ECF0;
+  --accent-soft:#E1F0EE;
   --shadow:0 1px 2px rgba(16,34,46,.05),0 8px 24px rgba(16,34,46,.06);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+html,body{margin:0;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Noto Sans TC",system-ui,sans-serif;
+  line-height:1.6;
+}
 a{color:inherit}
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
-.wrap{max-width:820px;margin:0 auto;padding:0 24px}
-
-.topbar{background:var(--primary);color:#fff;padding:14px 0}
+.wrap{max-width:960px;margin:auto;padding:0 24px}
+.mono{font-family:"IBM Plex Mono",monospace}
+.hidden{display:none!important}
+.topbar{background:var(--primary);color:#fff;padding:14px 0;position:sticky;top:0;z-index:50}
 .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.topbar .t{font-family:"Noto Serif TC",serif;font-weight:700;font-size:17px}
-.topbar .r{display:flex;align-items:center;gap:14px;font-size:13px}
-.topbar a{color:#cfe0e8;text-decoration:none}
-.topbar a:hover{color:#fff}
-.link-btn{background:none;border:0;color:#cfe0e8;font:inherit;cursor:pointer;padding:0}
-.link-btn:hover{color:#fff}
-
-.center{min-height:74vh;display:grid;place-items:center;padding:40px 0}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:28px}
-.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 16px}
-.tabs{display:flex;gap:6px;margin-bottom:6px}
-.tab{flex:1;text-align:center;padding:8px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border:1px solid transparent}
-.tab.on{color:var(--primary);background:var(--primary-soft);border-color:var(--line)}
-
-label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:12px 0 5px}
-input[type=text],input[type=email],input[type=password]{
-  width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);
-  border:1px solid var(--line);border-radius:9px;padding:9px 11px;transition:.15s}
-input:disabled{background:#f2f5f7;color:#40525d}
-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:9px;font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s;text-decoration:none}
+.topbar .t{font-family:"Noto Serif TC",serif;font-size:17px;font-weight:700}
+.topbar .r{display:flex;gap:14px;align-items:center;font-size:13px}
+.topbar a,.link-btn{color:#cfe0e8;text-decoration:none}
+.link-btn{border:0;background:none;font:inherit;padding:0;cursor:pointer}
+.center{min-height:70vh;display:grid;place-items:center;padding:40px 20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:28px}
+.card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 4px}
+.sub,.hint{color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+input,select,textarea{max-width:100%;min-width:0}
+input[type=text],input[type=email],input[type=password],input[type=date],
+input[type=datetime-local],input[type=number],textarea,select{
+  width:100%;font:inherit;font-size:14px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px;
+}
+input:disabled{background:#f2f5f7}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{min-height:74px;resize:vertical}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 16px;border-radius:9px;font:inherit;font-size:14px;
+  border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;
+}
 .btn:hover{border-color:var(--primary)}
 .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-.btn-primary:hover{background:#0e364a}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-danger{color:var(--danger);border-color:#e6ccc8}
+.btn-danger:hover{background:#faf0ee}
+.btn-ghost{background:transparent}
+.btn-sm{padding:6px 11px;font-size:13px}
 .btn-block{width:100%;margin-top:18px}
-.btn[disabled]{opacity:.5;cursor:not-allowed}
-.msg{font-size:13px;margin-top:10px;min-height:18px}
-.msg.err{color:var(--danger)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.msg{font-size:13px;min-height:18px;margin-top:8px}
 .msg.ok{color:var(--accent)}
-
-.hidden{display:none!important}
-main{padding:28px 0 60px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
-.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.msg.err{color:var(--danger)}
+main{padding:22px 0 60px}
+.tabbar{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:22px}
+.tabbtn,.subtab{border:0;border-bottom:2px solid transparent;background:none;padding:10px 16px;font:inherit;color:var(--muted);cursor:pointer}
+.tabbtn.on,.subtab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.tabpane{display:none}
+.tabpane.on{display:block}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap}
 .panel-head h2{font-family:"Noto Serif TC",serif;font-size:19px;margin:0}
-.panel-head .hint{font-size:12px;color:var(--muted)}
-
-.prow{display:grid;grid-template-columns:76px 1fr 1fr;gap:12px;align-items:end;margin-bottom:6px}
-.prow .prole{font-size:13px;font-weight:700;color:var(--primary);padding-bottom:9px}
-.prow.head label{margin-top:0}
-.req{color:var(--danger)}
-.lock-note{background:var(--gold-soft);color:#8a5a1c;border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:6px}
-
-.advisor-box{display:flex;align-items:center;gap:12px;font-size:15px;flex-wrap:wrap}
-.advisor-name{font-weight:700}
-.pill{font-size:12px;font-weight:500;padding:3px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
-.pill.wait{background:#eef1f3;color:var(--muted)}
-
-.round{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fafcfd}
-.round-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.round-no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--primary);font-weight:500}
-.round-title{font-weight:700;font-size:15px}
-.round-desc{font-size:13px;color:var(--muted);margin:0 0 12px}
-.round-locked{font-size:13px;color:var(--muted)}
-
-@media (max-width:640px){
-  .prow{grid-template-columns:1fr}
-  .prow .prole{padding-bottom:0}
-}
-
-.rules-embed{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fafcfd}
-.rules-embed iframe{width:100%;height:560px;border:0;display:block}
-.rules-embed img{width:100%;display:block}
-.rules-none{color:var(--muted);font-size:14px}
-
-.slot{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-.slot:first-child{border-top:0}
-.slot .slot-label{font-size:14px;font-weight:500}
-.slot .slot-label .req{color:var(--danger)}
-.slot .slot-hint{font-size:12px;color:var(--muted);font-weight:400}
-.slot .slot-state{font-size:13px;min-width:0;overflow:hidden}
-.slot .fname{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink);word-break:break-all}
-.slot .fnone{color:var(--muted);font-size:13px}
-.slot .slot-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.slot input[type=file]{display:none}
-.slot .prog{font-size:12px;color:var(--accent)}
-.slot .lnk{font-size:13px;color:var(--primary);text-decoration:underline;cursor:pointer}
-.slot .btn-file{padding:7px 12px;font-size:13px}
-
-@media (max-width:640px){
-  .slot{grid-template-columns:1fr;gap:6px}
-  .slot .slot-act{justify-content:flex-start}
-}
-
-.tabs{display:flex;gap:6px;margin:22px 0 0;border-bottom:1px solid var(--line)}
-.tab{padding:10px 18px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
-.tchip{font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
-.tchip.open{background:var(--accent-soft);color:var(--accent)}
-.tchip.notyet{background:#e7ebee;color:#5e6e79}
-.tchip.closed{background:#f6e2df;color:#8a3320}
-.tchip.limited{background:#eef1f3;color:#5e6e79}
-.round-h{font-family:"Noto Serif TC",serif;font-size:18px;margin:0 0 4px}
-.round-sec{margin-top:18px}
-.round-sec:first-of-type{margin-top:10px}
-.round-sub{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
-.round-locked.closed{background:#f6e2df;color:#8a3320}
-.statusbar{border-radius:10px;padding:9px 14px;font-size:14px;font-weight:500;margin:0 0 14px}
-.statusbar.sb-open{background:var(--accent-soft);color:var(--accent)}
-.statusbar.sb-notyet{background:#e7ebee;color:#5e6e79}
-.statusbar.sb-closed{background:#f6e2df;color:#8a3320}
-.statusbar.sb-limited{background:#eef1f3;color:#5e6e79}
-
-@media (max-width:640px){
-  .wrap{padding-left:16px;padding-right:16px}
-  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
-  .tabs,.tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .tabs::-webkit-scrollbar,.tabbar::-webkit-scrollbar,.subtabs::-webkit-scrollbar{display:none}
-  .tab,.tabbtn,.subtab{white-space:nowrap;flex:0 0 auto}
-  .topbar .wrap{flex-wrap:wrap;row-gap:4px}
-  .topbar .t{font-size:15px}
-  .topbar .r{font-size:12px;gap:10px}
-  .panel,.gpanel,.card,.docpanel{padding-left:16px;padding-right:16px}
-}
-
-#__np{position:fixed;top:0;left:0;height:4px;width:0;background:var(--accent);z-index:99999;opacity:0;transition:width .25s ease,opacity .3s;box-shadow:0 0 12px var(--accent),0 0 5px var(--accent)}
+.panel-head .hint{font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+.actions,.item-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+.spacer{flex:1}
+.chk{display:inline-flex;align-items:center;gap:7px;color:var(--ink);font-size:14px;margin:6px 0}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.setgrp{padding:12px 0;border-top:1px solid var(--line)}
+.setlabel,.score-col-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.setrow{display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap}
+.sethint{font-size:12px;color:var(--muted)}
+.dl{display:inline-flex;flex-direction:column;font-size:12px}
+.dl input{font-size:13px;padding:6px 8px}
+.dl-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.dl-label{font-size:12px;white-space:nowrap;color:var(--muted)}
+.dl-row input{max-width:240px}
+.score-item{padding:12px 0;border-top:1px solid var(--line)}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:#fafcfd}
+.item-grid{display:grid;grid-template-columns:130px 1fr;gap:10px}
+.empty-note{color:var(--muted);font-size:14px}
+.accrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.ac-email,.gsummary{color:var(--muted);font-size:13px}
+.gsummary{margin-bottom:12px}
+.acc-item{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fff}
+.acc-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;flex-wrap:wrap}
+.acc-head:hover{background:#f7fafb}
+.acc-no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--primary);min-width:64px}
+.acc-leader{font-weight:500}
+.acc-adv{font-size:13px}
+.acc-adv.none{color:var(--muted)}
+.acc-adv.set{color:var(--accent)}
+.acc-chev{margin-left:auto;color:var(--muted)}
+.acc-body{display:none;padding:4px 14px 16px;border-top:1px solid var(--line);background:#fafcfd}
+.acc-item.open .acc-body{display:block}
+.cohort-badge{font-size:11px;border-radius:999px;padding:1px 9px}
+.cohort-badge.cur{color:#fff;background:var(--primary)}
+.cohort-badge.next{color:#8a5a1c;background:#f4e3cc}
+.stage-item{padding:0}
+.stage-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f6f9fb}
+.drag-handle{cursor:grab;font-size:18px}
+.stage-title{font-size:14px;font-weight:500}
+.stage-sum{font-size:12px;color:var(--muted)}
+.stage-item .item-grid,.stage-item .item-foot{display:none}
+.stage-item.open .item-grid{display:grid;padding:12px 14px 0}
+.stage-item.open .item-foot{display:flex;padding:0 14px 12px}
+.stage-item.dragging{opacity:.45}
+.stage-item.dragover{outline:2px dashed var(--accent)}
+.subtabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:16px}
+.folder{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:11px 14px;cursor:pointer}
+.folder:hover{border-color:var(--primary)}
+.folder .dlall{margin-left:auto;font-size:13px;color:var(--primary)}
+.fmsg,.file-none{font-size:12px;color:var(--muted)}
+.files-grouprow{margin-bottom:16px}
+.fg-label{font-size:14px;font-weight:500}
+.ffile{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;font-size:13px;flex-wrap:wrap}
+.ftag{font-size:11px;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px}
+.fnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46%}
+.usage-bar{height:14px;border-radius:8px;background:#e7ecef;overflow:hidden;margin:8px 0}
+.usage-bar>span{display:block;height:100%;background:var(--accent)}
+.usage-bar.warn>span{background:var(--gold)}
+.usage-bar.danger>span{background:var(--danger)}
+.ubanner{padding:10px 16px;border-radius:10px;margin-bottom:14px;font-size:14px}
+.ubanner.warn{background:#f7ece0;color:#8a5a1c}
+.ubanner.danger{background:#f6e2df;color:#8a3320}
+#adminView.wide{max-width:1400px}
+.score-controls{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.score-controls input[type=text]{max-width:240px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--primary);color:#fff}
+.scoretable{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:10px}
+table.stab{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;background:#fff}
+table.stab th,table.stab td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+table.stab thead th{position:sticky;top:0;background:#eef2f5;font-weight:600;z-index:2}
+table.stab th.sortable{cursor:pointer}
+table.stab td.num,table.stab th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.stab td.mono{font-family:"IBM Plex Mono",monospace}
+table.stab td.ellip{max-width:220px;overflow:hidden;text-overflow:ellipsis}
+table.stab tbody tr:nth-child(even) td{background:#f6f9fb}
+table.stab td.sticky-c,table.stab th.sticky-c{position:sticky;background:#fff;z-index:1;overflow:hidden;text-overflow:ellipsis}
+table.stab thead th.sticky-c{z-index:3;background:#eef2f5}
+table.stab tbody tr:nth-child(even) td.sticky-c{background:#eef2f4}
+table.stab .sticky-last{box-shadow:6px 0 6px -5px rgba(16,34,46,.25)}
+table.stab .grp{border-left:2px solid #c7d2d9}
+table.stab tbody tr.top td{background:#F7EBD8}
+table.stab tbody tr.top td.sticky-c{background:#f3e4cf}
+table.stab .na{color:#b9c2c8}
+#__np{position:fixed;top:0;left:0;height:4px;width:0;background:var(--accent);z-index:99999;opacity:0;transition:width .25s,opacity .3s}
 #__np.on{opacity:1}
-#__toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);background:#10222E;color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;z-index:99999;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.28);display:flex;align-items:center;gap:10px}
-#__toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-#__toast .s{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:__spin .6s linear infinite;flex:0 0 auto}
-.btn-loading{position:relative;pointer-events:none;opacity:.7}
-.btn-loading::before{content:"";display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:__spin .6s linear infinite;margin-right:7px;vertical-align:-1px}
-@keyframes __spin{to{transform:rotate(360deg)}}
-
-.topbar,.site-header{position:sticky;top:0;z-index:50}
-#toTop{position:fixed;right:18px;bottom:20px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--primary);box-shadow:0 4px 14px rgba(16,34,46,.18);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:22px;line-height:1;z-index:60;padding:0}
-#toTop.show{display:flex}
-#toTop:hover{border-color:var(--primary)}
-
-input,select,textarea{max-width:100%;min-width:0}
-@media (max-width:640px){
-  input[type=date],input[type=datetime-local],input[type=number]{width:100%}
-  .score-controls>input,.score-controls>select{flex:1 1 100%}
-  .setrow .dl{flex:1 1 100%}
-  .dl input,.dl-row input{width:100%}
-  .dl-row{flex-wrap:wrap;padding-left:0}
-  .grid3{grid-template-columns:1fr}
-  .stu{grid-template-columns:1fr 1fr}
-}
-
-html,body{overflow-x:hidden}
-@media (max-width:640px){
-  .prow,.slot,.doc-slot,.stu,.rowline,.agenda-row,.item-grid,.grid3{grid-template-columns:1fr!important}
-  .prow>*,.slot>*,.doc-slot>*,.stu>*,.rowline>*,.agenda-row>*,.item-grid>*,.grid3>*,.grid2>*{min-width:0}
-  .grow,.setrow,.score-controls{max-width:100%}
-}
-
-@media (max-width:640px){
-  input[type=date],input[type=datetime-local]{display:block;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
-  .dl{display:block!important;width:100%;margin:0}
-  .dl input{width:100%!important}
+#__toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#10222E;color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;z-index:99999;opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px}
+#__toast.on{opacity:1}
+#__toast .s{width:15px;height:15px;border:2px solid #ffffff55;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.btn-loading{pointer-events:none;opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toTop{position:fixed;right:18px;bottom:20px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--primary);cursor:pointer;display:none;font-size:22px;z-index:60}
+#toTop.show{display:block}
+@media(max-width:640px){
+  .wrap{padding-left:16px;padding-right:16px}
+  .panel,.card{padding-left:16px;padding-right:16px}
+  .grid2,.item-grid{grid-template-columns:1fr}
+  input[type=text],input[type=email],input[type=password],input[type=number],textarea,select{font-size:16px}
+  input[type=date],input[type=datetime-local]{width:100%;min-width:0;-webkit-appearance:none}
+  .topbar .wrap{flex-wrap:wrap}
+  .tabbar,.subtabs{overflow-x:auto;flex-wrap:nowrap}
+  .tabbtn,.subtab{white-space:nowrap}
   .setrow{display:block}
-  .setrow>.chk,.setrow>.dl{display:block;width:100%;margin:8px 0 0}
-  .item .item-grid>div{min-width:0}
-  .item .item-grid input,.item .item-grid textarea,.item .item-grid select{width:100%}
-}
-
-@media (max-width:640px){
-  input[type=date],input[type=datetime-local]{-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box;height:40px}
+  .setrow>.chk,.setrow>.dl{display:block;margin:8px 0}
+  .dl-row{flex-wrap:wrap}
+  .score-controls>input,.score-controls>select{flex:1 1 100%}
+  .stage-bar{flex-wrap:wrap}
 }
 </style>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="logo.svg">
-<link rel="icon" type="image/png" href="icon-192.png">
-<meta name="theme-color" content="#15455E">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="實務專題">
 </head>
-<body>
 
+<body>
 <div class="topbar">
   <div class="wrap">
-    <span class="t">學生入口</span>
+    <span class="t">管理員後台</span>
     <div class="r" id="topRight"><a href="index.html">回首頁</a></div>
   </div>
 </div>
@@ -210,117 +215,465 @@ html,body{overflow-x:hidden}
   <div class="card" style="text-align:center;color:var(--muted)">載入中…</div>
 </div>
 
-<div id="authView" class="center hidden">
+<div id="loginView" class="center hidden">
   <div class="card">
-    <div class="tabs">
-      <div class="tab on" id="tabLogin">登入</div>
-      <div class="tab" id="tabReg">註冊（組長）</div>
+    <h1>管理員登入</h1>
+    <p class="sub">請以系辦管理員帳號登入。</p>
+    <label for="email">電子郵件</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="pw">密碼</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
+    <div style="text-align:right;margin-top:8px">
+      <a href="#" id="forgotPw">忘記密碼？</a>
     </div>
-
-    <div id="loginForm">
-      <h1 style="font-size:19px;margin:14px 0 0">組長登入</h1>
-      <label for="lEmail">電子郵件</label>
-      <input id="lEmail" type="email" autocomplete="username">
-      <label for="lPw">密碼</label>
-      <input id="lPw" type="password" autocomplete="current-password">
-      <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
-      <div style="text-align:right;margin-top:8px">
-        <a href="#" id="forgotPw" style="font-size:13px;color:var(--primary)">忘記密碼？</a>
-      </div>
-      <div class="msg err" id="loginMsg"></div>
-    </div>
-
-    <div id="regForm" class="hidden">
-      <h1 style="font-size:19px;margin:14px 0 0">組長註冊</h1>
-      <p class="hint" style="font-size:12px;color:var(--muted);margin:6px 0 0">
-        每組僅需組長一人註冊，用於登錄分組名單與上傳。
-      </p>
-      <label for="rEmail">電子郵件</label>
-      <input id="rEmail" type="email" autocomplete="username">
-      <label for="rPw">設定密碼（至少 6 碼）</label>
-      <input id="rPw" type="password" autocomplete="new-password">
-      <button class="btn btn-primary btn-block" id="regBtn">建立帳號</button>
-      <div class="msg err" id="regMsg"></div>
-    </div>
+    <div class="msg err" id="loginMsg"></div>
   </div>
 </div>
 
-<main id="studentView" class="wrap hidden">
+<div id="denyView" class="center hidden">
+  <div class="card">
+    <h1>無管理員權限</h1>
+    <p class="sub">此帳號沒有管理員權限，請洽系辦。</p>
+    <button class="btn btn-block" id="denySignOut">登出</button>
+  </div>
+</div>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2>分組名單</h2>
-      <span class="hint" id="groupState"></span>
-    </div>
-    <div id="lockNote" class="lock-note hidden">
-      分組名單已送出，無法自行修改。如需更正，請洽系辦。
-    </div>
-
-    <div class="prow head">
-      <div class="prole">組長 <span class="req">*</span></div>
-      <div><label>學號</label><input id="leaderSid" type="text"></div>
-      <div><label>姓名</label><input id="leaderName" type="text"></div>
-    </div>
-    <div class="prow">
-      <div class="prole">組員1 <span class="req">*</span></div>
-      <div><input id="m1Sid" type="text" placeholder="學號"></div>
-      <div><input id="m1Name" type="text" placeholder="姓名"></div>
-    </div>
-    <div class="prow">
-      <div class="prole">組員2 <span class="req">*</span></div>
-      <div><input id="m2Sid" type="text" placeholder="學號"></div>
-      <div><input id="m2Name" type="text" placeholder="姓名"></div>
-    </div>
-    <div class="prow">
-      <div class="prole">組員3</div>
-      <div><input id="m3Sid" type="text" placeholder="學號（選填）"></div>
-      <div><input id="m3Name" type="text" placeholder="姓名（選填）"></div>
-    </div>
-
-    <div id="saveArea">
-      <button class="btn btn-primary" id="saveGroup" style="margin-top:16px">
-        送出分組名單
-      </button>
-      <span class="msg err" id="groupMsg"></span>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head"><h2>指導老師</h2></div>
-    <div class="advisor-box" id="advisorBox"></div>
-  </section>
-
-  <div class="tabs hidden" id="upTabs">
-    <div class="tab on" data-r="r1">
-      第一次上傳<span class="tchip" data-chip="r1"></span>
-    </div>
-    <div class="tab" data-r="r2">
-      第二次上傳<span class="tchip" data-chip="r2"></span>
-    </div>
-    <div class="tab" data-r="r3">
-      第三次上傳<span class="tchip" data-chip="r3"></span>
-    </div>
+<main id="adminView" class="wrap hidden">
+  <div class="tabbar">
+    <button class="tabbtn on" data-tab="site">網站設定</button>
+    <button class="tabbtn" data-tab="contest">競賽發表</button>
+    <button class="tabbtn" data-tab="student">學生</button>
+    <button class="tabbtn" data-tab="teacher">教師</button>
+    <button class="tabbtn" data-tab="committee">校外委員</button>
+    <button class="tabbtn" data-tab="files">檔案</button>
+    <button class="tabbtn" data-tab="score">評分</button>
   </div>
 
-  <section class="panel hidden" id="uploadSection"
-    style="border-top-left-radius:0;border-top-right-radius:0">
-    <div id="roundHost"></div>
-  </section>
+  <div id="usageBanner" class="ubanner hidden"></div>
 
+  <div class="tabpane on" data-pane="site">
+    <section class="panel">
+      <div class="panel-head"><h2>網站設定</h2></div>
+      <div class="grid2">
+        <div><label for="fSchool">學校名稱</label><input id="fSchool" type="text"></div>
+        <div><label for="fYear">學年度標籤</label><input id="fYear" type="text"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="saveSite">儲存網站設定</button>
+        <span class="msg" id="siteMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>修改管理員密碼</h2></div>
+      <div class="grid2">
+        <div><label>目前密碼</label><input id="cpw" type="password" autocomplete="current-password"></div>
+        <div></div>
+        <div><label>新密碼（至少 6 碼）</label><input id="npw1" type="password" autocomplete="new-password"></div>
+        <div><label>再次輸入新密碼</label><input id="npw2" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="changePw">更新密碼</button>
+        <span class="msg" id="pwMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>開放評分設定</h2></div>
+      <p class="hint">未開放時可檢視但無法儲存分數；開始及截止時間留空表示不限制。</p>
+      <div class="grid2">
+        <div>
+          <div class="score-col-title">指導教授</div>
+          <div class="score-item">
+            <label class="chk"><input type="checkbox" id="t1open"> 開放第一次成績</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="t1Start"></div>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t1Deadline"></div>
+          </div>
+          <div class="score-item">
+            <label class="chk"><input type="checkbox" id="t2open"> 開放第二次成績</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="t2Start"></div>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="t2Deadline"></div>
+          </div>
+        </div>
+        <div>
+          <div class="score-col-title">校外委員</div>
+          <div class="score-item">
+            <label class="chk"><input type="checkbox" id="c1open"> 開放第一階段評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="c1Start"></div>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c1Deadline"></div>
+          </div>
+          <div class="score-item">
+            <label class="chk"><input type="checkbox" id="c2open"> 開放第二階段評分</label>
+            <div class="dl-row"><span class="dl-label">開始時間</span><input type="datetime-local" id="c2Start"></div>
+            <div class="dl-row"><span class="dl-label">截止時間</span><input type="datetime-local" id="c2Deadline"></div>
+          </div>
+        </div>
+      </div>
+      <label class="chk">
+        <input type="checkbox" id="scLocked">
+        結算鎖定：由資料庫安全規則限制成績與上傳修改
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" id="saveScoring">儲存開放設定</button>
+        <span class="msg" id="scoringMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel" data-flow="current">
+      <div class="panel-head"><h2>流程與日程 · 應屆競賽</h2></div>
+      <label>分頁標題</label><input class="fl-title" type="text">
+      <label>目前進行到</label><select class="fl-current"></select>
+      <div class="fl-stages"></div>
+      <div class="actions">
+        <button class="btn btn-sm fl-add">＋ 新增階段</button>
+        <button class="btn btn-sm fl-seed">載入預設流程</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary fl-save">儲存應屆日程</button>
+        <span class="msg" id="flMsg_current"></span>
+      </div>
+    </section>
+
+    <section class="panel" data-flow="next">
+      <div class="panel-head"><h2>流程與日程 · 下屆</h2></div>
+      <label>分頁標題</label><input class="fl-title" type="text">
+      <label>目前進行到</label><select class="fl-current"></select>
+      <div class="fl-stages"></div>
+      <div class="actions">
+        <button class="btn btn-sm fl-add">＋ 新增階段</button>
+        <button class="btn btn-sm fl-seed">載入預設流程</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary fl-save">儲存下屆日程</button>
+        <span class="msg" id="flMsg_next"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>公告</h2></div>
+      <div id="annHost"></div>
+      <div class="actions">
+        <button class="btn btn-accent btn-sm" id="addAnn">＋ 新增公告</button>
+        <span class="msg" id="annMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>年度重置（升屆）</h2></div>
+      <p class="hint">清除應屆分組、成績、上傳紀錄及組長角色資料，並將下屆升為應屆。公告、設定、教師及委員角色保留。</p>
+      <p style="color:var(--danger)">操作無法復原。Firebase Authentication 帳號及 Storage 實體檔案不會由年度重置刪除。</p>
+      <button class="btn btn-danger" id="resetYear">執行年度重置（升屆）</button>
+      <div class="msg" id="resetMsg"></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+      <p class="hint">下方功能清空 groups/ 下所有組別的實體檔案，包含下屆；規定文件與委員資料保留。</p>
+      <button class="btn btn-sm btn-danger" id="wipeStorage">清空所有各組上傳檔案（Storage）</button>
+      <span class="msg" id="wipeMsg"></span>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="contest">
+    <section class="panel">
+      <div class="panel-head"><h2>入選第二階段名單</h2></div>
+      <label class="chk"><input type="checkbox" id="fPublished"> 發布名單至首頁</label>
+      <label for="fIntro">名單上方說明</label>
+      <textarea id="fIntro"></textarea>
+      <label for="fFoot">名單下方附註</label>
+      <input id="fFoot" type="text">
+      <div class="score-controls" style="margin-top:12px">
+        <span>由第一階段排名帶入前</span>
+        <input id="topN" type="number" min="1" style="width:80px">
+        <span>組</span>
+        <button class="btn btn-sm" id="fillFromRank">帶入</button>
+      </div>
+      <div id="finalHost"></div>
+      <div class="actions">
+        <button class="btn btn-sm" id="addFinal">＋ 新增組別</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" id="saveFinal">儲存名單</button>
+        <span class="msg" id="finalMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>口頭發表當天議程</h2></div>
+      <label class="chk"><input type="checkbox" id="agPublished"> 顯示於首頁</label>
+      <div class="grid2">
+        <div><label for="agTitle">標題</label><input id="agTitle" type="text"></div>
+        <div><label for="agDate">日期</label><input id="agDate" type="text"></div>
+      </div>
+      <label for="agPlace">地點</label><input id="agPlace" type="text">
+      <div id="agendaHost"></div>
+      <div class="actions">
+        <button class="btn btn-sm" id="addAgenda">＋ 新增項目</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" id="saveAgenda">儲存議程</button>
+        <span class="msg" id="agMsg"></span>
+      </div>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="student">
+    <section class="panel">
+      <div class="panel-head"><h2>登錄與上傳設定</h2></div>
+
+      <div class="setgrp">
+        <div class="setlabel">分組登錄</div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fRegOpen"> 開放分組登錄</label>
+          <label class="chk"><input type="checkbox" id="fNextCohort"> 新登錄歸為下屆</label>
+          <label class="dl">登錄開始<input type="datetime-local" id="fRegStart"></label>
+          <label class="dl">登錄截止<input type="datetime-local" id="fRegDeadline"></label>
+        </div>
+      </div>
+
+      <div class="setgrp">
+        <div class="setlabel">開放檔案上傳</div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fForm1Open"> 第一次：報告／簡報／補充</label>
+          <label class="dl">開始<input type="datetime-local" id="fForm1Start"></label>
+          <label class="dl">截止<input type="datetime-local" id="fForm1Deadline"></label>
+        </div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fForm2Open"> 第二次：入選組別發表簡報</label>
+          <label class="dl">開始<input type="datetime-local" id="fForm2Start"></label>
+          <label class="dl">截止<input type="datetime-local" id="fForm2Deadline"></label>
+        </div>
+        <div class="setrow">
+          <label class="chk"><input type="checkbox" id="fForm3Open"> 第三次：最終成果</label>
+          <label class="dl">開始<input type="datetime-local" id="fForm3Start"></label>
+          <label class="dl">截止<input type="datetime-local" id="fForm3Deadline"></label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="saveUploads">儲存設定</button>
+        <span class="msg" id="upMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>專題規定／說明文件</h2>
+        <span class="hint">顯示於學生對應的上傳分頁</span>
+      </div>
+      <p class="hint">支援 PDF、PNG、JPG；單檔小於 50MB。可新增多個文件，並逐一取代或刪除。</p>
+
+      <div data-rblock="1" class="setgrp">
+        <strong>第一次上傳規定（報告／簡報／補充資料）</strong>
+        <div id="rulesCurrent1"></div>
+        <label class="btn btn-sm">
+          <input type="file" data-rulesfile="1" multiple accept=".pdf,.png,.jpg,.jpeg" style="display:none">
+          新增文件
+        </label>
+        <span class="msg" id="rulesMsg1"></span>
+      </div>
+
+      <div data-rblock="2" class="setgrp">
+        <strong>第二次上傳規定（入選組別：發表簡報）</strong>
+        <div id="rulesCurrent2"></div>
+        <label class="btn btn-sm">
+          <input type="file" data-rulesfile="2" multiple accept=".pdf,.png,.jpg,.jpeg" style="display:none">
+          新增文件
+        </label>
+        <span class="msg" id="rulesMsg2"></span>
+      </div>
+
+      <div data-rblock="3" class="setgrp">
+        <strong>第三次上傳規定（最終成果：報告／簡報）</strong>
+        <div id="rulesCurrent3"></div>
+        <label class="btn btn-sm">
+          <input type="file" data-rulesfile="3" multiple accept=".pdf,.png,.jpg,.jpeg" style="display:none">
+          新增文件
+        </label>
+        <span class="msg" id="rulesMsg3"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>分組與指導老師</h2>
+        <button class="btn btn-sm" id="xlsxGroups">下載 Excel</button>
+      </div>
+      <div class="gsummary" id="gsummary"></div>
+      <div class="score-controls">
+        <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師">
+        <select id="cohortFilter" style="max-width:160px">
+          <option value="all">全部屆別</option>
+          <option value="current">僅應屆競賽</option>
+          <option value="next">僅下屆</option>
+        </select>
+        <button class="btn btn-sm" id="expandAll">展開全部</button>
+        <button class="btn btn-sm" id="collapseAll">收合全部</button>
+      </div>
+      <div class="score-controls">
+        <span class="hint">批次操作目前顯示的組別：</span>
+        <button class="btn btn-sm" id="batchCur">全設應屆</button>
+        <button class="btn btn-sm" id="batchNext">全設下屆</button>
+        <button class="btn btn-sm" id="batchNo">依序自動編號</button>
+        <span class="msg" id="batchMsg"></span>
+      </div>
+      <div id="groupsHost"></div>
+      <div class="actions">
+        <button class="btn btn-sm" id="reloadGroups">重新整理</button>
+        <span class="msg" id="asgMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>組長帳號</h2></div>
+      <div class="seg" id="leaderCohortSeg">
+        <button class="on" data-lc="all">全部</button>
+        <button data-lc="current">應屆</button>
+        <button data-lc="next">下屆</button>
+      </div>
+      <div id="leaderHost"></div>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="teacher">
+    <section class="panel">
+      <div class="panel-head"><h2>指導教授帳號</h2></div>
+      <div class="grid2">
+        <div><label for="tName">姓名</label><input id="tName" type="text"></div>
+        <div><label for="tEmail">電子郵件</label><input id="tEmail" type="email"></div>
+        <div><label for="tPw">初始密碼（至少 6 碼）</label><input id="tPw" type="text"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="createTeacher">建立指導教授帳號</button>
+        <span class="msg" id="tAccMsg"></span>
+      </div>
+      <div id="teacherAccList"></div>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="committee">
+    <section class="panel">
+      <div class="panel-head"><h2>校外委員帳號</h2></div>
+      <div class="grid2">
+        <div><label for="cName">姓名</label><input id="cName" type="text"></div>
+        <div><label for="cEmail">電子郵件</label><input id="cEmail" type="email"></div>
+        <div><label for="cPw">初始密碼（至少 6 碼）</label><input id="cPw" type="text"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="createCommittee">建立校外委員帳號</button>
+        <span class="msg" id="cAccMsg"></span>
+      </div>
+      <div id="committeeAccList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>委員個人資料（匯款用）</h2>
+        <div>
+          <button class="btn btn-sm" id="reloadCDocs">重新整理</button>
+          <button class="btn btn-sm" id="csvCDocs" data-xlsx="cdocs">下載 Excel</button>
+        </div>
+      </div>
+      <div id="cdocsHost"></div>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="files">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>儲存空間用量</h2>
+        <button class="btn btn-sm" id="calcUsage">計算目前用量</button>
+      </div>
+      <div id="usageHost">尚未計算。</div>
+      <div class="grid2">
+        <div><label>阻擋上限（MB）</label><input id="capMB" type="number" min="0"></div>
+        <div><label>警示門檻（MB）</label><input id="warnMB" type="number" min="0"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-sm btn-primary" id="saveCap">儲存上限設定</button>
+        <span class="msg" id="capMsg"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>學生上傳檔案</h2>
+        <button class="btn btn-sm" id="reloadFiles">重新整理</button>
+      </div>
+      <div class="subtabs" id="fileSubtabs">
+        <button class="subtab on" data-fr="r1">第一次</button>
+        <button class="subtab" data-fr="r2">第二次</button>
+        <button class="subtab" data-fr="r3">第三次</button>
+      </div>
+      <div id="filesHost"></div>
+    </section>
+  </div>
+
+  <div class="tabpane" data-pane="score">
+    <section class="panel">
+      <div class="panel-head"><h2>校外委員評分進度</h2></div>
+      <div id="cmtProgress"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>指導教授第一次成績</h2>
+        <div>
+          <button class="btn btn-sm" id="reloadTG">重新整理</button>
+          <button class="btn btn-sm" data-xlsx="t1">下載 Excel</button>
+        </div>
+      </div>
+      <div id="tg1Host"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>指導教授第二次成績</h2>
+        <button class="btn btn-sm" data-xlsx="t2">下載 Excel</button>
+      </div>
+      <div id="tg2Host"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>校外委員成績常態化</h2>
+        <select id="sdMode" style="max-width:220px">
+          <option value="sample">樣本 STDEV（n−1）</option>
+          <option value="pop">母體 STDEVP（n）</option>
+        </select>
+      </div>
+      <p class="hint">常態化＝75＋5×（原始分數−委員平均）÷委員標準差。</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>校外委員第一階段成績</h2>
+        <button class="btn btn-sm" data-xlsx="c1">下載 Excel</button>
+      </div>
+      <div id="cs1Host"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>校外委員第二階段成績</h2>
+        <button class="btn btn-sm" data-xlsx="c2">下載 Excel</button>
+      </div>
+      <div id="cs2Host"></div>
+    </section>
+  </div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="firebase-config.js"></script>
 
 <script>
+"use strict";
+
 const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
 
 const esc=t=>String(t??"").replace(
   /[&<>"]/g,
-  c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])
+  c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])
 );
 
 function safeUrl(u){
@@ -328,522 +681,1103 @@ function safeUrl(u){
   return /^https?:\/\//i.test(u)?u:"#";
 }
 
-function notPast(iso){
-  if(!iso)return true;
-  const t=new Date(iso).getTime();
-  return isNaN(t)||Date.now()<t;
-}
-
-function afterStart(iso){
-  if(!iso)return true;
-  const t=new Date(iso).getTime();
-  return isNaN(t)||Date.now()>=t;
-}
-
-function fmtWhen(iso){
-  if(!iso)return "";
-  const d=new Date(iso);
-  if(isNaN(d))return "";
-  const p=x=>String(x).padStart(2,"0");
-  return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+
-    " "+p(d.getHours())+":"+p(d.getMinutes());
-}
+const today=()=>new Date().toISOString().slice(0,10);
 
 function flash(id,msg,ok=true){
   const e=$("#"+id);
+  if(!e)return;
   e.textContent=msg;
   e.className="msg "+(ok?"ok":"err");
-  if(ok&&msg){
+  if(msg){
     setTimeout(()=>{
       if(e.textContent===msg)e.textContent="";
-    },2600);
+    },5000);
   }
 }
 
-if(typeof firebase==="undefined"||!firebase.apps.length){
-  $("#loginMsg").textContent="尚未設定 Firebase（請先填好 firebase-config.js）。";
-  $("#bootView").classList.add("hidden");
-  $("#authView").classList.remove("hidden");
+function show(view){
+  ["bootView","loginView","denyView","adminView"].forEach(v=>{
+    $("#"+v).classList.toggle("hidden",v!==view);
+  });
 }
 
-const auth=firebase.auth();
-const db=firebase.firestore();
-const storage=firebase.storage();
-
-try{
-  db.enablePersistence({synchronizeTabs:true}).catch(function(){});
-}catch(_){}
-
-const ROSTER_IDS=[
-  "leaderSid","leaderName",
-  "m1Sid","m1Name",
-  "m2Sid","m2Name",
-  "m3Sid","m3Name"
+const DEFAULT_STAGES=[
+  {id:"group",term:"大三上學期",name:"分組",date:"",desc:"每組 3–4 人，推派組長登錄組員名單。"},
+  {id:"advisorAsk",term:"大三上學期",name:"洽詢指導老師",date:"",desc:"主動洽詢教師並徵詢指導意願。"},
+  {id:"advisorOk",term:"大三上學期",name:"確定指導老師",date:"",desc:"繳交實務專題指導同意書。"},
+  {id:"exec",term:"大三下學期",name:"專題執行",date:"",desc:"與指導老師討論並執行專題。"},
+  {id:"grade1",term:"大三下學期",name:"第一次成績評定",date:"",desc:"指導老師評定第一次專題成績。"},
+  {id:"review1",term:"大四上學期",name:"第一階段 · 書面評審",date:"",desc:"上傳報告與簡報，由校外委員評審。"},
+  {id:"announce",term:"大四上學期",name:"公告第二階段名單",date:"",desc:"公告進入口頭發表的組別。"},
+  {id:"review2",term:"大四上學期",name:"第二階段 · 口頭發表",date:"",desc:"進行口頭發表與委員評分。"},
+  {id:"final",term:"大四上學期",name:"成果繳交與第二次評定",date:"",desc:"繳交完整成果並評定第二次成績。"}
 ];
 
-let myFiles={};
-let myTopic="";
-let topicDraft=null;
-let topicSaving=false;
-let studentUploads=0;
+const FLOW_DEFAULT_TITLE={current:"應屆",next:"下屆"};
 
-let myGroupNo="";
-let mySubmitted={};
-let myLeaderSid="";
-let myLeaderName="";
-let curR="r1";
-let myCohort="current";
-let hasGroup=false;
-
-$("#tabLogin").onclick=()=>{
-  $("#tabLogin").classList.add("on");
-  $("#tabReg").classList.remove("on");
-  $("#loginForm").classList.remove("hidden");
-  $("#regForm").classList.add("hidden");
+let state={
+  flows:{
+    current:{title:"",stages:[],currentStageId:""},
+    next:{title:"",stages:[],currentStageId:""}
+  },
+  finalists:{
+    published:false,
+    groups:[],
+    intro:"",
+    foot:"※此排序非第一階段成績排序。"
+  }
 };
 
-$("#tabReg").onclick=()=>{
-  $("#tabReg").classList.add("on");
-  $("#tabLogin").classList.remove("on");
-  $("#regForm").classList.remove("hidden");
-  $("#loginForm").classList.add("hidden");
+let TEACHERS=[];
+let COMMITTEE=[];
+let GROUPMAP={};
+let GRADES={};
+let CSCORES=[];
+let GFILES={};
+let CDOCS={};
+
+let agenda={
+  published:false,
+  title:"",
+  date:"",
+  place:"",
+  rows:[]
 };
 
-auth.onAuthStateChanged(async user=>{
-  if(!user){
-    $("#topRight").innerHTML='<a href="index.html">回首頁</a>';
-    $("#bootView").classList.add("hidden");
-    $("#authView").classList.remove("hidden");
-    $("#studentView").classList.add("hidden");
+let FILES_GROUPS=[];
+let FILES_MAP={};
+let curFR="r1";
+let COMMITTEE_SD_MODE="sample";
+
+const FILE_ROUND_SLOTS={
+  r1:[["report","報告"],["slides","簡報"],["extra","補充"]],
+  r2:[["slides","發表簡報"]],
+  r3:[["report","報告"],["slides","簡報"]]
+};
+
+const rulesBusy=new Set();
+const STAB={};
+const STICKY_W={groupNo:76,leaderSid:92,leaderName:104};
+
+let auth;
+let db;
+let storage;
+
+function initFirebase(){
+  try{
+    if(typeof firebase==="undefined"||!firebase.apps.length){
+      throw new Error("Firebase 尚未載入，請確認 firebase-config.js 及網路連線。");
+    }
+    auth=firebase.auth();
+    db=firebase.firestore();
+    storage=firebase.storage();
+
+    try{
+      db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    }catch(_){}
+
+    return true;
+  }catch(e){
+    show("loginView");
+    flash("loginMsg",e.message,false);
+    return false;
+  }
+}
+
+function isCurrentCohort(g){
+  return !(g&&g.cohort==="next");
+}
+
+function currentGroupList(){
+  return Object.values(GROUPMAP).filter(isCurrentCohort);
+}
+
+function extOf(name){
+  const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/);
+  return m?m[0]:"";
+}
+
+function safeName(s){
+  return String(s||"")
+    .replace(/[\/\\:*?"<>|]/g,"_")
+    .replace(/\s+/g," ")
+    .trim()||"file";
+}
+
+function folderName(g){
+  return (g.groupNo||"未編號")+"--"+(g.topic||"未命名題目");
+}
+
+function hasFile(f){
+  return !!(f&&(f.path||f.url));
+}
+
+async function urlOf(f){
+  if(f&&f.path){
+    try{
+      return await storage.ref(f.path).getDownloadURL();
+    }catch(_){
+      return null;
+    }
+  }
+  return null;
+}
+
+async function downloadAs(url,filename){
+  try{
+    const r=await fetch(url);
+    if(!r.ok)throw new Error("下載失敗");
+    const blob=await r.blob();
+    const u=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=u;
+    a.download=filename||"file";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),5000);
+  }catch(_){
+    const u=safeUrl(url);
+    if(u!=="#")window.open(u,"_blank","noopener");
+  }
+}
+
+function fmtBytes(n){
+  if(n>=1073741824)return (n/1073741824).toFixed(2)+" GB";
+  if(n>=1048576)return (n/1048576).toFixed(1)+" MB";
+  if(n>=1024)return (n/1024).toFixed(0)+" KB";
+  return n+" B";
+}
+
+async function loadAll(){
+  const [site,flow,fin,reg,up,sc,ag]=await Promise.all([
+    db.doc("settings/site").get(),
+    db.doc("settings/flow").get(),
+    db.doc("settings/finalists").get(),
+    db.doc("settings/registration").get(),
+    db.doc("settings/uploads").get(),
+    db.doc("settings/scoring").get(),
+    db.doc("settings/agenda").get()
+  ]);
+
+  if(site.exists){
+    $("#fSchool").value=site.data().school||"";
+    $("#fYear").value=site.data().academicYear||"";
+  }
+
+  const fd=flow.exists?flow.data():{};
+  const mk=(o,title)=>({
+    title:(o&&o.title)||title,
+    stages:o&&Array.isArray(o.stages)?o.stages:[],
+    currentStageId:(o&&o.currentStageId)||""
+  });
+
+  state.flows.current=fd.current
+    ?mk(fd.current,FLOW_DEFAULT_TITLE.current)
+    :mk({
+      stages:fd.stages,
+      currentStageId:fd.currentStageId
+    },FLOW_DEFAULT_TITLE.current);
+
+  state.flows.next=mk(fd.next,FLOW_DEFAULT_TITLE.next);
+  renderStages("current");
+  renderStages("next");
+
+  if(fin.exists){
+    const d=fin.data();
+    state.finalists={
+      published:!!d.published,
+      groups:Array.isArray(d.groups)?d.groups:[],
+      intro:d.intro||"",
+      foot:d.foot!==undefined?d.foot:"※此排序非第一階段成績排序。"
+    };
+  }
+
+  $("#fPublished").checked=state.finalists.published;
+  $("#fIntro").value=state.finalists.intro||"";
+  $("#fFoot").value=state.finalists.foot||"";
+
+  const rd=reg.exists?reg.data():{};
+  $("#fRegOpen").checked=!!rd.open;
+  $("#fNextCohort").checked=rd.nextCohort===true;
+  $("#fRegStart").value=rd.regStart||"";
+  $("#fRegDeadline").value=rd.regDeadline||"";
+
+  const upd=up.exists?up.data():{};
+
+  [1,2,3].forEach(n=>{
+    $("#fForm"+n+"Open").checked=!!upd["round"+n+"Open"];
+    $("#fForm"+n+"Start").value=upd["round"+n+"Start"]||"";
+    $("#fForm"+n+"Deadline").value=upd["round"+n+"Deadline"]||"";
+  });
+
+  renderRulesCurrent(upd);
+
+  const sd=sc.exists?sc.data():{};
+
+  ["t1","t2","c1","c2"].forEach(k=>{
+    $("#"+k+"open").checked=sd[k+"open"]!==false;
+    $("#"+k+"Start").value=sd[k+"Start"]||"";
+    $("#"+k+"Deadline").value=sd[k+"Deadline"]||"";
+  });
+
+  $("#scLocked").checked=sd.locked===true;
+
+  if(ag.exists){
+    const d=ag.data();
+    agenda={
+      published:!!d.published,
+      title:d.title||"",
+      date:d.date||"",
+      place:d.place||"",
+      rows:Array.isArray(d.rows)?d.rows:[]
+    };
+  }
+
+  $("#agPublished").checked=agenda.published;
+  $("#agTitle").value=agenda.title;
+  $("#agDate").value=agenda.date;
+  $("#agPlace").value=agenda.place;
+
+  await loadAnnouncements();
+  await loadAccounts();
+  await loadGroups();
+
+  renderFinalists();
+  renderAgenda();
+
+  await loadLeaders();
+  await loadCommitteeDocs();
+
+  loadStorageUsage();
+  startStorageBanner();
+  startCommitteeListener();
+  startGradesListener();
+}
+
+$$(".tabbtn").forEach(b=>{
+  b.onclick=()=>{
+    $$(".tabbtn").forEach(x=>x.classList.toggle("on",x===b));
+    $$(".tabpane").forEach(p=>{
+      p.classList.toggle("on",p.dataset.pane===b.dataset.tab);
+    });
+
+    $("#adminView").classList.toggle("wide",b.dataset.tab==="score");
+
+    if(b.dataset.tab==="score")refreshScores();
+    if(b.dataset.tab==="files"){
+      loadFilesTab();
+      loadStorageUsage();
+    }
+  };
+});
+
+$("#loginBtn").onclick=async()=>{
+  if(!auth){
+    flash("loginMsg","Firebase 尚未就緒，請重新整理頁面。",false);
     return;
   }
 
-  try{
-    const u=await db.doc("users/"+user.uid).get();
+  const email=$("#email").value.trim();
+  const pw=$("#pw").value;
 
-    if(!u.exists||u.data().role!=="student"){
-      flash("loginMsg","此入口供學生（組長）使用。",false);
-      await auth.signOut();
-      return;
-    }
-
-    $("#topRight").innerHTML=
-      '<a href="index.html">回首頁</a>'+
-      '<button class="link-btn" id="signOut">登出（'+
-      esc(user.email)+'）</button>';
-
-    $("#signOut").onclick=()=>auth.signOut();
-
-    $("#bootView").classList.add("hidden");
-    $("#authView").classList.add("hidden");
-    $("#studentView").classList.remove("hidden");
-
-    await loadGroup(user);
-    await renderRound();
-    subscribeLiveStudent(user.uid);
-  }catch(e){
-    flash("loginMsg","載入失敗："+(e.code||e.message),false);
-  }
-});
-
-$("#loginBtn").onclick=()=>{
-  const em=$("#lEmail").value.trim();
-  const pw=$("#lPw").value;
-
-  if(!em||!pw){
+  if(!email||!pw){
     flash("loginMsg","請輸入電子郵件與密碼。",false);
     return;
   }
 
-  const btn=$("#loginBtn");
-  btn.disabled=true;
-  btn.textContent="登入中…";
+  const b=$("#loginBtn");
+  b.disabled=true;
+  b.textContent="登入中…";
 
-  auth.signInWithEmailAndPassword(em,pw)
-    .catch(e=>flash("loginMsg","登入失敗："+(e.code||e.message),false))
-    .finally(()=>{
-      btn.disabled=false;
-      btn.textContent="登入";
-    });
+  try{
+    await auth.signInWithEmailAndPassword(email,pw);
+  }catch(e){
+    flash("loginMsg","登入失敗："+(e.code||e.message),false);
+  }finally{
+    b.disabled=false;
+    b.textContent="登入";
+  }
 };
 
-$("#lPw").addEventListener("keydown",e=>{
+$("#pw").addEventListener("keydown",e=>{
   if(e.key==="Enter")$("#loginBtn").click();
 });
 
-$("#forgotPw").onclick=e=>{
+$("#denySignOut").onclick=()=>auth&&auth.signOut();
+
+$("#forgotPw").onclick=async e=>{
   e.preventDefault();
 
-  const el=$("#loginMsg");
-  const set=(m,ok)=>{
-    el.className="msg "+(ok?"ok":"err");
-    el.textContent=m;
+  const email=$("#email").value.trim();
+
+  if(!email){
+    flash("loginMsg","請先輸入電子郵件。",false);
+    return;
+  }
+
+  if(!auth){
+    flash("loginMsg","Firebase 尚未就緒。",false);
+    return;
+  }
+
+  try{
+    await auth.sendPasswordResetEmail(email);
+    flash("loginMsg","密碼重設信已寄出，請檢查收件匣與垃圾郵件匣。");
+  }catch(err){
+    flash("loginMsg","寄送失敗："+(err.code||err.message),false);
+  }
+};
+
+$("#saveSite").onclick=async()=>{
+  try{
+    await db.doc("settings/site").set({
+      school:$("#fSchool").value.trim(),
+      academicYear:$("#fYear").value.trim()
+    },{merge:true});
+    flash("siteMsg","已儲存。");
+  }catch(e){
+    flash("siteMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+$("#changePw").onclick=async()=>{
+  const cur=$("#cpw").value;
+  const a=$("#npw1").value;
+  const b=$("#npw2").value;
+
+  if(!cur){
+    flash("pwMsg","請輸入目前密碼。",false);
+    return;
+  }
+
+  if(a.length<6){
+    flash("pwMsg","新密碼至少 6 碼。",false);
+    return;
+  }
+
+  if(a!==b){
+    flash("pwMsg","兩次新密碼不一致。",false);
+    return;
+  }
+
+  const btn=$("#changePw");
+  btn.disabled=true;
+
+  try{
+    const cred=firebase.auth.EmailAuthProvider.credential(
+      auth.currentUser.email,
+      cur
+    );
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(a);
+
+    $("#cpw").value="";
+    $("#npw1").value="";
+    $("#npw2").value="";
+
+    flash("pwMsg","密碼已更新。");
+  }catch(e){
+    flash("pwMsg","更新失敗："+(e.code||e.message),false);
+  }finally{
+    btn.disabled=false;
+  }
+};
+
+$("#saveScoring").onclick=async()=>{
+  try{
+    const patch={locked:$("#scLocked").checked};
+    const ms=v=>{
+      const t=Date.parse(v);
+      return Number.isFinite(t)?t:0;
+    };
+
+    ["t1","t2","c1","c2"].forEach(k=>{
+      patch[k+"open"]=$("#"+k+"open").checked;
+      patch[k+"Start"]=$("#"+k+"Start").value||"";
+      patch[k+"Deadline"]=$("#"+k+"Deadline").value||"";
+
+      if(k[0]==="c"){
+        patch[k+"StartMs"]=ms(patch[k+"Start"]);
+        patch[k+"DeadlineMs"]=ms(patch[k+"Deadline"]);
+      }
+    });
+
+    await db.doc("settings/scoring").set(patch,{merge:true});
+    flash("scoringMsg","已儲存。");
+  }catch(e){
+    flash("scoringMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+function stageId(){
+  return "s"+Math.random().toString(36).slice(2,10);
+}
+
+function flowPanel(flow){
+  return document.querySelector('[data-flow="'+flow+'"]');
+}
+
+function syncFromDOM(flow){
+  const p=flowPanel(flow);
+  const f=state.flows[flow];
+
+  f.title=$(".fl-title",p).value.trim();
+  f.currentStageId=$(".fl-current",p).value;
+
+  f.stages=$$(".fl-stages .stage-item",p).map(row=>({
+    id:row.dataset.id,
+    term:$(".f-term",row).value.trim(),
+    name:$(".f-name",row).value.trim(),
+    date:$(".f-date",row).value.trim(),
+    desc:$(".f-desc",row).value.trim()
+  }));
+}
+
+function renderStages(flow){
+  const p=flowPanel(flow);
+  const f=state.flows[flow];
+
+  $(".fl-title",p).value=f.title||"";
+
+  $(".fl-stages",p).innerHTML=f.stages.map((s,idx)=>`
+    <div class="item stage-item" data-id="${esc(s.id||stageId())}" data-idx="${idx}">
+      <div class="stage-bar" data-act="toggle-stage">
+        <span class="drag-handle" draggable="true">⠿</span>
+        <span class="stage-title" data-title>${esc(s.name)||"（未命名階段）"}</span>
+        <span class="stage-sum" data-sum>${esc([s.term,s.date].filter(Boolean).join(" · "))}</span>
+        <span class="spacer"></span>
+        <button class="btn btn-sm" data-act="up">▲</button>
+        <button class="btn btn-sm" data-act="down">▼</button>
+        <span>▸</span>
+      </div>
+      <div class="item-grid">
+        <div><label>學期</label><input class="f-term" type="text" value="${esc(s.term)}"></div>
+        <div><label>階段名稱</label><input class="f-name" type="text" value="${esc(s.name)}"></div>
+        <div><label>日期</label><input class="f-date" type="text" value="${esc(s.date)}"></div>
+        <div><label>說明</label><input class="f-desc" type="text" value="${esc(s.desc)}"></div>
+      </div>
+      <div class="item-foot">
+        <button class="btn btn-sm btn-danger" data-act="del-stage">刪除此階段</button>
+      </div>
+    </div>
+  `).join("")||'<p class="empty-note">尚無階段。</p>';
+
+  const sel=$(".fl-current",p);
+  sel.innerHTML='<option value="">（未指定）</option>'+
+    f.stages.map(s=>
+      '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>'
+    ).join("");
+
+  sel.value=f.currentStageId||"";
+}
+
+function moveStage(flow,from,to){
+  const stages=state.flows[flow].stages;
+  if(from===to||from<0||to<0||from>=stages.length||to>=stages.length)return;
+  const item=stages.splice(from,1)[0];
+  stages.splice(to,0,item);
+  renderStages(flow);
+}
+
+function wireFlowPanel(flow){
+  const p=flowPanel(flow);
+  const host=$(".fl-stages",p);
+
+  $(".fl-add",p).onclick=()=>{
+    syncFromDOM(flow);
+    state.flows[flow].stages.push({
+      id:stageId(),term:"",name:"",date:"",desc:""
+    });
+    renderStages(flow);
+    const items=$$(".stage-item",host);
+    if(items.length)items[items.length-1].classList.add("open");
   };
 
-  const em=$("#lEmail").value.trim();
+  $(".fl-seed",p).onclick=()=>{
+    syncFromDOM(flow);
+    state.flows[flow].stages=DEFAULT_STAGES.map(s=>({...s}));
+    state.flows[flow].currentStageId="";
+    renderStages(flow);
+  };
 
-  if(!em){
-    set("請先在上方輸入電子郵件。",false);
-    return;
-  }
-
-  set("寄送中…",true);
-
-  auth.sendPasswordResetEmail(em)
-    .then(()=>set(
-      "重設信已寄出（僅當此信箱為系統登記帳號時才會寄達）。請檢查收件匣與垃圾郵件匣；1–2 分鐘未收到，請確認信箱是否正確或洽系辦。",
-      true
-    ))
-    .catch(err=>{
-      const c=err.code||"";
-      set(
-        c==="auth/user-not-found"
-          ?"此信箱尚未註冊為系統帳號，請確認或洽系辦。"
-          :c==="auth/invalid-email"
-          ?"電子郵件格式不正確。"
-          :c==="auth/too-many-requests"
-          ?"嘗試過於頻繁，請稍後再試。"
-          :c==="auth/missing-email"
-          ?"請輸入電子郵件。"
-          :"寄送失敗："+(c||err.message),
-        false
-      );
-    });
-};
-
-$("#regBtn").onclick=async()=>{
-  const em=$("#rEmail").value.trim();
-  const pw=$("#rPw").value;
-
-  if(!em||!pw){
-    flash("regMsg","請填寫電子郵件與密碼。",false);
-    return;
-  }
-
-  $("#regBtn").disabled=true;
-  $("#regBtn").textContent="建立中…";
-
-  try{
-    const reg=await db.doc("settings/registration").get();
-    const rd=reg.exists?reg.data():{};
-
-    if(rd.open!==true){
-      flash("regMsg","目前未開放分組登錄。",false);
-      return;
-    }
-
-    if(!afterStart(rd.regStart)){
-      flash(
-        "regMsg",
-        "分組登錄尚未開始（開始時間："+fmtWhen(rd.regStart)+"）。",
-        false
-      );
-      return;
-    }
-
-    if(!notPast(rd.regDeadline)){
-      flash(
-        "regMsg",
-        "分組登錄已截止（截止時間："+fmtWhen(rd.regDeadline)+"）。",
-        false
-      );
-      return;
-    }
-
-    const cred=await auth.createUserWithEmailAndPassword(em,pw);
-
+  $(".fl-save",p).onclick=async()=>{
+    syncFromDOM(flow);
     try{
-      await db.doc("users/"+cred.user.uid).set({
-        role:"student",
-        email:em
-      });
-    }catch(werr){
-      try{
-        await cred.user.delete();
-      }catch(_){}
-      throw werr;
+      await db.doc("settings/flow").set({
+        [flow]:state.flows[flow]
+      },{merge:true});
+      flash("flMsg_"+flow,"已儲存。");
+    }catch(e){
+      flash("flMsg_"+flow,"儲存失敗："+(e.code||e.message),false);
     }
-  }catch(e){
-    flash("regMsg","註冊失敗："+(e.code||e.message),false);
-  }finally{
-    $("#regBtn").disabled=false;
-    $("#regBtn").textContent="建立帳號";
-  }
-};
+  };
 
-function setRosterDisabled(locked){
-  ROSTER_IDS.forEach(id=>$("#"+id).disabled=locked);
-  $("#lockNote").classList.toggle("hidden",!locked);
-  $("#saveArea").classList.toggle("hidden",locked);
-  $("#groupState").textContent=locked?"已送出":"尚未送出";
-}
+  host.addEventListener("click",e=>{
+    const item=e.target.closest(".stage-item");
+    if(!item)return;
+    const idx=Number(item.dataset.idx);
 
-async function loadGroup(user){
-  const doc=await db.doc("groups/"+user.uid).get();
-
-  if(doc.exists){
-    const g=doc.data();
-
-    myTopic=g.topic||"";
-    topicDraft=null;
-    hasGroup=true;
-    myGroupNo=g.groupNo||"";
-    mySubmitted=g.submitted||{};
-    myLeaderSid=g.leaderSid||"";
-    myLeaderName=g.leaderName||"";
-    myCohort=g.cohort==="next"?"next":"current";
-
-    $("#leaderSid").value=g.leaderSid||"";
-    $("#leaderName").value=g.leaderName||"";
-
-    const m=g.members||[];
-
-    $("#m1Sid").value=m[0]?.sid||"";
-    $("#m1Name").value=m[0]?.name||"";
-    $("#m2Sid").value=m[1]?.sid||"";
-    $("#m2Name").value=m[1]?.name||"";
-    $("#m3Sid").value=m[2]?.sid||"";
-    $("#m3Name").value=m[2]?.name||"";
-
-    setRosterDisabled(true);
-    renderAdvisor(g.advisorName||"");
-  }else{
-    myTopic="";
-    topicDraft=null;
-    hasGroup=false;
-    myGroupNo="";
-    mySubmitted={};
-    myLeaderSid="";
-    myLeaderName="";
-    myCohort="current";
-
-    setRosterDisabled(false);
-    renderAdvisor("");
-  }
-}
-
-$("#saveGroup").onclick=async()=>{
-  const user=auth.currentUser;
-  if(!user)return;
-
-  const v=id=>$("#"+id).value.trim();
-
-  const req=[
-    ["leaderSid","組長學號"],
-    ["leaderName","組長姓名"],
-    ["m1Sid","組員1學號"],
-    ["m1Name","組員1姓名"],
-    ["m2Sid","組員2學號"],
-    ["m2Name","組員2姓名"]
-  ];
-
-  for(const [id,label] of req){
-    if(!v(id)){
-      flash("groupMsg","請填寫必填欄位："+label+"。",false);
+    if(e.target.closest("[data-act=del-stage]")){
+      syncFromDOM(flow);
+      state.flows[flow].stages.splice(idx,1);
+      renderStages(flow);
       return;
     }
-  }
 
-  if(
-    (v("m3Sid")&&!v("m3Name"))||
-    (!v("m3Sid")&&v("m3Name"))
-  ){
-    flash(
-      "groupMsg",
-      "組員3 需同時填學號與姓名，或兩者留空。",
-      false
-    );
-    return;
-  }
-
-  const members=[
-    {sid:v("m1Sid"),name:v("m1Name")},
-    {sid:v("m2Sid"),name:v("m2Name")}
-  ];
-
-  if(v("m3Sid")&&v("m3Name")){
-    members.push({sid:v("m3Sid"),name:v("m3Name")});
-  }
-
-  if(!confirm(
-    "分組名單送出後將無法自行修改，如需更正須洽系辦。確定送出？"
-  ))return;
-
-  $("#saveGroup").disabled=true;
-
-  try{
-    let nextCohort=false;
-
-    try{
-      const reg=await db.doc("settings/registration").get();
-      if(reg.exists)nextCohort=reg.data().nextCohort===true;
-    }catch(_){}
-
-    myCohort=nextCohort?"next":"current";
-
-    await db.doc("groups/"+user.uid).set({
-      leaderUid:user.uid,
-      leaderSid:v("leaderSid"),
-      leaderName:v("leaderName"),
-      members:members,
-      cohort:myCohort,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    hasGroup=true;
-    setRosterDisabled(true);
-    flash("groupMsg","已送出。",true);
-
-    await renderRound();
-  }catch(e){
-    flash("groupMsg","送出失敗："+(e.code||e.message),false);
-    $("#saveGroup").disabled=false;
-  }
-};
-
-function renderAdvisor(name){
-  const box=$("#advisorBox");
-
-  if(name){
-    box.innerHTML=
-      '<span class="advisor-name">'+esc(name)+'</span>'+
-      '<span class="pill">已登錄</span>';
-  }else{
-    box.innerHTML=
-      '<span class="pill wait">尚未登錄</span>'+
-      '<span style="color:var(--muted);font-size:14px">'+
-      '指導老師經同意書確認後，由系辦登錄並顯示於此。</span>';
-  }
-}
-
-function subscribeLiveStudent(uid){
-  if(subscribeLiveStudent.done)return;
-  subscribeLiveStudent.done=true;
-
-  db.doc("groups/"+uid).onSnapshot(d=>{
-    if(d.exists){
-      const g=d.data();
-
-      myTopic=g.topic||"";
-      myGroupNo=g.groupNo||"";
-      myLeaderSid=g.leaderSid||myLeaderSid;
-      myLeaderName=g.leaderName||myLeaderName;
-
-      renderAdvisor(g.advisorName||"");
+    if(e.target.closest("[data-act=up]")){
+      syncFromDOM(flow);
+      moveStage(flow,idx,idx-1);
+      return;
     }
 
-    renderRound();
-  },()=>{});
+    if(e.target.closest("[data-act=down]")){
+      syncFromDOM(flow);
+      moveStage(flow,idx,idx+1);
+      return;
+    }
 
-  db.doc("settings/uploads").onSnapshot(
-    ()=>renderRound(),
-    ()=>{}
-  );
+    if(e.target.closest(".drag-handle"))return;
 
-  db.doc("settings/finalists").onSnapshot(
-    ()=>renderRound(),
-    ()=>{}
-  );
-
-  db.doc("groupFiles/"+uid).onSnapshot(d=>{
-    myFiles=d.exists?d.data():{};
-    renderRound();
-  },()=>{});
-}
-
-$("#upTabs").addEventListener("click",e=>{
-  const t=e.target.closest(".tab");
-  if(!t)return;
-
-  curR=t.dataset.r;
-
-  [...$("#upTabs").children].forEach(x=>{
-    x.classList.toggle("on",x===t);
+    if(e.target.closest("[data-act=toggle-stage]")){
+      item.classList.toggle("open");
+    }
   });
 
-  renderRound();
-});
+  host.addEventListener("input",e=>{
+    const item=e.target.closest(".stage-item");
+    if(!item)return;
+    $("[data-title]",item).textContent=$(".f-name",item).value||"（未命名階段）";
+    $("[data-sum]",item).textContent=[
+      $(".f-term",item).value,
+      $(".f-date",item).value
+    ].filter(Boolean).join(" · ");
+  });
 
-const ROUND_DEFS={
-  r1:{
-    no:"第一次",
-    title:"第一階段書面資料",
-    slots:[
-      {
-        key:"report",
-        label:"專題報告",
-        required:true,
-        accept:".doc,.docx,.pdf",
-        hint:"Word 或 PDF"
-      },
-      {
-        key:"slides",
-        label:"專題簡報",
-        required:true,
-        accept:".ppt,.pptx,.pdf",
-        hint:"PPT 或 PDF"
-      },
-      {
-        key:"extra",
-        label:"補充資料",
-        required:false,
-        accept:".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.zip",
-        hint:"選填，限 1 個檔案"
-      }
-    ]
-  },
-  r2:{
-    no:"第二次",
-    title:"第二階段發表簡報",
-    finalistOnly:true,
-    slots:[
-      {
-        key:"slides",
-        label:"發表簡報",
-        required:true,
-        accept:".ppt,.pptx,.pdf",
-        hint:"PPT 或 PDF"
-      }
-    ]
-  },
-  r3:{
-    no:"第三次",
-    title:"最終成果",
-    slots:[
-      {
-        key:"report",
-        label:"報告 Word",
-        required:true,
-        accept:".doc,.docx,.pdf",
-        hint:"Word 或 PDF"
-      },
-      {
-        key:"slides",
-        label:"簡報 PPT",
-        required:true,
-        accept:".ppt,.pptx,.pdf",
-        hint:"PPT 或 PDF"
-      }
-    ]
+  let dragIdx=-1;
+
+  host.addEventListener("dragstart",e=>{
+    const h=e.target.closest(".drag-handle");
+    if(!h){
+      e.preventDefault();
+      return;
+    }
+
+    const item=h.closest(".stage-item");
+    syncFromDOM(flow);
+    dragIdx=Number(item.dataset.idx);
+    item.classList.add("dragging");
+    e.dataTransfer.effectAllowed="move";
+    e.dataTransfer.setData("text/plain",String(dragIdx));
+  });
+
+  host.addEventListener("dragover",e=>{
+    const item=e.target.closest(".stage-item");
+    if(!item||dragIdx<0)return;
+    e.preventDefault();
+
+    $$(".stage-item",host).forEach(x=>{
+      x.classList.toggle("dragover",x===item);
+    });
+  });
+
+  host.addEventListener("drop",e=>{
+    const item=e.target.closest(".stage-item");
+    if(!item||dragIdx<0)return;
+    e.preventDefault();
+    moveStage(flow,dragIdx,Number(item.dataset.idx));
+    dragIdx=-1;
+  });
+
+  host.addEventListener("dragend",()=>{
+    dragIdx=-1;
+    $$(".stage-item",host).forEach(x=>{
+      x.classList.remove("dragover","dragging");
+    });
+  });
+}
+
+wireFlowPanel("current");
+wireFlowPanel("next");
+
+function annFileHtml(a){
+  if(!a||!a.fileUrl){
+    return '<span class="hint">尚未附加檔案</span>';
+  }
+
+  return '<a href="'+esc(safeUrl(a.fileUrl))+
+    '" target="_blank" rel="noopener">'+
+    esc(a.fileName||"附件")+'</a> '+
+    '<button class="btn btn-sm btn-danger" data-act="del-annfile">移除檔案</button>';
+}
+
+async function loadAnnouncements(){
+  const snap=await db.collection("announcements").get();
+
+  const list=snap.docs.map(d=>({
+    id:d.id,...d.data()
+  })).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+
+  $("#annHost").innerHTML=list.map(a=>`
+    <div class="item" data-id="${esc(a.id)}">
+      <div class="item-grid">
+        <div><label>日期</label><input class="a-date" type="date" value="${esc(a.date)}"></div>
+        <div><label>標題</label><input class="a-title" type="text" value="${esc(a.title)}"></div>
+        <div class="full"><label>內容</label><textarea class="a-body">${esc(a.body)}</textarea></div>
+        <div class="full">
+          <label>附件（圖片或 PDF，單檔小於 20MB）</label>
+          <div data-annfile>${annFileHtml(a)}</div>
+          <label class="btn btn-sm">
+            <input type="file" class="a-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none">
+            上傳／更換附件
+          </label>
+          <span class="msg" data-annfmsg></span>
+        </div>
+      </div>
+      <div class="item-foot">
+        <label class="chk"><input type="checkbox" class="a-pin" ${a.pinned?"checked":""}> 置頂</label>
+        <span class="spacer"></span>
+        <button class="btn btn-sm btn-primary" data-act="save-ann">儲存這則</button>
+        <button class="btn btn-sm btn-danger" data-act="del-ann">刪除</button>
+      </div>
+    </div>
+  `).join("")||'<p class="empty-note">目前沒有公告。</p>';
+}
+
+$("#addAnn").onclick=async()=>{
+  try{
+    await db.collection("announcements").add({
+      date:today(),title:"",body:"",pinned:false
+    });
+    await loadAnnouncements();
+    flash("annMsg","已新增，請填寫後儲存。");
+  }catch(e){
+    flash("annMsg","新增失敗："+(e.code||e.message),false);
   }
 };
 
-const ROUND_LABEL={
-  r1:"第一次",
-  r2:"第二次",
-  r3:"第三次"
-};
+$("#annHost").addEventListener("click",async e=>{
+  const item=e.target.closest(".item");
+  if(!item)return;
+  const id=item.dataset.id;
 
-function roundDone(rk){
-  const def=ROUND_DEFS[rk];
-  const rec=myFiles[rk]||{};
+  if(e.target.closest("[data-act=save-ann]")){
+    try{
+      await db.doc("announcements/"+id).set({
+        date:$(".a-date",item).value,
+        title:$(".a-title",item).value.trim(),
+        body:$(".a-body",item).value.trim(),
+        pinned:$(".a-pin",item).checked
+      },{merge:true});
+      flash("annMsg","已儲存。");
+    }catch(err){
+      flash("annMsg","儲存失敗："+(err.code||err.message),false);
+    }
+  }
 
-  return (rk!=="r1"||!!myTopic.trim())&&
-    def.slots
-      .filter(s=>s.required)
-      .every(s=>rec[s.key]&&rec[s.key].url);
+  if(e.target.closest("[data-act=del-ann]")){
+    if(!confirm("確定刪除這則公告？"))return;
+
+    try{
+      const doc=await db.doc("announcements/"+id).get();
+      const d=doc.exists?doc.data():{};
+      await db.doc("announcements/"+id).delete();
+
+      if(d.filePath){
+        try{await storage.ref(d.filePath).delete();}catch(_){}
+      }
+
+      await loadAnnouncements();
+      flash("annMsg","已刪除。");
+    }catch(err){
+      flash("annMsg","刪除失敗："+(err.code||err.message),false);
+    }
+  }
+
+  if(e.target.closest("[data-act=del-annfile]")){
+    const msg=$("[data-annfmsg]",item);
+
+    try{
+      const doc=await db.doc("announcements/"+id).get();
+      const d=doc.exists?doc.data():{};
+      const del=firebase.firestore.FieldValue.delete();
+
+      await db.doc("announcements/"+id).set({
+        fileUrl:del,filePath:del,fileName:del,fileType:del
+      },{merge:true});
+
+      if(d.filePath){
+        try{await storage.ref(d.filePath).delete();}catch(_){}
+      }
+
+      $("[data-annfile]",item).innerHTML=annFileHtml({});
+      msg.textContent="已移除。";
+      msg.className="msg ok";
+    }catch(err){
+      msg.textContent="移除失敗："+(err.code||err.message);
+      msg.className="msg err";
+    }
+  }
+});
+
+$("#annHost").addEventListener("change",async e=>{
+  const inp=e.target.closest(".a-file");
+  if(!inp)return;
+
+  const item=inp.closest(".item");
+  const id=item.dataset.id;
+  const msg=$("[data-annfmsg]",item);
+  const file=inp.files&&inp.files[0];
+  if(!file)return;
+
+  const ext=extOf(file.name);
+  const isPdf=ext===".pdf";
+  const isImg=[".jpg",".jpeg",".png"].includes(ext);
+
+  const setMsg=(text,ok)=>{
+    msg.textContent=text;
+    msg.className="msg "+(ok?"ok":"err");
+  };
+
+  if(!isPdf&&!isImg){
+    setMsg("僅支援 PDF、PNG、JPG。",false);
+    inp.value="";
+    return;
+  }
+
+  if(file.size>=20*1024*1024){
+    setMsg("附件須小於 20MB。",false);
+    inp.value="";
+    return;
+  }
+
+  setMsg("上傳中…",true);
+
+  try{
+    const old=await db.doc("announcements/"+id).get();
+    const oldPath=old.exists?(old.data().filePath||""):"";
+    const path="public/announcements/"+id+"_"+Date.now()+ext;
+    const ref=storage.ref(path);
+
+    await ref.put(file,{
+      contentType:file.type||(isPdf?"application/pdf":"image/"+(ext===".png"?"png":"jpeg"))
+    });
+
+    const url=await ref.getDownloadURL();
+    const patch={
+      fileUrl:url,
+      filePath:path,
+      fileName:file.name,
+      fileType:isImg?"image":"pdf"
+    };
+
+    await db.doc("announcements/"+id).set(patch,{merge:true});
+
+    if(oldPath&&oldPath!==path){
+      try{await storage.ref(oldPath).delete();}catch(_){}
+    }
+
+    $("[data-annfile]",item).innerHTML=annFileHtml(patch);
+    setMsg("已上傳。",true);
+  }catch(err){
+    setMsg("上傳失敗："+(err.code||err.message),false);
+  }finally{
+    inp.value="";
+  }
+});
+
+function groupOptions(sel){
+  return '<option value="">（選擇小組）</option>'+
+    currentGroupList()
+      .sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")))
+      .map(g=>
+        '<option value="'+esc(g.id)+'"'+
+        (g.id===sel?" selected":"")+'>'+
+        esc((g.groupNo||"未編號")+" · "+(g.leaderName||""))+
+        '</option>'
+      ).join("");
 }
 
+function syncFinalFromDOM(){
+  state.finalists.groups=$$("#finalHost .acc-item").map(it=>({
+    gid:$(".f-gid",it).value,
+    no:$(".f-no",it).value.trim(),
+    title:$(".f-title",it).value.trim(),
+    leader:$(".f-leader",it).value.trim(),
+    m1:$(".f-m1",it).value.trim(),
+    m2:$(".f-m2",it).value.trim(),
+    m3:$(".f-m3",it).value.trim()
+  }));
+
+  state.finalists.published=$("#fPublished").checked;
+  state.finalists.intro=$("#fIntro").value;
+  state.finalists.foot=$("#fFoot").value;
+}
+
+function renderFinalists(){
+  $("#finalHost").innerHTML=state.finalists.groups.map((g,idx)=>`
+    <div class="acc-item" data-idx="${idx}">
+      <div class="acc-head">
+        <span class="acc-no fh-no">${esc(g.no||"未編號")}</span>
+        <span class="acc-leader fh-title">${esc(g.title||"（未帶入）")}</span>
+        <span class="acc-chev">▾</span>
+      </div>
+      <div class="acc-body">
+        <label>選擇小組</label>
+        <select class="f-gid">${groupOptions(g.gid||"")}</select>
+        <div class="grid2">
+          <div><label>組別編號</label><input class="f-no" type="text" value="${esc(g.no||"")}"></div>
+          <div><label>專題題目</label><input class="f-title" type="text" value="${esc(g.title||"")}"></div>
+          <div><label>組長</label><input class="f-leader" type="text" value="${esc(g.leader||"")}"></div>
+          <div><label>組員1</label><input class="f-m1" type="text" value="${esc(g.m1||"")}"></div>
+          <div><label>組員2</label><input class="f-m2" type="text" value="${esc(g.m2||"")}"></div>
+          <div><label>組員3</label><input class="f-m3" type="text" value="${esc(g.m3||"")}"></div>
+        </div>
+        <div class="item-foot">
+          <button class="btn btn-sm btn-danger" data-act="del-final">刪除</button>
+        </div>
+      </div>
+    </div>
+  `).join("")||'<p class="empty-note">尚無入選組別。</p>';
+}
+
+function updateFinalHeader(it){
+  $(".fh-no",it).textContent=$(".f-no",it).value.trim()||"未編號";
+  $(".fh-title",it).textContent=$(".f-title",it).value.trim()||"（未帶入）";
+}
+
+$("#addFinal").onclick=()=>{
+  syncFinalFromDOM();
+  state.finalists.groups.push({
+    gid:"",no:"",title:"",leader:"",m1:"",m2:"",m3:""
+  });
+  renderFinalists();
+};
+
+$("#finalHost").addEventListener("change",e=>{
+  const sel=e.target.closest(".f-gid");
+  if(!sel)return;
+
+  const it=sel.closest(".acc-item");
+  const g=GROUPMAP[sel.value];
+
+  if(g){
+    const m=g.members||[];
+    $(".f-no",it).value=g.groupNo||"";
+    $(".f-title",it).value=g.topic||"";
+    $(".f-leader",it).value=g.leaderName||"";
+    $(".f-m1",it).value=(m[0]||{}).name||"";
+    $(".f-m2",it).value=(m[1]||{}).name||"";
+    $(".f-m3",it).value=(m[2]||{}).name||"";
+  }
+
+  updateFinalHeader(it);
+});
+
+$("#finalHost").addEventListener("input",e=>{
+  const it=e.target.closest(".acc-item");
+  if(it)updateFinalHeader(it);
+});
+
+$("#finalHost").addEventListener("click",e=>{
+  const head=e.target.closest(".acc-head");
+
+  if(head){
+    head.parentElement.classList.toggle("open");
+    return;
+  }
+
+  const b=e.target.closest("[data-act=del-final]");
+  if(!b)return;
+
+  syncFinalFromDOM();
+  const idx=Number(b.closest(".acc-item").dataset.idx);
+  state.finalists.groups.splice(idx,1);
+  renderFinalists();
+});
+
+$("#saveFinal").onclick=async()=>{
+  syncFinalFromDOM();
+
+  try{
+    await db.doc("settings/finalists").set({
+      published:state.finalists.published,
+      groups:state.finalists.groups,
+      intro:state.finalists.intro||"",
+      foot:state.finalists.foot||""
+    });
+
+    flash("finalMsg","已儲存。");
+    renderCommitteeTables();
+  }catch(e){
+    flash("finalMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+function renderAgenda(){
+  $("#agendaHost").innerHTML=agenda.rows.map((r,idx)=>{
+    const g=GROUPMAP[r.gid];
+    const summary=r.gid&&g
+      ?g.topic||g.groupNo||"小組發表"
+      :r.text||"（未填內容）";
+
+    return `
+      <div class="acc-item" data-idx="${idx}">
+        <div class="acc-head">
+          <span class="acc-no ah-time">${esc(r.time||"（未填時間）")}</span>
+          <span class="acc-leader ah-item">${esc(summary)}</span>
+          <span class="acc-chev">▾</span>
+        </div>
+        <div class="acc-body">
+          <div class="grid2">
+            <div><label>時間</label><input class="ag-time" type="text" value="${esc(r.time||"")}"></div>
+            <div><label>發表小組</label><select class="ag-gid">${groupOptions(r.gid||"")}</select></div>
+          </div>
+          <label>未選小組時的自訂文字</label>
+          <input class="ag-text" type="text" value="${esc(r.text||"")}">
+          <div class="item-foot">
+            <button class="btn btn-sm" data-act="ag-up">↑</button>
+            <button class="btn btn-sm" data-act="ag-down">↓</button>
+            <span class="spacer"></span>
+            <button class="btn btn-sm btn-danger" data-act="ag-del">刪除</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("")||'<p class="empty-note">尚無議程項目。</p>';
+}
+
+function updateAgendaHeader(it){
+  const gid=$(".ag-gid",it).value;
+  const g=GROUPMAP[gid];
+
+  $(".ah-time",it).textContent=$(".ag-time",it).value.trim()||"（未填時間）";
+  $(".ah-item",it).textContent=gid&&g
+    ?g.topic||g.groupNo||"小組發表"
+    :$(".ag-text",it).value.trim()||"（未填內容）";
+}
+
+function syncAgendaFromDOM(){
+  agenda.rows=$$("#agendaHost .acc-item").map(it=>{
+    const gid=$(".ag-gid",it).value;
+    const g=GROUPMAP[gid]||{};
+
+    return {
+      time:$(".ag-time",it).value.trim(),
+      kind:gid?"group":"text",
+      gid:gid,
+      no:gid?(g.groupNo||""):"",
+      title:gid?(g.topic||""):"",
+      text:$(".ag-text",it).value.trim()
+    };
+  });
+
+  agenda.published=$("#agPublished").checked;
+  agenda.title=$("#agTitle").value.trim();
+  agenda.date=$("#agDate").value.trim();
+  agenda.place=$("#agPlace").value.trim();
+}
+
+$("#addAgenda").onclick=()=>{
+  syncAgendaFromDOM();
+  agenda.rows.push({
+    time:"",kind:"text",gid:"",no:"",title:"",text:""
+  });
+  renderAgenda();
+};
+
+$("#agendaHost").addEventListener("click",e=>{
+  const head=e.target.closest(".acc-head");
+
+  if(head){
+    head.parentElement.classList.toggle("open");
+    return;
+  }
+
+  const it=e.target.closest(".acc-item");
+  if(!it)return;
+
+  const idx=Number(it.dataset.idx);
+
+  if(e.target.closest("[data-act=ag-del]")){
+    syncAgendaFromDOM();
+    agenda.rows.splice(idx,1);
+    renderAgenda();
+  }else if(e.target.closest("[data-act=ag-up]")){
+    syncAgendaFromDOM();
+
+    if(idx>0){
+      [agenda.rows[idx-1],agenda.rows[idx]]=[
+        agenda.rows[idx],agenda.rows[idx-1]
+      ];
+      renderAgenda();
+    }
+  }else if(e.target.closest("[data-act=ag-down]")){
+    syncAgendaFromDOM();
+
+    if(idx<agenda.rows.length-1){
+      [agenda.rows[idx],agenda.rows[idx+1]]=[
+        agenda.rows[idx+1],agenda.rows[idx]
+      ];
+      renderAgenda();
+    }
+  }
+});
+
+$("#agendaHost").addEventListener("input",e=>{
+  const it=e.target.closest(".acc-item");
+  if(it)updateAgendaHeader(it);
+});
+
+$("#agendaHost").addEventListener("change",e=>{
+  const it=e.target.closest(".acc-item");
+  if(it)updateAgendaHeader(it);
+});
+
+$("#saveAgenda").onclick=async()=>{
+  syncAgendaFromDOM();
+
+  try{
+    await db.doc("settings/agenda").set(agenda);
+    flash("agMsg","已儲存。");
+  }catch(e){
+    flash("agMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+$("#saveUploads").onclick=async()=>{
+  try{
+    const ms=v=>{
+      const t=Date.parse(v);
+      return Number.isFinite(t)?t:0;
+    };
+
+    await db.doc("settings/registration").set({
+      open:$("#fRegOpen").checked,
+      nextCohort:$("#fNextCohort").checked,
+      regStart:$("#fRegStart").value||"",
+      regDeadline:$("#fRegDeadline").value||""
+    },{merge:true});
+
+    const patch={};
+
+    [1,2,3].forEach(n=>{
+      const k="round"+n;
+      patch[k+"Open"]=$("#fForm"+n+"Open").checked;
+      patch[k+"Start"]=$("#fForm"+n+"Start").value||"";
+      patch[k+"Deadline"]=$("#fForm"+n+"Deadline").value||"";
+      patch[k+"StartMs"]=ms(patch[k+"Start"]);
+      patch[k+"DeadlineMs"]=ms(patch[k+"Deadline"]);
+    });
+
+    await db.doc("settings/uploads").set(patch,{merge:true});
+    flash("upMsg","已儲存。");
+  }catch(e){
+    flash("upMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+/* 多檔規定文件，支援舊版單檔欄位 */
 function rulesFiles(up,n){
   const key="rules"+n;
 
@@ -860,493 +1794,2275 @@ function rulesFiles(up,n){
   }]:[];
 }
 
-function rulesEmbed(url,type){
-  if(!url){
-    return '<p class="rules-none">系辦尚未上傳本次規定文件。</p>';
-  }
+function lockRules(n,busy){
+  n=String(n);
 
-  if(type==="image"){
-    return '<div class="rules-embed"><img src="'+
-      esc(safeUrl(url))+'" alt="專題規定"></div>';
-  }
+  if(busy)rulesBusy.add(n);
+  else rulesBusy.delete(n);
 
-  return '<div class="rules-embed"><iframe src="'+
-    esc(safeUrl(url))+
-    '#toolbar=1" title="專題規定"></iframe></div>'+
-    '<p style="font-size:12px;color:var(--muted);margin:8px 0 0">'+
-    '若下方無法顯示，可 <a href="'+esc(safeUrl(url))+
-    '" target="_blank" rel="noopener" style="color:var(--primary)">'+
-    '另開新分頁檢視</a>。</p>';
+  document.querySelectorAll(
+    '[data-rblock="'+n+'"] input, [data-rblock="'+n+'"] button'
+  ).forEach(el=>el.disabled=busy);
 }
 
-async function renderRound(){
-  if(
-    studentUploads||
-    topicSaving||
-    document.activeElement?.id==="projectTopic"
-  )return;
+function renderRulesCurrent(up){
+  [1,2,3].forEach(n=>{
+    const host=$("#rulesCurrent"+n);
 
-  const uid=auth.currentUser&&auth.currentUser.uid;
-  if(!uid)return;
+    host.innerHTML=rulesFiles(up||{},n).map(f=>
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0">'+
+      '<a href="'+esc(safeUrl(f.url))+
+      '" target="_blank" rel="noopener" style="color:var(--primary);overflow-wrap:anywhere">'+
+      esc(f.name||"規定文件")+'</a>'+
+      '<label class="btn btn-sm">'+
+      '<input type="file" data-rulesfile="'+n+
+      '" data-rule-id="'+esc(f.id)+
+      '" accept=".pdf,.png,.jpg,.jpeg" style="display:none">取代</label>'+
+      '<button class="btn btn-sm btn-danger" data-rulesremove="'+n+
+      '" data-rule-id="'+esc(f.id)+'">刪除</button></div>'
+    ).join("")||'<p class="hint">尚未上傳。</p>';
 
-  if(!hasGroup||myCohort==="next"){
-    $("#upTabs").classList.add("hidden");
-    $("#uploadSection").classList.add("hidden");
-    $("#roundHost").innerHTML="";
-    return;
-  }
-
-  $("#upTabs").classList.remove("hidden");
-  $("#uploadSection").classList.remove("hidden");
-
-  let up={};
-  let fin={published:false,groups:[]};
-
-  try{
-    const d=await db.doc("settings/uploads").get();
-    if(d.exists)up=d.data();
-  }catch(e){}
-
-  try{
-    const d=await db.doc("settings/finalists").get();
-    if(d.exists)fin=d.data();
-  }catch(e){}
-
-  const isFinalist=
-    !!fin.published&&
-    Array.isArray(fin.groups)&&
-    !!myGroupNo&&
-    fin.groups.some(g=>g.no===myGroupNo);
-
-  const fmtDL=iso=>{
-    if(!iso)return "";
-
-    const d=new Date(iso);
-    if(isNaN(d))return "";
-
-    const p=x=>String(x).padStart(2,"0");
-
-    return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+
-      p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
-  };
-
-  function roundStatus(r){
-    const nn=r==="r1"?1:r==="r2"?2:3;
-
-    if(r==="r2"&&!isFinalist)return "limited";
-    if(!up["round"+nn+"Open"])return "notyet";
-    if(!afterStart(up["round"+nn+"Start"]))return "notstarted";
-    if(!notPast(up["round"+nn+"Deadline"]))return "closed";
-
-    return "open";
-  }
-
-  const chipMap={
-    open:["開放中","open"],
-    notyet:["未開放","notyet"],
-    notstarted:["未開始","notyet"],
-    closed:["已截止","closed"],
-    limited:["限入選","limited"]
-  };
-
-  ["r1","r2","r3"].forEach(r=>{
-    const c=document.querySelector('[data-chip="'+r+'"]');
-
-    if(c){
-      const [t,cls]=chipMap[roundStatus(r)];
-      c.textContent=t;
-      c.className="tchip "+cls;
-    }
+    if(rulesBusy.has(String(n)))lockRules(n,true);
   });
-
-  const rk=curR;
-  const def=ROUND_DEFS[rk];
-  const n=rk==="r1"?1:rk==="r2"?2:3;
-  const st=roundStatus(rk);
-  const dlStr=fmtDL(up["round"+n+"Deadline"]);
-  const stStr=fmtDL(up["round"+n+"Start"]);
-
-  const sbLabel=st==="open"
-    ?("開放中"+(dlStr?("（截止時間 "+dlStr+"）"):""))
-    :st==="notstarted"
-    ?("尚未開始"+(stStr?("（開始時間 "+stStr+"）"):""))
-    :st==="closed"
-    ?("已截止"+(dlStr?("（截止時間 "+dlStr+"）"):""))
-    :st==="limited"
-    ?"僅開放入選第二階段之組別"
-    :"尚未開放";
-
-  const sbCls=st==="open"
-    ?"sb-open"
-    :st==="closed"
-    ?"sb-closed"
-    :st==="limited"
-    ?"sb-limited"
-    :"sb-notyet";
-
-  const statusBar=
-    '<div class="statusbar '+sbCls+'">'+esc(sbLabel)+'</div>';
-
-  const done=roundDone(rk);
-
-  const badge=done
-    ?' <span style="font-size:12px;font-weight:500;'+
-      'color:var(--accent);background:var(--accent-soft);'+
-      'padding:2px 10px;border-radius:999px">已完成</span>'
-    :"";
-
-  let slotsHtml;
-
-  if(st!=="open"){
-    const msg=st==="limited"
-      ?"第二次上傳僅開放入選第二階段之組別。"
-      :st==="notstarted"
-      ?("本次上傳尚未開始"+
-        (stStr?("（開始時間 "+stStr+"）"):"")+
-        "，時間到才可上傳。")
-      :st==="closed"
-      ?("本次上傳已截止"+
-        (dlStr?("（截止時間 "+dlStr+"）"):"")+
-        "，無法再上傳。")
-      :"本次上傳尚未開放。";
-
-    slotsHtml=
-      '<div class="round-locked'+
-      (st==="closed"?" closed":"")+
-      '">'+esc(msg)+'</div>';
-  }else{
-    const rec=myFiles[rk]||{};
-
-    slotsHtml=def.slots.map(s=>{
-      const f=rec[s.key];
-
-      const stateHtml=f&&f.url
-        ?'<a class="fname" href="'+esc(safeUrl(f.url))+
-          '" target="_blank" rel="noopener">'+
-          esc(f.name||"檔案")+'</a>'
-        :'<span class="fnone">'+
-          (s.required?"尚未上傳":"（未上傳）")+'</span>';
-
-      const btnLabel=f&&f.url?"重新上傳":"上傳";
-
-      return '<div class="slot" data-round="'+rk+
-        '" data-slot="'+esc(s.key)+'">'+
-        '<div class="slot-label">'+esc(s.label)+
-        (s.required?' <span class="req">*</span>':"")+
-        '<div class="slot-hint">'+esc(s.hint)+'</div></div>'+
-        '<div class="slot-state">'+stateHtml+
-        '<span class="prog" style="display:none"></span></div>'+
-        '<div class="slot-act">'+
-        (f&&f.url?'<span class="lnk" data-act="view">檢視</span>':"")+
-        '<label class="btn btn-file">'+
-        '<input type="file" accept="'+esc(s.accept)+
-        '" data-act="pick">'+btnLabel+'</label>'+
-        '</div></div>';
-    }).join("");
-  }
-
-  const rulesHtml=rulesFiles(up,n).map(f=>
-    '<div style="margin-bottom:20px">'+
-    '<p><a href="'+esc(safeUrl(f.url))+
-    '" target="_blank" rel="noopener">'+
-    esc(f.name||"規定文件")+'</a></p>'+
-    rulesEmbed(f.url,f.type)+'</div>'
-  ).join("")||rulesEmbed("","");
-
-  $("#roundHost").innerHTML=
-    '<h2 class="round-h">'+esc(def.no)+'　'+
-    esc(def.title)+badge+'</h2>'+
-    statusBar+
-    (rk==="r1"?topicHtml(st==="open"):"")+
-    '<div class="round-sec">'+
-    '<div class="round-sub">規定／注意事項</div>'+
-    rulesHtml+'</div>'+
-    '<div class="round-sec">'+
-    '<div class="round-sub">檔案上傳（單檔上限 50MB）</div>'+
-    slotsHtml+'</div>';
 }
 
-function topicHtml(open){
-  return '<div class="round-sec">'+
-    '<label for="projectTopic" class="round-sub">'+
-    '專題題目名稱 <span class="req">* 必填</span></label>'+
-    '<input id="projectTopic" type="text" required value="'+
-    esc(topicDraft===null?myTopic:topicDraft)+
-    '" placeholder="請填寫完整專題題目名稱" '+
-    (!open||topicSaving?"disabled":"")+'>'+
-    '<p style="font-size:13px;color:var(--muted)">'+
-    '上傳第一階段資料前必須填寫題目；上傳時會一併儲存。</p>'+
-    (open
-      ?'<button class="btn btn-primary btn-sm" data-act="save-topic" '+
-        (topicSaving?"disabled":"")+'>儲存題目</button>'
-      :"")+
-    '<span id="topicMsg" class="msg" role="status" '+
-    'style="margin-left:10px"></span></div>';
-}
+async function updateRulesFile(n,id,file){
+  const doc=db.doc("settings/uploads");
 
-async function saveProjectTopic(){
-  const input=$("#projectTopic");
+  return db.runTransaction(async tx=>{
+    const snap=await tx.get(doc);
+    const up=snap.exists?snap.data():{};
+    const list=rulesFiles(up,n).slice();
+    const idx=list.findIndex(f=>f.id===id);
 
-  const topic=(
-    input?input.value:(topicDraft===null?myTopic:topicDraft)
-  ).trim();
-
-  if(!topic){
-    if(input){
-      input.focus();
-      input.reportValidity();
+    if(id&&idx<0){
+      throw new Error("文件已被其他管理員修改，請重新整理後再試。");
     }
 
-    throw new Error("請填寫專題題目名稱（不可空白）。");
-  }
+    const old=idx>=0?list[idx]:null;
 
-  const uid=auth.currentUser&&auth.currentUser.uid;
-
-  if(!uid||!hasGroup||myCohort!=="current"){
-    throw new Error("請先完成分組登錄。");
-  }
-
-  const d=await db.doc("settings/uploads").get();
-  const up=d.exists?d.data():{};
-
-  if(
-    !up.round1Open||
-    !afterStart(up.round1Start)||
-    !notPast(up.round1Deadline)
-  ){
-    throw new Error(
-      "第一階段上傳尚未開放或已截止，無法修改題目。"
-    );
-  }
-
-  await db.doc("groups/"+uid).update({topic});
-
-  myTopic=topic;
-
-  if(topicDraft===null||topicDraft.trim()===topic){
-    topicDraft=null;
-  }
-
-  return topic;
-}
-
-$("#roundHost").addEventListener("input",e=>{
-  if(e.target.id==="projectTopic"){
-    topicDraft=e.target.value;
-  }
-});
-
-$("#roundHost").addEventListener("click",async e=>{
-  const btn=e.target.closest('[data-act="save-topic"]');
-  if(!btn||topicSaving)return;
-
-  topicSaving=true;
-  btn.disabled=true;
-
-  let saved=false;
-
-  try{
-    await saveProjectTopic();
-    saved=true;
-  }catch(err){
-    if($("#topicMsg")){
-      flash("topicMsg",err.message||"儲存失敗。",false);
+    if(idx>=0){
+      if(file)list[idx]=file;
+      else list.splice(idx,1);
+    }else if(file){
+      list.push(file);
     }
-  }finally{
-    topicSaving=false;
 
-    if(saved){
-      await renderRound();
+    const patch={["rules"+n+"Files"]:list};
 
-      if($("#topicMsg")){
-        flash("topicMsg","題目已儲存。");
-      }
-    }else{
-      const current=$('[data-act="save-topic"]');
-      if(current)current.disabled=false;
-    }
-  }
-});
+    ["Url","Path","Name","Type"].forEach(s=>{
+      patch["rules"+n+s]=firebase.firestore.FieldValue.delete();
+    });
 
-function extOf(name){
-  const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/);
-  return m?m[0]:"";
+    tx.set(doc,patch,{merge:true});
+
+    return {
+      old:old,
+      up:{...up,["rules"+n+"Files"]:list}
+    };
+  });
 }
 
-function safeAscii(s){
-  return String(s||"")
-    .replace(/[^\x20-\x7E]/g,"_")
-    .replace(/["\\\/]/g,"_")
-    .trim()||"file";
-}
-
-function friendlyName(rk,sk,ext){
-  const label={
-    report:"報告",
-    slides:"簡報",
-    extra:"補充資料"
-  }[sk]||sk;
-
-  const idPart=myGroupNo||myLeaderSid||"未編號";
-  const namePart=myLeaderName?("_"+myLeaderName):"";
-
-  return idPart+namePart+"_"+
-    (ROUND_LABEL[rk]||rk)+"_"+label+ext;
-}
-
-$("#roundHost").addEventListener("click",e=>{
-  const v=e.target.closest("[data-act=view]");
-
-  if(v){
-    const slot=v.closest(".slot");
-    const a=slot.querySelector("a.fname");
-
-    if(a){
-      window.open(a.href,"_blank","noopener");
-    }
-  }
-});
-
-$("#roundHost").addEventListener("change",async e=>{
-  const inp=e.target.closest('input[type=file][data-act=pick]');
+$("#adminView").addEventListener("change",async e=>{
+  const inp=e.target.closest("input[type=file][data-rulesfile]");
   if(!inp)return;
 
-  const file=inp.files&&inp.files[0];
-  if(!file)return;
+  const n=inp.dataset.rulesfile;
+  const id=inp.dataset.ruleId||"";
+  const msgId="rulesMsg"+n;
+  const files=Array.from(inp.files||[]);
 
-  const slotEl=inp.closest(".slot");
-  const rk=slotEl.dataset.round;
-  const sk=slotEl.dataset.slot;
+  if(!files.length||rulesBusy.has(n))return;
 
-  const def=ROUND_DEFS[rk].slots.find(s=>s.key===sk);
-  const accepts=def.accept.split(",").map(x=>x.trim().toLowerCase());
-  const ext=extOf(file.name);
-  const prog=slotEl.querySelector(".prog");
+  for(const file of files){
+    if(!/\.(pdf|png|jpe?g)$/i.test(file.name)){
+      flash(msgId,"僅支援 PDF、PNG、JPG。",false);
+      inp.value="";
+      return;
+    }
 
-  const showErr=m=>{
-    prog.style.display="";
-    prog.style.color="var(--danger)";
-    prog.textContent=m;
-  };
-
-  if(!accepts.includes(ext)){
-    showErr("檔案格式須為 "+def.accept);
-    inp.value="";
-    return;
-  }
-
-  if(file.size>=50*1024*1024){
-    showErr("檔案超過 50MB。");
-    inp.value="";
-    return;
-  }
-
-  studentUploads++;
-
-  if(rk==="r1"){
-    try{
-      await saveProjectTopic();
-    }catch(err){
-      studentUploads--;
-      showErr(err.message||"題目儲存失敗，請稍後重試。");
+    if(file.size>=50*1024*1024){
+      flash(msgId,"單檔須小於 50MB。",false);
       inp.value="";
       return;
     }
   }
 
+  lockRules(n,true);
+  let completed=0;
+
   try{
-    const sd=await db.doc("settings/storage").get();
+    for(const file of files){
+      flash(msgId,"上傳中… "+(completed+1)+" / "+files.length);
 
-    if(sd.exists){
-      const s=sd.data();
-      const cap=(+s.capBytes)||0;
-      const used=(+s.bytes)||0;
+      const ext=extOf(file.name);
+      const fileId=crypto.randomUUID();
+      const path="public/rules/rules"+n+"_"+fileId+ext;
+      const ref=storage.ref(path);
 
-      if(cap>0&&used+file.size>cap){
-        studentUploads--;
-        showErr(
-          "系統儲存空間已接近上限，暫時無法上傳，請洽系辦處理。"
-        );
-        inp.value="";
-        return;
+      let result;
+
+      try{
+        await ref.put(file,{
+          contentType:file.type||(
+            ext===".pdf"
+              ?"application/pdf"
+              :"image/"+(ext===".png"?"png":"jpeg")
+          )
+        });
+
+        const url=await ref.getDownloadURL();
+
+        result=await updateRulesFile(n,id,{
+          id:id||fileId,
+          url:url,
+          path:path,
+          name:file.name,
+          type:ext===".pdf"?"pdf":"image"
+        });
+      }catch(err){
+        try{await ref.delete();}catch(_){}
+        throw err;
+      }
+
+      completed++;
+
+      if(result.old&&result.old.path){
+        try{
+          await storage.ref(result.old.path).delete();
+        }catch(_){}
       }
     }
-  }catch(_){}
 
-  const uid=auth.currentUser.uid;
-  const path="groups/"+uid+"/"+rk+"/"+sk+"_"+Date.now()+ext;
-  const dlName=friendlyName(rk,sk,ext);
+    flash(msgId,"已"+(id?"取代":"新增")+" "+completed+" 個文件。");
+  }catch(err){
+    flash(
+      msgId,
+      (completed?"已新增 "+completed+" 個；":"")+
+      "上傳失敗："+(err.code||err.message),
+      false
+    );
+  }finally{
+    inp.value="";
 
-  const disposition=
-    'inline; filename="'+safeAscii(dlName)+
-    "\"; filename*=UTF-8''"+encodeURIComponent(dlName);
+    try{
+      const d=await db.doc("settings/uploads").get();
+      renderRulesCurrent(d.exists?d.data():{});
+    }catch(_){}
 
-  prog.style.display="";
-  prog.style.color="var(--accent)";
-  prog.textContent="上傳中… 0%";
+    lockRules(n,false);
+  }
+});
 
-  let uploaded=false;
+$("#adminView").addEventListener("click",async e=>{
+  const btn=e.target.closest("[data-rulesremove]");
+  if(!btn)return;
+
+  const n=btn.dataset.rulesremove;
+  const id=btn.dataset.ruleId;
+  const msgId="rulesMsg"+n;
+
+  if(rulesBusy.has(n))return;
+  if(!confirm("確定刪除這個規定文件？其他文件將保留。"))return;
+
+  lockRules(n,true);
 
   try{
-    const ref=storage.ref(path);
+    const result=await updateRulesFile(n,id,null);
 
-    const task=ref.put(file,{
-      contentType:file.type||"application/octet-stream",
-      contentDisposition:disposition
-    });
-
-    task.on("state_changed",s=>{
-      const pct=Math.round(
-        (s.bytesTransferred/s.totalBytes)*100
-      );
-      prog.textContent="上傳中… "+pct+"%";
-    });
-
-    await task;
-
-    const url=await ref.getDownloadURL();
-    const rec=Object.assign({},myFiles[rk]||{});
-    const old=rec[sk];
-
-    rec[sk]={
-      name:file.name,
-      dlName:dlName,
-      path:path,
-      url:url,
-      size:file.size,
-      at:Date.now()
-    };
-
-    await db.doc("groupFiles/"+uid).set({
-      [rk]:rec
-    },{merge:true});
-
-    myFiles[rk]=rec;
-
-    if(old&&old.path&&old.path!==path){
+    if(result.old&&result.old.path){
       try{
-        await storage.ref(old.path).delete();
+        await storage.ref(result.old.path).delete();
       }catch(_){}
     }
 
-    try{
-      await db.doc("settings/storage").set({
-        bytes:firebase.firestore.FieldValue.increment(file.size),
-        at:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-    }catch(_){}
-
-    prog.textContent="已上傳 ✓";
-    uploaded=true;
+    renderRulesCurrent(result.up);
+    flash(msgId,"已刪除。");
   }catch(err){
-    showErr("上傳失敗："+(err.code||err.message));
+    flash(msgId,"刪除失敗："+(err.code||err.message),false);
   }finally{
-    inp.value="";
-    studentUploads--;
-
-    if(uploaded)renderRound();
+    lockRules(n,false);
   }
 });
+
+async function createAccount(role,name,email,pw,msgId,clearIds){
+  if(!name||!email||pw.length<6){
+    flash(msgId,"請填姓名、電子郵件與至少 6 碼密碼。",false);
+    return;
+  }
+
+  const btn=role==="teacher"
+    ?$("#createTeacher")
+    :$("#createCommittee");
+
+  if(btn.disabled)return;
+  btn.disabled=true;
+
+  try{
+    const sec=firebase.apps.find(a=>a.name==="secondary")||
+      firebase.initializeApp(firebaseConfig,"secondary");
+
+    const cred=await sec.auth().createUserWithEmailAndPassword(email,pw);
+
+    await db.doc("users/"+cred.user.uid).set({
+      role:role,
+      name:name,
+      email:email
+    });
+
+    await sec.auth().signOut();
+
+    clearIds.forEach(id=>$("#"+id).value="");
+    flash(msgId,"已建立帳號。");
+
+    await loadAccounts();
+    await loadGroups();
+  }catch(e){
+    flash(msgId,"建立失敗："+(e.code||e.message),false);
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+$("#createTeacher").onclick=()=>createAccount(
+  "teacher",
+  $("#tName").value.trim(),
+  $("#tEmail").value.trim(),
+  $("#tPw").value,
+  "tAccMsg",
+  ["tName","tEmail","tPw"]
+);
+
+$("#createCommittee").onclick=()=>createAccount(
+  "committee",
+  $("#cName").value.trim(),
+  $("#cEmail").value.trim(),
+  $("#cPw").value,
+  "cAccMsg",
+  ["cName","cEmail","cPw"]
+);
+
+async function loadAccounts(){
+  const snap=await db.collection("users").get();
+  const all=snap.docs.map(d=>({uid:d.id,...d.data()}));
+
+  TEACHERS=all.filter(u=>u.role==="teacher")
+    .map(u=>({uid:u.uid,name:u.name||u.email||u.uid}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  COMMITTEE=all.filter(u=>u.role==="committee")
+    .map(u=>({
+      uid:u.uid,
+      name:u.name||u.email||u.uid,
+      email:u.email||""
+    }))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  renderAccList("teacherAccList",all.filter(u=>u.role==="teacher"));
+  renderAccList("committeeAccList",all.filter(u=>u.role==="committee"));
+  renderCommitteeDocs();
+}
+
+function renderAccList(hostId,rows){
+  const host=$("#"+hostId);
+
+  if(!rows.length){
+    host.innerHTML='<p class="empty-note">尚無帳號。</p>';
+    return;
+  }
+
+  host.innerHTML=rows.sort((a,b)=>
+    String(a.name||"").localeCompare(String(b.name||""))
+  ).map(u=>
+    '<div class="accrow" data-uid="'+esc(u.uid)+
+    '" data-email="'+esc(u.email||"")+'">'+
+    '<input class="ac-name" type="text" value="'+esc(u.name||"")+
+    '" style="max-width:150px">'+
+    '<span class="ac-email">'+esc(u.email||"")+'</span>'+
+    '<span class="spacer"></span>'+
+    '<button class="btn btn-sm" data-act="save-name">儲存姓名</button>'+
+    '<button class="btn btn-sm" data-act="reset-pw">重設密碼</button>'+
+    '<button class="btn btn-sm btn-danger" data-act="del-acc">刪除</button>'+
+    '<span class="msg" data-msg style="flex-basis:100%"></span>'+
+    '</div>'
+  ).join("");
+}
+
+document.addEventListener("click",async e=>{
+  const row=e.target.closest(".accrow");
+  if(!row||!row.closest("#teacherAccList,#committeeAccList"))return;
+
+  const uid=row.dataset.uid;
+  const email=row.dataset.email;
+  const msg=$("[data-msg]",row);
+
+  if(e.target.closest("[data-act=save-name]")){
+    try{
+      await db.doc("users/"+uid).update({
+        name:$(".ac-name",row).value.trim()
+      });
+
+      msg.textContent="已更新姓名。";
+      msg.className="msg ok";
+
+      await loadAccounts();
+      await loadGroups();
+    }catch(err){
+      msg.textContent="更新失敗："+(err.code||err.message);
+      msg.className="msg err";
+    }
+  }else if(e.target.closest("[data-act=reset-pw]")){
+    if(!email){
+      msg.textContent="此帳號無電子郵件。";
+      msg.className="msg err";
+      return;
+    }
+
+    try{
+      await auth.sendPasswordResetEmail(email);
+      msg.textContent="已寄出密碼重設信。";
+      msg.className="msg ok";
+    }catch(err){
+      msg.textContent="寄送失敗："+(err.code||err.message);
+      msg.className="msg err";
+    }
+  }else if(e.target.closest("[data-act=del-acc]")){
+    const isCommittee=!!row.closest("#committeeAccList");
+
+    if(!confirm(
+      "確定刪除此帳號的角色資料？"+
+      (isCommittee?"亦會刪除委員個人資料與評分。":"")+
+      "\nFirebase Authentication 登入帳號需另於主控台刪除。"
+    ))return;
+
+    try{
+      if(isCommittee){
+        try{
+          await deleteFolderDeep(storage.ref("committee/"+uid));
+        }catch(_){}
+
+        await db.doc("committeeDocs/"+uid).delete().catch(()=>{});
+
+        const cs=await db.collection("committeeScores")
+          .where("committeeUid","==",uid).get();
+
+        for(let i=0;i<cs.docs.length;i+=400){
+          const batch=db.batch();
+          cs.docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+
+      await db.doc("users/"+uid).delete();
+
+      await loadAccounts();
+      await loadGroups();
+      await loadCommitteeDocs();
+    }catch(err){
+      msg.textContent="刪除失敗："+(err.code||err.message);
+      msg.className="msg err";
+    }
+  }
+});
+
+async function loadCommitteeDocs(){
+  CDOCS={};
+
+  try{
+    const snap=await db.collection("committeeDocs").get();
+    snap.docs.forEach(d=>CDOCS[d.id]=d.data());
+  }catch(_){}
+
+  renderCommitteeDocs();
+}
+
+function renderCommitteeDocs(){
+  const host=$("#cdocsHost");
+
+  if(!COMMITTEE.length){
+    host.innerHTML='<p class="empty-note">尚無委員帳號。</p>';
+    return;
+  }
+
+  const na='<span class="hint">未填</span>';
+
+  const row=(label,value)=>
+    '<div style="margin:6px 0;font-size:14px">'+
+    '<span class="hint" style="display:inline-block;min-width:90px">'+
+    label+'</span>'+value+'</div>';
+
+  host.innerHTML=COMMITTEE.map(c=>{
+    const d=CDOCS[c.uid]||{};
+    let account=na;
+
+    if(d.payType==="bank"){
+      account="銀行　"+esc(
+        [d.bankCode,d.bankBranch,d.bankAccount]
+          .filter(Boolean).join(" / ")
+      );
+    }else if(d.payType==="post"){
+      account="郵局　"+esc(d.postAccount||"");
+    }
+
+    return '<div class="acc-item">'+
+      '<div class="acc-head" style="cursor:default">'+
+      '<strong>'+esc(c.name)+'</strong>'+
+      '<span class="hint">'+esc(c.email)+'</span></div>'+
+      '<div style="padding:0 14px 14px">'+
+      row("身分證字號",d.idNumber?esc(d.idNumber):na)+
+      row("戶籍地址",d.householdAddr?esc(d.householdAddr):na)+
+      row("匯款帳戶",account)+
+      (hasFile(d.passbook)
+        ?'<button class="btn btn-sm cdoc-file" data-uid="'+
+          esc(c.uid)+'">檢視存簿封面</button>'
+        :'<span class="hint">尚未上傳存簿封面</span>')+
+      '</div></div>';
+  }).join("");
+}
+
+$("#reloadCDocs").onclick=()=>loadCommitteeDocs();
+
+$("#cdocsHost").addEventListener("click",async e=>{
+  const b=e.target.closest(".cdoc-file");
+  if(!b)return;
+
+  const d=CDOCS[b.dataset.uid]||{};
+  const u=await urlOf(d.passbook);
+
+  if(u){
+    window.open(safeUrl(u),"_blank","noopener");
+  }else{
+    alert("無法取得檔案連結。");
+  }
+});
+
+function filesBlock(gid){
+  const gf=GFILES[gid]||{};
+  const rounds=[
+    ["r1","第一次"],
+    ["r2","第二次"],
+    ["r3","第三次"]
+  ];
+
+  let any=false;
+
+  const rows=rounds.map(([rk,label])=>{
+    const rec=gf[rk]||{};
+
+    const links=FILE_ROUND_SLOTS[rk].map(([sk,tag])=>{
+      const f=rec[sk];
+      if(!hasFile(f))return "";
+
+      any=true;
+
+      const dl=safeName(folderName(GROUPMAP[gid]||{}))+
+        "--"+tag+extOf(f.name||f.path||"");
+
+      return '<span class="acc-filelink" data-gid="'+esc(gid)+
+        '" data-rk="'+rk+'" data-slot="'+sk+
+        '" data-dl="'+esc(dl)+
+        '" style="color:var(--primary);text-decoration:underline;cursor:pointer;margin-right:12px">'+
+        esc(tag)+"："+esc(f.name||"檔案")+'</span>';
+    }).filter(Boolean).join("");
+
+    return links
+      ?'<div style="margin:5px 0"><span class="hint">'+label+'　</span>'+links+'</div>'
+      :"";
+  }).join("");
+
+  return '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">'+
+    '<div class="hint">上傳檔案</div>'+
+    (any?rows:'<span class="hint">尚無上傳檔案。</span>')+
+    '</div>';
+}
+
+async function loadGroups(){
+  const [gs,gfs]=await Promise.all([
+    db.collection("groups").get(),
+    db.collection("groupFiles").get()
+  ]);
+
+  const groups=gs.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+
+  GFILES={};
+  gfs.docs.forEach(d=>GFILES[d.id]=d.data());
+
+  GROUPMAP={};
+  groups.forEach(g=>GROUPMAP[g.id]=g);
+
+  const cur=groups.filter(isCurrentCohort);
+  const next=groups.length-cur.length;
+  const sub=k=>cur.filter(g=>g.submitted&&g.submitted[k]).length;
+
+  $("#gsummary").textContent=
+    "共 "+groups.length+" 組（應屆 "+cur.length+"、下屆 "+next+"）。"+
+    "已登錄指導老師 "+groups.filter(g=>g.advisorUid).length+" 組。"+
+    "應屆繳交：第一次 "+sub("r1")+"、第二次 "+sub("r2")+"、第三次 "+sub("r3")+"。";
+
+  if(!groups.length){
+    $("#groupsHost").innerHTML='<p class="empty-note">尚無分組資料。</p>';
+    renderCommitteeTables();
+    return;
+  }
+
+  const advSel=g=>
+    '<option value="">（未登錄）</option>'+
+    TEACHERS.map(t=>
+      '<option value="'+esc(t.uid)+'"'+
+      (t.uid===g.advisorUid?" selected":"")+'>'+
+      esc(t.name)+'</option>'
+    ).join("");
+
+  const pair=(l1,c1,v1,l2,c2,v2)=>
+    '<div class="grid2">'+
+    '<div><label>'+l1+'</label><input class="'+c1+
+    '" type="text" value="'+esc(v1)+'"></div>'+
+    '<div><label>'+l2+'</label><input class="'+c2+
+    '" type="text" value="'+esc(v2)+'"></div></div>';
+
+  $("#groupsHost").innerHTML=groups.map(g=>{
+    const m=g.members||[];
+    const m1=m[0]||{};
+    const m2=m[1]||{};
+    const m3=m[2]||{};
+    const sb=g.submitted||{};
+    const isNext=g.cohort==="next";
+    const subCount=["r1","r2","r3"].filter(k=>sb[k]).length;
+
+    const search=[
+      g.groupNo,g.leaderName,g.leaderSid,
+      m.map(x=>(x.name||"")+" "+(x.sid||"")).join(" "),
+      g.topic,g.advisorName
+    ].join(" ").toLowerCase();
+
+    return `
+      <div class="acc-item" data-id="${esc(g.id)}"
+        data-cohort="${isNext?"next":"current"}"
+        data-search="${esc(search)}">
+        <div class="acc-head">
+          <span class="acc-no">${esc(g.groupNo||"未編號")}</span>
+          <span class="acc-leader">${esc(g.leaderName||"（無組長）")}</span>
+          <span class="cohort-badge ${isNext?"next":"cur"}">${isNext?"下屆":"應屆"}</span>
+          <span class="acc-adv ${g.advisorName?"set":"none"}">指導：${esc(g.advisorName||"未登錄")}</span>
+          <span class="hint">繳 ${subCount}/3</span>
+          <span class="acc-chev">▾</span>
+        </div>
+        <div class="acc-body">
+          <div style="margin:10px 0">
+            <label class="chk">
+              <input type="radio" name="coh-${esc(g.id)}" class="a-coh-cur" ${isNext?"":"checked"}>
+              應屆競賽
+            </label>
+            <label class="chk">
+              <input type="radio" name="coh-${esc(g.id)}" class="a-coh-next" ${isNext?"checked":""}>
+              下屆
+            </label>
+          </div>
+          <div class="grid2">
+            <div><label>組別編號</label><input class="a-no" type="text" value="${esc(g.groupNo||"")}"></div>
+            <div><label>指導老師</label><select class="a-advsel">${advSel(g)}</select></div>
+          </div>
+          <label>專題題目</label>
+          <input class="a-topic" type="text" value="${esc(g.topic||"")}" placeholder="學生於第一次上傳填寫，系辦可更正">
+          ${pair("組長學號","a-lsid",g.leaderSid||"","組長姓名","a-lname",g.leaderName||"")}
+          ${pair("組員1學號","a-m1sid",m1.sid||"","組員1姓名","a-m1name",m1.name||"")}
+          ${pair("組員2學號","a-m2sid",m2.sid||"","組員2姓名","a-m2name",m2.name||"")}
+          ${pair("組員3學號","a-m3sid",m3.sid||"","組員3姓名","a-m3name",m3.name||"")}
+          <div style="margin-top:10px">
+            <span class="hint">繳交狀態：</span>
+            <label class="chk"><input type="checkbox" class="a-r1" ${sb.r1?"checked":""}>第一次</label>
+            <label class="chk"><input type="checkbox" class="a-r2" ${sb.r2?"checked":""}>第二次</label>
+            <label class="chk"><input type="checkbox" class="a-r3" ${sb.r3?"checked":""}>第三次</label>
+          </div>
+          ${filesBlock(g.id)}
+          <div class="item-foot">
+            <button class="btn btn-sm btn-danger" data-act="del-group">刪除此組</button>
+            <span class="spacer"></span>
+            <button class="btn btn-sm btn-primary" data-act="save-group">儲存</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  filterGroups();
+  renderCommitteeTables();
+}
+
+function filterGroups(){
+  const q=$("#groupSearch").value.trim().toLowerCase();
+  const cf=$("#cohortFilter").value;
+
+  $$("#groupsHost .acc-item").forEach(x=>{
+    const okQ=!q||(x.dataset.search||"").includes(q);
+    const okC=cf==="all"||x.dataset.cohort===cf;
+    x.style.display=okQ&&okC?"":"none";
+  });
+}
+
+$("#groupSearch").oninput=filterGroups;
+$("#cohortFilter").onchange=filterGroups;
+$("#reloadGroups").onclick=()=>loadGroups();
+
+function visibleGids(){
+  return $$("#groupsHost .acc-item")
+    .filter(x=>x.style.display!=="none")
+    .map(x=>x.dataset.id);
+}
+
+async function batchSetCohort(cohort){
+  const ids=visibleGids();
+
+  if(!ids.length){
+    flash("batchMsg","目前沒有顯示中的組別。",false);
+    return;
+  }
+
+  if(!confirm(
+    "將目前顯示的 "+ids.length+" 組全部設為"+
+    (cohort==="next"?"下屆":"應屆競賽")+"？"
+  ))return;
+
+  try{
+    for(let i=0;i<ids.length;i+=400){
+      const batch=db.batch();
+
+      ids.slice(i,i+400).forEach(id=>{
+        batch.set(db.doc("groups/"+id),{cohort:cohort},{merge:true});
+      });
+
+      await batch.commit();
+    }
+
+    flash("batchMsg","已更新 "+ids.length+" 組。");
+    await loadGroups();
+    await loadLeaders();
+  }catch(e){
+    flash("batchMsg","更新失敗："+(e.code||e.message),false);
+  }
+}
+
+$("#batchCur").onclick=()=>batchSetCohort("current");
+$("#batchNext").onclick=()=>batchSetCohort("next");
+
+$("#batchNo").onclick=async()=>{
+  const ids=visibleGids();
+
+  if(!ids.length){
+    flash("batchMsg","目前沒有顯示中的組別。",false);
+    return;
+  }
+
+  const input=prompt("從哪個號碼開始編號？","1");
+  if(input===null)return;
+
+  const start=Number(input);
+
+  if(!Number.isInteger(start)||start<0){
+    flash("batchMsg","請輸入有效整數。",false);
+    return;
+  }
+
+  const pad=confirm("是否補零成兩位數？確定＝01、02；取消＝1、2。");
+
+  if(!confirm("確定為目前顯示的 "+ids.length+" 組依序編號？"))return;
+
+  try{
+    for(let i=0;i<ids.length;i+=400){
+      const batch=db.batch();
+
+      ids.slice(i,i+400).forEach((id,j)=>{
+        const n=start+i+j;
+
+        batch.set(db.doc("groups/"+id),{
+          groupNo:pad?String(n).padStart(2,"0"):String(n)
+        },{merge:true});
+      });
+
+      await batch.commit();
+    }
+
+    flash("batchMsg","已編號。");
+    await loadGroups();
+  }catch(e){
+    flash("batchMsg","編號失敗："+(e.code||e.message),false);
+  }
+};
+
+$("#expandAll").onclick=()=>{
+  $$("#groupsHost .acc-item").forEach(x=>{
+    if(x.style.display!=="none")x.classList.add("open");
+  });
+};
+
+$("#collapseAll").onclick=()=>{
+  $$("#groupsHost .acc-item").forEach(x=>x.classList.remove("open"));
+};
+
+$("#groupsHost").addEventListener("click",async e=>{
+  const file=e.target.closest(".acc-filelink");
+
+  if(file){
+    downloadSingleFromMap(
+      file,
+      (gid,rk)=>(GFILES[gid]||{})[rk]||{}
+    );
+    return;
+  }
+
+  const head=e.target.closest(".acc-head");
+
+  if(head){
+    head.parentElement.classList.toggle("open");
+    return;
+  }
+
+  const item=e.target.closest(".acc-item");
+  if(!item)return;
+
+  const gid=item.dataset.id;
+  const v=cls=>$("."+cls,item).value.trim();
+
+  if(e.target.closest("[data-act=save-group]")){
+    const members=[];
+
+    [
+      ["a-m1sid","a-m1name"],
+      ["a-m2sid","a-m2name"],
+      ["a-m3sid","a-m3name"]
+    ].forEach(([sid,name])=>{
+      if(v(sid)||v(name)){
+        members.push({sid:v(sid),name:v(name)});
+      }
+    });
+
+    const advisorUid=$(".a-advsel",item).value;
+    const advisorName=(TEACHERS.find(t=>t.uid===advisorUid)||{}).name||"";
+
+    try{
+      await db.doc("groups/"+gid).set({
+        groupNo:v("a-no"),
+        topic:v("a-topic"),
+        advisorUid:advisorUid,
+        advisorName:advisorName,
+        leaderSid:v("a-lsid"),
+        leaderName:v("a-lname"),
+        members:members,
+        submitted:{
+          r1:$(".a-r1",item).checked,
+          r2:$(".a-r2",item).checked,
+          r3:$(".a-r3",item).checked
+        },
+        cohort:$(".a-coh-next",item).checked?"next":"current"
+      },{merge:true});
+
+      flash("asgMsg","已儲存。");
+      await loadGroups();
+    }catch(err){
+      flash("asgMsg","儲存失敗："+(err.code||err.message),false);
+    }
+  }
+
+  if(e.target.closest("[data-act=del-group]")){
+    if(!confirm("確定刪除這一組及其上傳檔案？此操作無法復原。"))return;
+
+    try{
+      await deleteFolderDeep(storage.ref("groups/"+gid));
+      await db.doc("groupFiles/"+gid).delete();
+      await db.doc("groups/"+gid).delete();
+
+      await loadGroups();
+      await loadLeaders();
+
+      flash("asgMsg","已刪除該組及上傳檔案。");
+    }catch(err){
+      flash("asgMsg","刪除失敗："+(err.code||err.message),false);
+    }
+  }
+});
+
+$("#xlsxGroups").onclick=()=>{
+  const cf=$("#cohortFilter").value;
+
+  let list=Object.values(GROUPMAP);
+
+  if(cf==="current")list=list.filter(isCurrentCohort);
+  else if(cf==="next")list=list.filter(g=>!isCurrentCohort(g));
+
+  list.sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+
+  const head=[
+    "組別編號","屆別","組長學號","組長姓名",
+    "組員1學號","組員1姓名",
+    "組員2學號","組員2姓名",
+    "組員3學號","組員3姓名",
+    "專題題目","指導老師",
+    "第一次繳交","第二次繳交","第三次繳交"
+  ];
+
+  const rows=list.map(g=>{
+    const m=g.members||[];
+    const sb=g.submitted||{};
+
+    return [
+      g.groupNo||"",
+      g.cohort==="next"?"下屆":"應屆",
+      g.leaderSid||"",
+      g.leaderName||"",
+      (m[0]||{}).sid||"",
+      (m[0]||{}).name||"",
+      (m[1]||{}).sid||"",
+      (m[1]||{}).name||"",
+      (m[2]||{}).sid||"",
+      (m[2]||{}).name||"",
+      g.topic||"",
+      g.advisorName||"",
+      sb.r1?"已繳":"",
+      sb.r2?"已繳":"",
+      sb.r3?"已繳":""
+    ];
+  });
+
+  const name=cf==="current"?"應屆":cf==="next"?"下屆":"全部";
+  xlsxDownload([[name,[head,...rows]]],"分組名單_"+name+".xlsx");
+};
+
+async function loadLeaders(){
+  const [us,gs]=await Promise.all([
+    db.collection("users").where("role","==","student").get(),
+    db.collection("groups").get()
+  ]);
+
+  const groups={};
+  gs.docs.forEach(d=>groups[d.id]=d.data());
+
+  const leaders=us.docs.map(d=>({uid:d.id,...d.data()}))
+    .sort((a,b)=>String(a.email||"").localeCompare(String(b.email||"")));
+
+  $("#leaderHost").innerHTML=leaders.map(u=>{
+    const g=groups[u.uid];
+    const cohort=g?(g.cohort==="next"?"next":"current"):"";
+    const info=g
+      ?(g.groupNo||"未編號")+"　"+(g.leaderName||"")
+      :"尚未送出分組";
+
+    const badge=cohort
+      ?'<span class="cohort-badge '+(cohort==="next"?"next":"cur")+'">'+
+        (cohort==="next"?"下屆":"應屆")+'</span>'
+      :"";
+
+    return '<div class="accrow" data-uid="'+esc(u.uid)+
+      '" data-email="'+esc(u.email||"")+
+      '" data-cohort="'+cohort+'">'+
+      '<strong>'+esc(u.email||"（無電子郵件）")+'</strong>'+
+      badge+'<span class="hint">'+esc(info)+'</span>'+
+      '<span class="spacer"></span>'+
+      '<button class="btn btn-sm" data-act="reset-pw">寄送密碼重設信</button>'+
+      '<button class="btn btn-sm btn-danger" data-act="del-acc-leader">刪除</button>'+
+      '<span class="msg" data-msg style="flex-basis:100%"></span></div>';
+  }).join("")||'<p class="empty-note">尚無組長帳號。</p>';
+
+  filterLeaders();
+}
+
+function filterLeaders(){
+  const b=$("#leaderCohortSeg button.on");
+  const value=b?b.dataset.lc:"all";
+
+  $$("#leaderHost .accrow").forEach(row=>{
+    row.style.display=value==="all"||row.dataset.cohort===value?"":"none";
+  });
+}
+
+$("#leaderCohortSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button");
+  if(!b)return;
+
+  $$("#leaderCohortSeg button").forEach(x=>{
+    x.classList.toggle("on",x===b);
+  });
+
+  filterLeaders();
+});
+
+$("#leaderHost").addEventListener("click",async e=>{
+  const row=e.target.closest(".accrow");
+  if(!row)return;
+
+  const uid=row.dataset.uid;
+  const email=row.dataset.email;
+  const msg=$("[data-msg]",row);
+
+  if(e.target.closest("[data-act=reset-pw]")){
+    if(!email){
+      msg.textContent="無電子郵件。";
+      msg.className="msg err";
+      return;
+    }
+
+    try{
+      await auth.sendPasswordResetEmail(email);
+      msg.textContent="已寄出密碼重設信。";
+      msg.className="msg ok";
+    }catch(err){
+      msg.textContent="寄送失敗："+(err.code||err.message);
+      msg.className="msg err";
+    }
+
+    return;
+  }
+
+  if(!e.target.closest("[data-act=del-acc-leader]"))return;
+
+  if(!confirm(
+    "確定刪除此組長的角色、分組與上傳檔案？"+
+    "\nFirebase Authentication 登入帳號需另於主控台移除。"
+  ))return;
+
+  try{
+    await deleteFolderDeep(storage.ref("groups/"+uid));
+    await db.doc("groupFiles/"+uid).delete();
+    await db.doc("groups/"+uid).delete();
+    await db.doc("users/"+uid).delete();
+
+    await loadLeaders();
+    await loadGroups();
+  }catch(err){
+    msg.textContent="刪除失敗："+(err.code||err.message);
+    msg.className="msg err";
+  }
+});
+
+async function loadFilesTab(){
+  try{
+    const [gs,gf]=await Promise.all([
+      db.collection("groups").get(),
+      db.collection("groupFiles").get()
+    ]);
+
+    FILES_GROUPS=gs.docs.map(d=>({id:d.id,...d.data()}))
+      .filter(isCurrentCohort)
+      .sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
+
+    FILES_MAP={};
+    gf.docs.forEach(d=>FILES_MAP[d.id]=d.data());
+
+    renderFilesTab();
+  }catch(e){
+    $("#filesHost").textContent="載入失敗："+(e.code||e.message);
+  }
+}
+
+function renderFilesTab(){
+  const rk=curFR;
+  const slots=FILE_ROUND_SLOTS[rk];
+
+  if(!FILES_GROUPS.length){
+    $("#filesHost").innerHTML='<p class="empty-note">尚無應屆分組。</p>';
+    return;
+  }
+
+  $("#filesHost").innerHTML=FILES_GROUPS.map(g=>{
+    const rec=(FILES_MAP[g.id]||{})[rk]||{};
+    const label=folderName(g);
+
+    const present=slots.map(([sk,tag])=>{
+      const f=rec[sk];
+      return hasFile(f)?{sk,tag,f}:null;
+    }).filter(Boolean);
+
+    let head;
+
+    if(!present.length){
+      head='<div class="fg-label">'+esc(label)+
+        '　<span class="file-none">尚無上傳</span></div>';
+    }else if(rk==="r2"){
+      head='<div class="fg-label">'+esc(label)+'</div>';
+    }else{
+      head='<div class="folder" data-gid="'+esc(g.id)+
+        '" data-rk="'+rk+'">📁 <span>'+esc(label)+
+        '</span><span class="dlall">下載整包 ZIP</span>'+
+        '<span class="fmsg" data-fmsg></span></div>';
+    }
+
+    const files=present.map(({sk,tag,f})=>{
+      const dl=safeName(label)+"--"+tag+extOf(f.name||f.path||"");
+
+      return '<div class="ffile">'+
+        '<span class="ftag">'+esc(tag)+'</span>'+
+        '<span class="fnm" title="'+esc(f.name||"")+'">'+
+        esc(f.name||"檔案")+'</span><span class="spacer"></span>'+
+        '<button class="btn btn-sm" data-act="filedl" data-gid="'+esc(g.id)+
+        '" data-rk="'+rk+'" data-slot="'+sk+
+        '" data-dl="'+esc(dl)+'">下載</button>'+
+        '<button class="btn btn-sm btn-danger" data-act="filedel" data-gid="'+esc(g.id)+
+        '" data-rk="'+rk+'" data-slot="'+sk+'">刪除</button>'+
+        '</div>';
+    }).join("");
+
+    return '<div class="files-grouprow">'+head+files+'</div>';
+  }).join("");
+}
+
+$("#fileSubtabs").addEventListener("click",e=>{
+  const b=e.target.closest(".subtab");
+  if(!b)return;
+
+  curFR=b.dataset.fr;
+
+  $$("#fileSubtabs .subtab").forEach(x=>{
+    x.classList.toggle("on",x===b);
+  });
+
+  renderFilesTab();
+});
+
+$("#reloadFiles").onclick=()=>loadFilesTab();
+
+async function downloadSingleFromMap(el,getRec){
+  const gid=el.dataset.gid;
+  const rk=el.dataset.rk;
+  const slot=el.dataset.slot;
+  const f=(getRec(gid,rk)||{})[slot];
+
+  if(!f)return;
+
+  const label=el.textContent;
+  el.textContent="下載中…";
+
+  try{
+    const url=await urlOf(f);
+    if(!url)throw new Error("無法取得下載連結");
+    await downloadAs(url,el.dataset.dl||f.name);
+  }catch(e){
+    alert("下載失敗："+(e.code||e.message));
+  }finally{
+    el.textContent=label;
+  }
+}
+
+async function zipFolder(el,getGroup,getRec){
+  if(el.dataset.busy)return;
+
+  const gid=el.dataset.gid;
+  const rk=el.dataset.rk;
+  const g=getGroup(gid);
+  if(!g)return;
+
+  const rec=getRec(gid,rk);
+  const present=FILE_ROUND_SLOTS[rk].map(([sk,tag])=>{
+    const f=rec[sk];
+    return hasFile(f)?{tag,f}:null;
+  }).filter(Boolean);
+
+  if(!present.length)return;
+
+  const msg=el.querySelector("[data-fmsg]");
+  el.dataset.busy="1";
+  if(msg)msg.textContent="打包中…";
+
+  try{
+    if(typeof JSZip==="undefined"){
+      throw new Error("ZIP 套件尚未載入");
+    }
+
+    const label=safeName(folderName(g));
+    const zip=new JSZip();
+    const dir=zip.folder(label);
+
+    const files=await Promise.all(present.map(async({tag,f})=>{
+      const url=await urlOf(f);
+      if(!url)throw new Error("無法取得檔案連結");
+
+      const response=await fetch(url);
+      if(!response.ok)throw new Error("下載檔案失敗");
+
+      return {
+        tag:tag,
+        ext:extOf(f.name||f.path||""),
+        blob:await response.blob()
+      };
+    }));
+
+    files.forEach(f=>{
+      dir.file(label+"--"+f.tag+f.ext,f.blob);
+    });
+
+    const blob=await zip.generateAsync({type:"blob"});
+    const u=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+
+    a.href=u;
+    a.download=label+".zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(()=>URL.revokeObjectURL(u),5000);
+
+    if(msg)msg.textContent="";
+  }catch(e){
+    if(msg)msg.textContent="下載失敗："+(e.code||e.message);
+  }finally{
+    delete el.dataset.busy;
+  }
+}
+
+async function deleteFile(gid,rk,slot){
+  const f=((FILES_MAP[gid]||{})[rk]||{})[slot];
+  if(!f)return;
+
+  if(!confirm("確定刪除「"+(f.name||"檔案")+"」？此操作無法復原。"))return;
+
+  try{
+    if(f.path){
+      await storage.ref(f.path).delete().catch(e=>{
+        if(e.code!=="storage/object-not-found")throw e;
+      });
+    }
+
+    await db.doc("groupFiles/"+gid).update({
+      [rk+"."+slot]:firebase.firestore.FieldValue.delete()
+    });
+
+    if(FILES_MAP[gid]&&FILES_MAP[gid][rk]){
+      delete FILES_MAP[gid][rk][slot];
+    }
+
+    if(f.size){
+      try{
+        await db.doc("settings/storage").set({
+          bytes:firebase.firestore.FieldValue.increment(-Number(f.size))
+        },{merge:true});
+      }catch(_){}
+    }
+
+    renderFilesTab();
+  }catch(e){
+    alert("刪除失敗："+(e.code||e.message));
+  }
+}
+
+$("#filesHost").addEventListener("click",e=>{
+  const dl=e.target.closest("[data-act=filedl]");
+
+  if(dl){
+    downloadSingleFromMap(
+      dl,
+      (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}
+    );
+    return;
+  }
+
+  const del=e.target.closest("[data-act=filedel]");
+
+  if(del){
+    deleteFile(del.dataset.gid,del.dataset.rk,del.dataset.slot);
+    return;
+  }
+
+  const folder=e.target.closest(".folder");
+
+  if(folder){
+    zipFolder(
+      folder,
+      gid=>FILES_GROUPS.find(g=>g.id===gid),
+      (gid,rk)=>(FILES_MAP[gid]||{})[rk]||{}
+    );
+  }
+});
+
+async function folderSize(ref){
+  let total=0;
+  let count=0;
+
+  const res=await ref.listAll();
+
+  const sizes=await Promise.all(res.items.map(async item=>{
+    const meta=await item.getMetadata();
+    return Number(meta.size)||0;
+  }));
+
+  sizes.forEach(size=>{
+    total+=size;
+    count++;
+  });
+
+  for(const p of res.prefixes){
+    const sub=await folderSize(p);
+    total+=sub.total;
+    count+=sub.count;
+  }
+
+  return {total,count};
+}
+
+async function usageFromFirestore(){
+  let total=0;
+  let count=0;
+
+  const add=f=>{
+    if(f&&f.size){
+      total+=Number(f.size)||0;
+      count++;
+    }
+  };
+
+  try{
+    const gf=await db.collection("groupFiles").get();
+
+    gf.docs.forEach(d=>{
+      const v=d.data();
+      ["r1","r2","r3"].forEach(rk=>{
+        Object.values(v[rk]||{}).forEach(add);
+      });
+    });
+  }catch(_){}
+
+  try{
+    const cd=await db.collection("committeeDocs").get();
+    cd.docs.forEach(d=>add(d.data().passbook));
+  }catch(_){}
+
+  try{
+    const up=await db.doc("settings/uploads").get();
+
+    if(up.exists){
+      [1,2,3].forEach(n=>{
+        rulesFiles(up.data(),n).forEach(add);
+      });
+    }
+  }catch(_){}
+
+  return {total,count,estimate:true};
+}
+
+function renderUsage(total,opts={}){
+  const limit=5*1073741824;
+  const cap=Number(opts.capBytes)||0;
+  const warn=Number(opts.warnBytes)||0;
+  const percent=Math.min(100,total/limit*100);
+
+  let cls="";
+  let note="";
+
+  if(cap&&total>=cap){
+    cls="danger";
+    note="已達阻擋上限，學生上傳將受到限制。";
+  }else if(warn&&total>=warn){
+    cls="warn";
+    note="已達警示門檻，建議清理舊檔。";
+  }
+
+  $("#usageHost").innerHTML=
+    '<div style="font-size:22px;font-weight:700">'+
+    fmtBytes(total)+' <span class="hint">／ 5 GB（'+
+    percent.toFixed(1)+'%）</span></div>'+
+    '<div class="usage-bar '+cls+'">'+
+    '<span style="width:'+percent.toFixed(1)+'%"></span></div>'+
+    '<div class="hint">'+
+    (opts.count!=null?"共 "+opts.count+" 個檔案　":"")+
+    (opts.estimate?"（估算）　":"")+
+    "剩餘約 "+fmtBytes(Math.max(0,limit-total))+
+    '</div>'+
+    (note?'<p style="color:var(--danger)">'+note+'</p>':"");
+}
+
+function updateUsageBanner(s){
+  const bytes=Number(s.bytes)||0;
+  const cap=Number(s.capBytes)||0;
+  const warn=Number(s.warnBytes)||0;
+  const b=$("#usageBanner");
+
+  if(cap&&bytes>=cap){
+    b.className="ubanner danger";
+    b.textContent="儲存空間已達阻擋上限，請至檔案分頁清理或調高上限。";
+  }else if(warn&&bytes>=warn){
+    b.className="ubanner warn";
+    b.textContent="儲存空間已達警示門檻，建議清理舊屆檔案。";
+  }else{
+    b.className="ubanner hidden";
+  }
+}
+
+function startStorageBanner(){
+  if(startStorageBanner.done)return;
+  startStorageBanner.done=true;
+
+  db.doc("settings/storage").onSnapshot(d=>{
+    if(d.exists)updateUsageBanner(d.data());
+  },()=>{});
+}
+
+async function loadStorageUsage(){
+  try{
+    const d=await db.doc("settings/storage").get();
+
+    if(d.exists){
+      const s=d.data();
+
+      $("#capMB").value=s.capBytes
+        ?Math.round(s.capBytes/1048576)
+        :"";
+
+      $("#warnMB").value=s.warnBytes
+        ?Math.round(s.warnBytes/1048576)
+        :"";
+
+      renderUsage(Number(s.bytes)||0,{
+        capBytes:s.capBytes,
+        warnBytes:s.warnBytes
+      });
+    }else{
+      $("#capMB").value=4800;
+      $("#warnMB").value=4000;
+
+      renderUsage(0,{
+        capBytes:4800*1048576,
+        warnBytes:4000*1048576
+      });
+    }
+  }catch(e){
+    $("#usageHost").textContent="用量載入失敗："+(e.code||e.message);
+  }
+}
+
+$("#saveCap").onclick=async()=>{
+  const cap=Math.max(0,Math.round(Number($("#capMB").value)||0))*1048576;
+  const warn=Math.max(0,Math.round(Number($("#warnMB").value)||0))*1048576;
+
+  try{
+    await db.doc("settings/storage").set({
+      capBytes:cap,
+      warnBytes:warn
+    },{merge:true});
+
+    flash("capMsg","已儲存。");
+    await loadStorageUsage();
+  }catch(e){
+    flash("capMsg","儲存失敗："+(e.code||e.message),false);
+  }
+};
+
+$("#calcUsage").onclick=async()=>{
+  const btn=$("#calcUsage");
+  btn.disabled=true;
+  $("#usageHost").textContent="計算中…";
+
+  try{
+    let total=0;
+    let count=0;
+    let estimate=false;
+
+    try{
+      const parts=await Promise.all([
+        folderSize(storage.ref("groups")),
+        folderSize(storage.ref("committee")),
+        folderSize(storage.ref("public"))
+      ]);
+
+      parts.forEach(p=>{
+        total+=p.total;
+        count+=p.count;
+      });
+    }catch(_){
+      const data=await usageFromFirestore();
+      total=data.total;
+      count=data.count;
+      estimate=true;
+    }
+
+    const cap=Math.max(0,Math.round(Number($("#capMB").value)||0))*1048576;
+    const warn=Math.max(0,Math.round(Number($("#warnMB").value)||0))*1048576;
+
+    await db.doc("settings/storage").set({
+      bytes:total,
+      capBytes:cap,
+      warnBytes:warn,
+      at:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+
+    renderUsage(total,{
+      count:count,
+      estimate:estimate,
+      capBytes:cap,
+      warnBytes:warn
+    });
+  }catch(e){
+    $("#usageHost").textContent="計算失敗："+(e.code||e.message);
+  }finally{
+    btn.disabled=false;
+  }
+};
+
+async function loadTeacherScores(){
+  GRADES={};
+
+  try{
+    const snap=await db.collection("grades").get();
+    snap.docs.forEach(d=>GRADES[d.id]=d.data());
+  }catch(_){}
+
+  renderTeacherTable(1,"tg1Host");
+  renderTeacherTable(2,"tg2Host");
+}
+
+async function refreshScores(){
+  try{
+    await loadAccounts();
+
+    const [grades,scores]=await Promise.all([
+      db.collection("grades").get(),
+      db.collection("committeeScores").get()
+    ]);
+
+    GRADES={};
+    grades.docs.forEach(d=>GRADES[d.id]=d.data());
+    CSCORES=scores.docs.map(d=>d.data());
+
+    renderTeacherTable(1,"tg1Host");
+    renderTeacherTable(2,"tg2Host");
+    renderCommitteeTables();
+  }catch(e){
+    console.warn("成績重新整理失敗",e);
+  }
+}
+
+$("#reloadTG").onclick=()=>refreshScores();
+
+function scoreTabActive(){
+  return $('.tabpane[data-pane="score"]').classList.contains("on");
+}
+
+let lastScoreRefresh=0;
+
+function autoRefresh(){
+  if(Date.now()-lastScoreRefresh<3000)return;
+  lastScoreRefresh=Date.now();
+  refreshScores();
+}
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden&&scoreTabActive())autoRefresh();
+});
+
+window.addEventListener("focus",()=>{
+  if(scoreTabActive())autoRefresh();
+});
+
+function teacherRowsRaw(sem){
+  const key="sem"+sem;
+
+  return currentGroupList().map(g=>{
+    const gr=(GRADES[g.id]||{})[key]||{};
+    const m=g.members||[];
+
+    const score=slot=>{
+      const n=(gr[slot]||{}).score;
+      return n===0||n?n:"";
+    };
+
+    return {
+      groupNo:g.groupNo||"",
+      leaderSid:g.leaderSid||"",
+      leaderName:g.leaderName||"",
+      leaderScore:score("leader"),
+      m1sid:(m[0]||{}).sid||"",
+      m1name:(m[0]||{}).name||"",
+      m1score:score("m1"),
+      m2sid:(m[1]||{}).sid||"",
+      m2name:(m[1]||{}).name||"",
+      m2score:score("m2"),
+      m3sid:(m[2]||{}).sid||"",
+      m3name:(m[2]||{}).name||"",
+      m3score:score("m3"),
+      advisor:g.advisorName||""
+    };
+  });
+}
+
+const TEACHER_COLS=[
+  {key:"groupNo",label:"組別編號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderSid",label:"組長學號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderName",label:"組長姓名",kind:"text",sticky:true,keyCol:true,sortable:true},
+  {key:"leaderScore",label:"組長分數",kind:"num",keyCol:true,sortable:true},
+  {key:"m1sid",label:"組員1學號",kind:"mono",groupStart:true},
+  {key:"m1name",label:"組員1姓名",kind:"text"},
+  {key:"m1score",label:"組員1分數",kind:"num"},
+  {key:"m2sid",label:"組員2學號",kind:"mono",groupStart:true},
+  {key:"m2name",label:"組員2姓名",kind:"text"},
+  {key:"m2score",label:"組員2分數",kind:"num"},
+  {key:"m3sid",label:"組員3學號",kind:"mono",groupStart:true},
+  {key:"m3name",label:"組員3姓名",kind:"text"},
+  {key:"m3score",label:"組員3分數",kind:"num"},
+  {key:"advisor",label:"指導教授",kind:"text",groupStart:true,keyCol:true,sortable:true}
+];
+
+function renderTeacherTable(sem,hostId){
+  const rows=teacherRowsRaw(sem)
+    .sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo)));
+
+  scoreTable(hostId,TEACHER_COLS,rows);
+}
+
+function startCommitteeListener(){
+  if(startCommitteeListener.done)return;
+  startCommitteeListener.done=true;
+
+  let timer;
+
+  db.collection("committeeScores").onSnapshot(snap=>{
+    CSCORES=snap.docs.map(d=>d.data());
+    clearTimeout(timer);
+    timer=setTimeout(renderCommitteeTables,150);
+  },err=>console.warn("委員評分監聽失敗",err));
+}
+
+function startGradesListener(){
+  if(startGradesListener.done)return;
+  startGradesListener.done=true;
+
+  let timer;
+
+  db.collection("grades").onSnapshot(snap=>{
+    GRADES={};
+    snap.docs.forEach(d=>GRADES[d.id]=d.data());
+
+    clearTimeout(timer);
+    timer=setTimeout(()=>{
+      renderTeacherTable(1,"tg1Host");
+      renderTeacherTable(2,"tg2Host");
+    },150);
+  },err=>console.warn("教授成績監聽失敗",err));
+}
+
+function committeeCompute(stage,usePop){
+  const finalists=(state.finalists.groups||[]).map(g=>g.no);
+
+  let groups=currentGroupList();
+
+  if(stage===2){
+    groups=groups.filter(g=>g.groupNo&&finalists.includes(g.groupNo));
+  }
+
+  const gidRaw={};
+  groups.forEach(g=>gidRaw[g.id]={});
+
+  CSCORES.filter(s=>s.stage===stage).forEach(s=>{
+    if(
+      gidRaw[s.gid]&&
+      typeof s.score==="number"&&
+      Number.isFinite(s.score)
+    ){
+      gidRaw[s.gid][s.committeeUid]=s.score;
+    }
+  });
+
+  const rawByCommittee={};
+
+  groups.forEach(g=>{
+    Object.entries(gidRaw[g.id]).forEach(([uid,value])=>{
+      if(!rawByCommittee[uid])rawByCommittee[uid]=[];
+      rawByCommittee[uid].push(value);
+    });
+  });
+
+  const stat={};
+
+  Object.entries(rawByCommittee).forEach(([uid,values])=>{
+    const n=values.length;
+    const mean=values.reduce((a,b)=>a+b,0)/n;
+
+    let sd=0;
+
+    if(n>=2){
+      const sum=values.reduce((a,b)=>a+(b-mean)*(b-mean),0);
+      sd=Math.sqrt(sum/(usePop?n:n-1));
+    }
+
+    stat[uid]={mean:mean,sd:sd,n:n};
+  });
+
+  return {groups,gidRaw,stat};
+}
+
+function committeeRowsRaw(stage,modeOverride){
+  const usePop=(modeOverride||COMMITTEE_SD_MODE)==="pop";
+  const {groups,gidRaw,stat}=committeeCompute(stage,usePop);
+  const round=x=>Math.round(x*10000)/10000;
+
+  const rows=groups.map(g=>{
+    const m=g.members||[];
+
+    const row={
+      gid:g.id,
+      groupNo:g.groupNo||"",
+      leaderSid:g.leaderSid||"",
+      leaderName:g.leaderName||"",
+      m1sid:(m[0]||{}).sid||"",
+      m1name:(m[0]||{}).name||"",
+      m2sid:(m[1]||{}).sid||"",
+      m2name:(m[1]||{}).name||"",
+      m3sid:(m[2]||{}).sid||"",
+      m3name:(m[2]||{}).name||"",
+      advisor:g.advisorName||"",
+      topic:g.topic||""
+    };
+
+    COMMITTEE.forEach(c=>{
+      row["raw_"+c.uid]="";
+      row["z_"+c.uid]="";
+      row["nrm_"+c.uid]="";
+    });
+
+    let rawSum=0;
+    let normSum=0;
+    let n=0;
+
+    Object.entries(gidRaw[g.id]).forEach(([uid,raw])=>{
+      const s=stat[uid];
+      if(!s)return;
+
+      const z=s.sd>0?(raw-s.mean)/s.sd:0;
+      const normalized=s.sd>0?75+5*z:75;
+
+      row["raw_"+uid]=raw;
+      row["z_"+uid]=round(z);
+      row["nrm_"+uid]=round(normalized);
+
+      rawSum+=raw;
+      normSum+=normalized;
+      n++;
+    });
+
+    row.rawAvg=n?round(rawSum/n):"";
+    row.normAvg=n?round(normSum/n):"";
+    row._n=n;
+    row._normFull=n?normSum/n:-Infinity;
+
+    return row;
+  });
+
+  const scored=rows.filter(r=>r._n>0)
+    .sort((a,b)=>b._normFull-a._normFull);
+
+  scored.forEach((r,i)=>{
+    r.rank=i+1;
+    r._top=stage===2&&r.rank<=3;
+  });
+
+  const unscored=rows.filter(r=>!r._n);
+  unscored.forEach(r=>r.rank="");
+
+  return [...scored,...unscored];
+}
+
+function committeeCols(){
+  const cols=[
+    {key:"groupNo",label:"組別編號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+    {key:"leaderSid",label:"組長學號",kind:"mono",sticky:true,keyCol:true,sortable:true},
+    {key:"leaderName",label:"組長姓名",kind:"text",sticky:true,keyCol:true,sortable:true},
+    {key:"m1sid",label:"組員1學號",kind:"mono",groupStart:true},
+    {key:"m1name",label:"組員1姓名",kind:"text"},
+    {key:"m2sid",label:"組員2學號",kind:"mono",groupStart:true},
+    {key:"m2name",label:"組員2姓名",kind:"text"},
+    {key:"m3sid",label:"組員3學號",kind:"mono",groupStart:true},
+    {key:"m3name",label:"組員3姓名",kind:"text"},
+    {key:"advisor",label:"指導教授",kind:"text",groupStart:true,keyCol:true,sortable:true},
+    {key:"topic",label:"專題題目",kind:"ellip"}
+  ];
+
+  COMMITTEE.forEach(c=>{
+    cols.push({
+      key:"raw_"+c.uid,
+      label:c.name+"·原始",
+      kind:"num",
+      groupStart:true,
+      sortable:true
+    });
+
+    cols.push({
+      key:"z_"+c.uid,
+      label:c.name+"·標準化",
+      kind:"num",
+      dp:4
+    });
+
+    cols.push({
+      key:"nrm_"+c.uid,
+      label:c.name+"·常態化",
+      kind:"num",
+      dp:4
+    });
+  });
+
+  cols.push({
+    key:"rawAvg",label:"原始平均",kind:"num",
+    groupStart:true,sortable:true,dp:4
+  });
+
+  cols.push({
+    key:"normAvg",label:"常態化平均",kind:"num",
+    keyCol:true,sortable:true,dp:4
+  });
+
+  cols.push({
+    key:"rank",label:"名次",kind:"num",
+    keyCol:true,sortable:true
+  });
+
+  return cols;
+}
+
+function renderCommitteeTables(){
+  renderCommitteeTable(1,"cs1Host");
+  renderCommitteeTable(2,"cs2Host");
+  renderCmtProgress();
+}
+
+function renderCommitteeTable(stage,hostId){
+  scoreTable(hostId,committeeCols(),committeeRowsRaw(stage));
+}
+
+function renderCmtProgress(){
+  if(!COMMITTEE.length){
+    $("#cmtProgress").innerHTML='<p class="empty-note">尚無委員帳號。</p>';
+    return;
+  }
+
+  const finalists=(state.finalists.groups||[]).map(g=>g.no);
+  const current=currentGroupList();
+  const stage1Ids=new Set(current.map(g=>g.id));
+  const stage2Ids=new Set(
+    current.filter(g=>g.groupNo&&finalists.includes(g.groupNo))
+      .map(g=>g.id)
+  );
+
+  const count=(uid,stage,ids)=>new Set(
+    CSCORES.filter(s=>
+      s.committeeUid===uid&&
+      s.stage===stage&&
+      typeof s.score==="number"&&
+      ids.has(s.gid)
+    ).map(s=>s.gid)
+  ).size;
+
+  const cell=(value,total)=>{
+    const color=total>0&&value>=total
+      ?"var(--accent)"
+      :value>0
+      ?"var(--gold)"
+      :"var(--muted)";
+
+    return '<span style="color:'+color+'">'+value+"／"+total+'</span>';
+  };
+
+  $("#cmtProgress").innerHTML=
+    '<div class="scoretable"><table class="stab">'+
+    '<thead><tr><th>委員</th><th>第一階段</th><th>第二階段</th></tr></thead>'+
+    '<tbody>'+
+    COMMITTEE.map(c=>
+      '<tr><td>'+esc(c.name)+'</td>'+
+      '<td>'+cell(count(c.uid,1,stage1Ids),stage1Ids.size)+'</td>'+
+      '<td>'+cell(count(c.uid,2,stage2Ids),stage2Ids.size)+'</td></tr>'
+    ).join("")+
+    '</tbody></table></div>';
+}
+
+$("#sdMode").onchange=e=>{
+  COMMITTEE_SD_MODE=e.target.value;
+  renderCommitteeTables();
+};
+
+$("#fillFromRank").onclick=()=>{
+  const rows=committeeRowsRaw(1).filter(r=>r._n>0);
+
+  if(!rows.length){
+    flash("finalMsg","第一階段尚無評分可帶入。",false);
+    return;
+  }
+
+  let n=Number.parseInt($("#topN").value,10);
+  if(!n||n<1)n=Math.ceil(rows.length/2);
+
+  state.finalists.groups=rows.slice(0,n).map(r=>({
+    gid:r.gid,
+    no:r.groupNo,
+    title:r.topic,
+    leader:r.leaderName,
+    m1:r.m1name,
+    m2:r.m2name,
+    m3:r.m3name
+  }));
+
+  renderFinalists();
+  flash("finalMsg","已帶入，請確認後儲存名單並勾選發布。");
+};
+
+function scoreTable(hostId,columns,rows){
+  const prev=STAB[hostId]||{};
+
+  STAB[hostId]={
+    columns:columns,
+    rows:rows,
+    sortKey:prev.sortKey||null,
+    sortDir:prev.sortDir||1,
+    search:prev.search||"",
+    view:prev.view||"full"
+  };
+
+  drawScore(hostId);
+}
+
+function drawScore(hostId){
+  const st=STAB[hostId];
+  const host=$("#"+hostId);
+  if(!st||!host)return;
+
+  const cols=st.columns.filter(c=>st.view==="full"||c.keyCol);
+  const query=st.search.trim().toLowerCase();
+
+  let rows=st.rows;
+
+  if(query){
+    rows=rows.filter(r=>st.columns.some(c=>
+      String(r[c.key]??"").toLowerCase().includes(query)
+    ));
+  }
+
+  if(st.sortKey){
+    const col=st.columns.find(c=>c.key===st.sortKey);
+    const numeric=col&&col.kind==="num";
+
+    rows=rows.slice().sort((a,b)=>{
+      const x=a[st.sortKey];
+      const y=b[st.sortKey];
+      const xe=x===""||x==null;
+      const ye=y===""||y==null;
+
+      if(xe&&ye)return 0;
+      if(xe)return 1;
+      if(ye)return -1;
+
+      return numeric
+        ?(x-y)*st.sortDir
+        :String(x).localeCompare(String(y))*st.sortDir;
+    });
+  }
+
+  let left=0;
+  const offsets={};
+
+  cols.forEach(c=>{
+    if(c.sticky){
+      offsets[c.key]=left;
+      left+=STICKY_W[c.key]||90;
+    }
+  });
+
+  const lastSticky=cols.filter(c=>c.sticky).pop();
+
+  const cellInfo=c=>{
+    const classes=[];
+    if(c.sticky)classes.push("sticky-c");
+    if(lastSticky&&c.key===lastSticky.key)classes.push("sticky-last");
+    if(c.groupStart)classes.push("grp");
+    if(c.kind==="num")classes.push("num");
+    if(c.kind==="mono")classes.push("mono");
+    if(c.kind==="ellip")classes.push("ellip");
+
+    const width=STICKY_W[c.key]||90;
+    const style=c.sticky
+      ?"left:"+offsets[c.key]+"px;min-width:"+width+"px;max-width:"+width+"px"
+      :"";
+
+    return {classes,style};
+  };
+
+  const head=cols.map(c=>{
+    const info=cellInfo(c);
+    if(c.sortable)info.classes.push("sortable");
+
+    const arrow=st.sortKey===c.key
+      ?st.sortDir>0?" ▲":" ▼"
+      :"";
+
+    return '<th class="'+info.classes.join(" ")+'"'+
+      (c.sortable?' data-sort="'+esc(c.key)+'"':"")+
+      (info.style?' style="'+info.style+'"':"")+'>'+
+      esc(c.label)+arrow+'</th>';
+  }).join("");
+
+  const body=rows.map(r=>{
+    const cells=cols.map(c=>{
+      const info=cellInfo(c);
+      const value=r[c.key];
+
+      const text=c.kind==="num"
+        ?value===0||value
+          ?esc(c.dp!=null&&typeof value==="number"
+            ?value.toFixed(c.dp)
+            :value)
+          :'<span class="na">–</span>'
+        :esc(value);
+
+      return '<td class="'+info.classes.join(" ")+'"'+
+        (info.style?' style="'+info.style+'"':"")+
+        ((c.sticky||c.kind==="ellip")&&value
+          ?' title="'+esc(value)+'"':"")+
+        '>'+text+'</td>';
+    }).join("");
+
+    return '<tr'+(r._top?' class="top"':"")+'>'+cells+'</tr>';
+  }).join("");
+
+  host.innerHTML=
+    '<div class="score-controls">'+
+    '<input type="text" data-search placeholder="搜尋組別／姓名／題目" value="'+
+    esc(st.search)+'">'+
+    '<span class="seg">'+
+    '<button data-view="full" class="'+(st.view==="full"?"on":"")+'">完整</button>'+
+    '<button data-view="simple" class="'+(st.view==="simple"?"on":"")+'">簡潔</button>'+
+    '</span><span class="hint">共 '+rows.length+' 組</span></div>'+
+    '<div class="scoretable"><table class="stab">'+
+    '<thead><tr>'+head+'</tr></thead>'+
+    '<tbody>'+body+'</tbody></table></div>';
+
+  const search=host.querySelector("[data-search]");
+
+  search.oninput=()=>{
+    st.search=search.value;
+    const pos=search.selectionStart;
+    drawScore(hostId);
+
+    const next=host.querySelector("[data-search]");
+    next.focus();
+
+    try{next.setSelectionRange(pos,pos);}catch(_){}
+  };
+
+  host.querySelectorAll("[data-view]").forEach(b=>{
+    b.onclick=()=>{
+      st.view=b.dataset.view;
+      drawScore(hostId);
+    };
+  });
+
+  host.querySelectorAll("[data-sort]").forEach(th=>{
+    th.onclick=()=>{
+      const key=th.dataset.sort;
+
+      if(st.sortKey===key)st.sortDir=-st.sortDir;
+      else{
+        st.sortKey=key;
+        st.sortDir=1;
+      }
+
+      drawScore(hostId);
+    };
+  });
+}
+
+function teacherAOA(sem){
+  const rows=teacherRowsRaw(sem)
+    .sort((a,b)=>String(a.groupNo).localeCompare(String(b.groupNo)));
+
+  return [
+    TEACHER_COLS.map(c=>c.label),
+    ...rows.map(r=>TEACHER_COLS.map(c=>r[c.key]))
+  ];
+}
+
+function committeeAOA(stage,mode){
+  const {stat}=committeeCompute(stage,mode==="pop");
+  const rows=committeeRowsRaw(stage,mode);
+  const head=["組別編號","組長","專題題目"];
+
+  COMMITTEE.forEach(c=>{
+    head.push(c.name+"·原始",c.name+"·標準化",c.name+"·常態化");
+  });
+
+  head.push("原始平均","常態化平均","名次");
+
+  const aoa=[head];
+
+  rows.forEach(r=>{
+    const line=[r.groupNo,r.leaderName,r.topic];
+
+    COMMITTEE.forEach(c=>{
+      line.push(r["raw_"+c.uid],r["z_"+c.uid],r["nrm_"+c.uid]);
+    });
+
+    line.push(r.rawAvg,r.normAvg,r.rank);
+    aoa.push(line);
+  });
+
+  const means=["平均數","",""];
+  const deviations=["標準差","",""];
+
+  COMMITTEE.forEach(c=>{
+    const s=stat[c.uid];
+    means.push(s?Math.round(s.mean*10000)/10000:"","","");
+    deviations.push(s?Math.round(s.sd*10000)/10000:"","","");
+  });
+
+  aoa.push([],means,deviations);
+
+  return aoa;
+}
+
+function xlsxDownload(sheets,filename){
+  if(typeof XLSX==="undefined"){
+    alert("Excel 套件尚未載入，請確認網路後重新整理。");
+    return;
+  }
+
+  const wb=XLSX.utils.book_new();
+
+  sheets.forEach(([name,rows])=>{
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(rows),
+      name
+    );
+  });
+
+  XLSX.writeFile(wb,filename);
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-xlsx]");
+  if(!b)return;
+
+  const which=b.dataset.xlsx;
+
+  if(which==="t1"||which==="t2"){
+    const sem=which==="t1"?1:2;
+    const name=sem===1?"第一次成績":"第二次成績";
+
+    xlsxDownload([[name,teacherAOA(sem)]],"指導教授_"+name+".xlsx");
+  }else if(which==="c1"||which==="c2"){
+    const stage=which==="c1"?1:2;
+
+    xlsxDownload([
+      ["母體(STDEVP)",committeeAOA(stage,"pop")],
+      ["樣本(STDEV)",committeeAOA(stage,"sample")]
+    ],"校外委員_"+(stage===1?"第一階段":"第二階段")+"成績.xlsx");
+  }else if(which==="cdocs"){
+    const payType={post:"郵局",bank:"銀行"};
+
+    const head=[
+      "姓名","電子郵件","身分證字號","戶籍地址",
+      "匯款方式","郵局帳號","銀行代碼","分行","銀行帳號","存簿封面"
+    ];
+
+    const rows=COMMITTEE.map(c=>{
+      const d=CDOCS[c.uid]||{};
+
+      return [
+        c.name||"",
+        c.email||"",
+        d.idNumber||"",
+        d.householdAddr||"",
+        payType[d.payType]||"",
+        d.postAccount||"",
+        d.bankCode||"",
+        d.bankBranch||"",
+        d.bankAccount||"",
+        (d.passbook&&d.passbook.url)||""
+      ];
+    });
+
+    xlsxDownload([["委員個人資料",[head,...rows]]],"委員個人資料.xlsx");
+  }
+});
+
+$("#resetYear").onclick=async()=>{
+  const typed=prompt(
+    "此操作會清除應屆分組、成績與組長角色資料，並將下屆升為應屆。"+
+    "\n資料無法復原。確定請輸入大寫 RESET："
+  );
+
+  if(typed===null)return;
+
+  if(typed.trim()!=="RESET"){
+    flash("resetMsg","未輸入 RESET，已取消。",false);
+    return;
+  }
+
+  const btn=$("#resetYear");
+  const msg=$("#resetMsg");
+  btn.disabled=true;
+  msg.textContent="處理中…";
+
+  try{
+    const [students,groups,grades,scores,files]=await Promise.all([
+      db.collection("users").where("role","==","student").get(),
+      db.collection("groups").get(),
+      db.collection("grades").get(),
+      db.collection("committeeScores").get(),
+      db.collection("groupFiles").get()
+    ]);
+
+    const currentIds=new Set();
+    const nextGroups=[];
+
+    groups.docs.forEach(d=>{
+      if(d.data().cohort==="next")nextGroups.push(d);
+      else currentIds.add(d.id);
+    });
+
+    const refs=[];
+
+    [groups,students,grades,files].forEach(collection=>{
+      collection.docs.forEach(d=>{
+        if(currentIds.has(d.id))refs.push(d.ref);
+      });
+    });
+
+    scores.docs.forEach(d=>{
+      if(currentIds.has(d.data().gid))refs.push(d.ref);
+    });
+
+    for(let i=0;i<refs.length;i+=400){
+      const batch=db.batch();
+      refs.slice(i,i+400).forEach(ref=>batch.delete(ref));
+      await batch.commit();
+    }
+
+    for(let i=0;i<nextGroups.length;i+=400){
+      const batch=db.batch();
+
+      nextGroups.slice(i,i+400).forEach(d=>{
+        batch.set(d.ref,{cohort:"current"},{merge:true});
+      });
+
+      await batch.commit();
+    }
+
+    await db.doc("settings/finalists").set({
+      published:false,
+      groups:[]
+    },{merge:true});
+
+    await db.doc("settings/registration").set({
+      open:false,
+      nextCohort:false
+    },{merge:true});
+
+    state.finalists={
+      published:false,
+      groups:[],
+      intro:"",
+      foot:""
+    };
+
+    $("#fPublished").checked=false;
+    $("#fRegOpen").checked=false;
+    $("#fNextCohort").checked=false;
+
+    renderFinalists();
+
+    await loadAccounts();
+    await loadGroups();
+    await loadLeaders();
+    await loadTeacherScores();
+
+    msg.textContent=
+      "已完成升屆：清除 "+refs.length+" 筆應屆資料，"+
+      nextGroups.length+" 組下屆已升為應屆。";
+
+    msg.className="msg ok";
+  }catch(e){
+    msg.textContent="重置失敗："+(e.code||e.message);
+    msg.className="msg err";
+  }finally{
+    btn.disabled=false;
+  }
+};
+
+async function deleteFolderDeep(ref){
+  const res=await ref.listAll();
+
+  await Promise.all(res.items.map(async item=>{
+    try{
+      await item.delete();
+    }catch(e){
+      if(e.code!=="storage/object-not-found")throw e;
+    }
+  }));
+
+  for(const prefix of res.prefixes){
+    await deleteFolderDeep(prefix);
+  }
+}
+
+$("#wipeStorage").onclick=async()=>{
+  const typed=prompt(
+    "此操作會刪除 groups/ 下所有組別的實體檔案，包含下屆。"+
+    "\n委員資料及規定文件保留。"+
+    "\n此操作無法復原。確定請輸入大寫 RESET："
+  );
+
+  if(typed===null)return;
+
+  if(typed.trim()!=="RESET"){
+    flash("wipeMsg","未輸入 RESET，已取消。",false);
+    return;
+  }
+
+  const btn=$("#wipeStorage");
+  btn.disabled=true;
+  $("#wipeMsg").textContent="清除中…";
+
+  try{
+    await deleteFolderDeep(storage.ref("groups"));
+    flash("wipeMsg","已清空各組上傳實體檔案。");
+  }catch(e){
+    flash("wipeMsg","清除失敗："+(e.code||e.message),false);
+  }finally{
+    btn.disabled=false;
+  }
+};
+
+if(initFirebase()){
+  auth.onAuthStateChanged(async user=>{
+    if(!user){
+      $("#topRight").innerHTML='<a href="index.html">回首頁</a>';
+      show("loginView");
+      return;
+    }
+
+    try{
+      const profile=await db.doc("users/"+user.uid).get();
+
+      if(!profile.exists||profile.data().role!=="admin"){
+        show("denyView");
+        return;
+      }
+
+      $("#topRight").innerHTML=
+        '<a href="index.html">回首頁</a>'+
+        '<button class="link-btn" id="signOut">登出（'+
+        esc(user.email)+'）</button>';
+
+      $("#signOut").onclick=()=>auth.signOut();
+
+      show("adminView");
+
+      try{
+        await loadAll();
+      }catch(e){
+        flash("siteMsg","資料載入失敗："+(e.code||e.message),false);
+        console.error("管理後台資料載入失敗",e);
+      }
+    }catch(e){
+      show("loginView");
+      flash("loginMsg","讀取帳號權限失敗："+(e.code||e.message),false);
+    }
+  });
+}
 </script>
 
 <script>
@@ -1369,10 +4085,10 @@ if("serviceWorker" in navigator){
   var toast=document.getElementById("__toast");
   var pending=0;
   var lastBtn=null;
-  var fb=null;
-  var tt=null;
+  var fallback=null;
+  var toastTimer=null;
 
-  function npStart(){
+  function start(){
     if(bar){
       bar.classList.add("on");
       bar.style.width="0";
@@ -1381,9 +4097,12 @@ if("serviceWorker" in navigator){
         bar.style.width="88%";
       });
     }
+
+    clearTimeout(toastTimer);
+    if(toast)toast.classList.add("on");
   }
 
-  function npDone(){
+  function stop(){
     if(bar){
       bar.style.width="100%";
 
@@ -1392,124 +4111,75 @@ if("serviceWorker" in navigator){
         bar.style.width="0";
       },260);
     }
-  }
 
-  function setBtn(b,on){
-    if(!b)return;
+    clearTimeout(toastTimer);
 
-    if(on){
-      if(b.__l)return;
-      b.__l=1;
-      b.classList.add("btn-loading");
-      b.setAttribute("aria-busy","true");
-    }else if(b.__l){
-      b.__l=0;
-      b.classList.remove("btn-loading");
-      b.removeAttribute("aria-busy");
-    }
-  }
+    toastTimer=setTimeout(function(){
+      if(toast)toast.classList.remove("on");
 
-  function toastOn(on){
-    clearTimeout(tt);
-
-    if(on){
-      if(toast)toast.classList.add("on");
-    }else{
-      tt=setTimeout(function(){
-        if(toast)toast.classList.remove("on");
-        setBtn(lastBtn,false);
-      },180);
-    }
-  }
-
-  function begin(){
-    npStart();
-    toastOn(true);
-  }
-
-  function end(){
-    npDone();
-    toastOn(false);
+      if(lastBtn){
+        lastBtn.classList.remove("btn-loading");
+        lastBtn.removeAttribute("aria-busy");
+      }
+    },180);
   }
 
   document.addEventListener("click",function(e){
-    var b=e.target.closest("button.btn,a.btn");
+    var b=e.target.closest("button.btn");
     if(!b||b.disabled)return;
 
     lastBtn=b;
-    setBtn(b,true);
-    begin();
+    b.classList.add("btn-loading");
+    b.setAttribute("aria-busy","true");
 
-    clearTimeout(fb);
+    start();
+    clearTimeout(fallback);
 
-    fb=setTimeout(function(){
-      if(pending===0)end();
+    fallback=setTimeout(function(){
+      if(pending===0)stop();
     },600);
   },true);
-
-  function inc(){
-    if(pending===0){
-      clearTimeout(fb);
-      begin();
-    }
-
-    pending++;
-  }
-
-  function dec(){
-    pending=Math.max(0,pending-1);
-    if(pending===0)end();
-  }
 
   function wrap(proto,name){
     if(!proto)return;
 
-    var o=proto[name];
-
-    if(typeof o!=="function"||o.__w)return;
+    var original=proto[name];
+    if(typeof original!=="function"||original.__wrapped)return;
 
     proto[name]=function(){
-      var r=o.apply(this,arguments);
+      var result=original.apply(this,arguments);
 
-      if(r&&typeof r.then==="function"){
-        inc();
-        r.then(dec,dec);
+      if(result&&typeof result.then==="function"){
+        if(pending===0){
+          clearTimeout(fallback);
+          start();
+        }
+
+        pending++;
+
+        var done=function(){
+          pending=Math.max(0,pending-1);
+          if(pending===0)stop();
+        };
+
+        result.then(done,done);
       }
 
-      return r;
+      return result;
     };
 
-    proto[name].__w=1;
+    proto[name].__wrapped=true;
   }
 
   try{
     if(window.firebase&&firebase.firestore){
       var F=firebase.firestore;
 
-      wrap(
-        F.DocumentReference&&F.DocumentReference.prototype,
-        "set"
-      );
-
-      wrap(
-        F.DocumentReference&&F.DocumentReference.prototype,
-        "update"
-      );
-
-      wrap(
-        F.DocumentReference&&F.DocumentReference.prototype,
-        "delete"
-      );
-
-      wrap(
-        F.WriteBatch&&F.WriteBatch.prototype,
-        "commit"
-      );
-
-      wrap(
-        F.CollectionReference&&F.CollectionReference.prototype,
-        "add"
-      );
+      wrap(F.DocumentReference&&F.DocumentReference.prototype,"set");
+      wrap(F.DocumentReference&&F.DocumentReference.prototype,"update");
+      wrap(F.DocumentReference&&F.DocumentReference.prototype,"delete");
+      wrap(F.WriteBatch&&F.WriteBatch.prototype,"commit");
+      wrap(F.CollectionReference&&F.CollectionReference.prototype,"add");
     }
   }catch(_){}
 })();
@@ -1519,19 +4189,17 @@ if("serviceWorker" in navigator){
 
 <script>
 (function(){
-  var b=document.getElementById("toTop");
-  if(!b)return;
+  var button=document.getElementById("toTop");
+  if(!button)return;
 
-  function upd(){
-    window.scrollY>320
-      ?b.classList.add("show")
-      :b.classList.remove("show");
+  function update(){
+    button.classList.toggle("show",window.scrollY>320);
   }
 
-  window.addEventListener("scroll",upd,{passive:true});
-  upd();
+  window.addEventListener("scroll",update,{passive:true});
+  update();
 
-  b.addEventListener("click",function(){
+  button.addEventListener("click",function(){
     window.scrollTo({
       top:0,
       behavior:"smooth"
