@@ -165,7 +165,6 @@ html,body{overflow-x:hidden}
 #cmView.reviewing{max-width:1640px}
 .review-list{min-width:0}
 .grow.active-review{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
-.preview-external{display:inline-block;font-size:13px;color:var(--primary);margin-top:8px}
 @media(min-width:1000px){
   .review-layout.is-split{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.7fr);gap:20px;align-items:start}
   .review-layout.is-split .review-list{max-height:calc(100dvh - 150px);overflow:auto;overscroll-behavior:contain;padding-right:6px}
@@ -231,8 +230,7 @@ html,body{overflow-x:hidden}
       <div id="previewFiles" class="preview-files" aria-label="切換文件"></div>
       <p id="previewStatus" class="preview-status" role="status" aria-live="polite"></p>
       <div id="previewBody" class="preview-body"></div>
-      <p class="preview-status" id="previewHelp">PDF 與圖片由瀏覽器顯示；Word、PowerPoint、Excel 由 Microsoft Office 線上預覽，Microsoft 會讀取所選文件。評分保留在本系統。</p>
-      <a id="previewExternal" class="preview-external hidden" target="_blank" rel="noopener noreferrer">在新分頁開啟預覽</a>
+      <p class="preview-status" id="previewHelp">文件在此瀏覽器內預覽。Office 文件的字型或版面可能與原檔略有差異。</p>
     </section>
     </div>
   </div>
@@ -355,8 +353,6 @@ function closePreview(){
   $("#reviewLayout").classList.remove("is-split");
   $("#cmView").classList.remove("reviewing");
   document.querySelectorAll("#listHost .grow").forEach(row=>row.classList.remove("active-review"));
-  $("#previewExternal").classList.add("hidden");
-  $("#previewExternal").removeAttribute("href");
   clearPreviewResource();
   $("#filePreview").classList.add("hidden");
   $("#previewBody").replaceChildren();
@@ -382,6 +378,39 @@ function previewGroupHeader(gid,rk,slot){
   ).join("");
   return true;
 }
+function renderOfficePreview(bytes,name,signal){
+  return new Promise((resolve,reject)=>{
+    const frame=document.createElement("iframe");
+    frame.title=name;
+    frame.setAttribute("sandbox","allow-scripts");
+
+    function finish(error){
+      clearTimeout(timeout);
+      window.removeEventListener("message",receive);
+      signal.removeEventListener("abort",cancel);
+      if(error)reject(error);
+      else resolve();
+    }
+    function cancel(){finish(new DOMException("已取消預覽","AbortError"));}
+    function receive(event){
+      if(event.source!==frame.contentWindow||event.origin!=="null")return;
+      const type=event.data?.type;
+      if(type==="committee-office-ready")finish();
+      if(type==="committee-office-error")finish(new Error("瀏覽器無法解析這份 Office 文件。"));
+      if(type==="committee-office-unavailable")finish(new Error("Office 預覽元件無法載入。"));
+    }
+
+    const timeout=setTimeout(()=>finish(new Error("Office 預覽逾時，請重新載入。")),30000);
+    window.addEventListener("message",receive);
+    signal.addEventListener("abort",cancel,{once:true});
+    frame.addEventListener("load",()=>{
+      // 沙箱使用不透明來源。只將資料傳給這個預覽框，並在下方驗證回覆來源。
+      frame.contentWindow?.postMessage({type:"committee-office-file",name,bytes},"*",[bytes]);
+    },{once:true});
+    frame.src="office-preview.html";
+    $("#previewBody").replaceChildren(frame);
+  });
+}
 async function openPreview(gid,rk,slot,scroll=true){
   const expected=stage===1?"r1":"r2";
   if(view==="docs"||rk!==expected||!groupsForStage().some(g=>g.id===gid))return;
@@ -394,8 +423,6 @@ async function openPreview(gid,rk,slot,scroll=true){
   $("#filePreview").classList.remove("hidden");
   $("#reviewLayout").classList.add("is-split");
   $("#cmView").classList.add("reviewing");
-  $("#previewExternal").classList.add("hidden");
-  $("#previewExternal").removeAttribute("href");
   clearPreviewResource();
   $("#previewStatus").textContent=file?"正在載入「"+(file.name||entry.label)+"」…":"本組尚未上傳本階段檔案。";
   if(scroll)$("#filePreview").scrollIntoView({behavior:"smooth",block:"start"});
@@ -404,7 +431,7 @@ async function openPreview(gid,rk,slot,scroll=true){
     $("#previewBody").replaceChildren(p);
   };
   if(!file){message("本組尚未上傳本階段檔案。");return;}
-  const ext=extOf(file.name||file.path||"");
+  const ext=extOf(file.name)||extOf(file.path);
   const kind=ext===".pdf"?"pdf":[".png",".jpg",".jpeg",".gif",".webp"].includes(ext)?"image":
     [".doc",".docx",".ppt",".pptx",".xls",".xlsx"].includes(ext)?"office":"unsupported";
   if(kind==="unsupported"){
@@ -416,31 +443,24 @@ async function openPreview(gid,rk,slot,scroll=true){
     const url=await urlOf(file);
     if(request!==previewRequest)return;
     if(!url||safeUrl(url)==="#")throw new Error("無法取得檔案連結");
+    const controller=new AbortController();
+    previewAbort=controller;
+    const response=await fetch(url,{signal:controller.signal,credentials:"omit",referrerPolicy:"no-referrer"});
+    if(!response.ok)throw new Error("檔案讀取失敗（"+response.status+"）");
+    const name=file.name||entry.label;
     if(kind==="office"){
-      const frame=document.createElement("iframe");
-      frame.title=file.name||entry.label;
-      frame.referrerPolicy="no-referrer";
-      frame.allowFullscreen=true;
-      frame.src="https://view.officeapps.live.com/op/embed.aspx?src="+encodeURIComponent(url);
-      frame.onerror=()=>{
-        if(request!==previewRequest)return;
-        $("#previewStatus").textContent="Office 預覽連線失敗，請嘗試在新分頁開啟預覽。";
-      };
-      $("#previewStatus").textContent=(file.name||entry.label)+" · Microsoft Office 線上預覽";
-      $("#previewExternal").href="https://view.officeapps.live.com/op/view.aspx?src="+encodeURIComponent(url);
-      $("#previewExternal").classList.remove("hidden");
-      $("#previewBody").replaceChildren(frame);
+      const bytes=await response.arrayBuffer();
+      if(request!==previewRequest)return;
+      $("#previewStatus").textContent="正在產生「"+name+"」的頁面預覽…";
+      await renderOfficePreview(bytes,extOf(name)===ext?name:name+ext,controller.signal);
+      if(request===previewRequest)$("#previewStatus").textContent=name;
       return;
     }
-    previewAbort=new AbortController();
-    const response=await fetch(url,{signal:previewAbort.signal,credentials:"omit",referrerPolicy:"no-referrer"});
-    if(!response.ok)throw new Error("檔案讀取失敗（"+response.status+"）");
     const raw=await response.blob();
     if(request!==previewRequest)return;
     const mime=kind==="pdf"?"application/pdf":ext===".png"?"image/png":ext===".gif"?"image/gif":ext===".webp"?"image/webp":"image/jpeg";
     previewObjectUrl=URL.createObjectURL(new Blob([raw],{type:mime}));
     const element=document.createElement(kind==="pdf"?"iframe":"img");
-    const name=file.name||entry.label;
     element.referrerPolicy="no-referrer";
     if(kind==="pdf"){
       element.title=name;
@@ -460,8 +480,8 @@ async function openPreview(gid,rk,slot,scroll=true){
     $("#previewBody").replaceChildren(element);
   }catch(error){
     if(request!==previewRequest||error.name==="AbortError")return;
-    $("#previewStatus").textContent="預覽失敗："+(error.code||error.message);
-    message("無法讀取檔案，請確認檔案仍存在及帳號具備檢視權限。");
+    $("#previewStatus").textContent="無法預覽「"+(file.name||entry.label)+"」";
+    message(error.code||error.message||"請重新載入後再試。");
   }
 }
 function syncPreview(){

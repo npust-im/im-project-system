@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-eVGEbEZenP5dkkIBUECxc7U/7hp1YfZ/QcFOMfJAc/c=' https://cdn.jsdelivr.net/npm/@p10node/office-engine@0.17.0/dist/office-engine.embed.js; style-src 'unsafe-inline'; img-src blob: data:; font-src blob: data:; base-uri 'none'; form-action 'none'">
+<title>Office 文件預覽</title>
+<style>
+html,body{height:100%;margin:0;background:#f5f7f9}
+#viewer{height:100%}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@p10node/office-engine@0.17.0/dist/office-engine.embed.js"
+  integrity="sha384-lvUn5pmeZ+pO+fR5ucvvw9MH6r9bOZ3dEq/nxbHfFbBHuxK+KR9sz02sojb2rRDu"
+  crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="viewer"></div>
+<script>
+window.addEventListener("message",function receiveFile(event){
+  if(event.source!==parent||event.data?.type!=="committee-office-file")return;
+  window.removeEventListener("message",receiveFile);
+  const reply=type=>parent.postMessage({type},event.origin);
+  const {name,bytes}=event.data;
+  if(!window.OfficeEngine?.mount){
+    reply("committee-office-unavailable");
+    return;
+  }
+  try{
+    OfficeEngine.mount(document.getElementById("viewer"),{
+      src:bytes,name,editable:false,allowSave:false,allowDownload:false,fileMenu:false,allowOpen:false,
+      comments:false,theme:"light",
+      // Module workers cannot load from this sandbox's opaque origin.
+      worker:false,
+      onLoad:()=>reply("committee-office-ready"),
+      onError:()=>reply("committee-office-error")
+    });
+  }catch(error){
+    reply("committee-office-error");
+  }
+});
+</script>
+</body>
+</html>
