@@ -588,6 +588,7 @@ table.stab .na{color:#b9c2c8}
           <button class="btn btn-sm" id="csvCDocs" data-xlsx="cdocs">下載 Excel</button>
         </div>
       </div>
+      <p class="hint">存簿封面支援 PDF、JPG、PNG，單檔小於 50 MB。</p>
       <div id="cdocsHost"></div>
       <dialog class="card" id="committeeDocDialog" aria-labelledby="committeeDocTitle">
         <form id="committeeDocForm">
@@ -714,6 +715,7 @@ table.stab .na{color:#b9c2c8}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="firebase-config.js"></script>
+<script src="committee-passbook.js"></script>
 
 <script>
 "use strict";
@@ -2229,6 +2231,8 @@ async function loadCommitteeDocs(){
   renderCommitteeDocs();
 }
 
+const passbookUploads=new Map();
+
 function renderCommitteeDocs(){
   const host=$("#cdocsHost");
 
@@ -2246,6 +2250,8 @@ function renderCommitteeDocs(){
 
   host.innerHTML=COMMITTEE.map(c=>{
     const d=CDOCS[c.uid]||{};
+    const passbook=hasFile(d.passbook);
+    const upload=passbookUploads.get(c.uid);
     let account=na;
 
     if(d.payType==="bank"){
@@ -2257,7 +2263,7 @@ function renderCommitteeDocs(){
       account="郵局　"+esc(d.postAccount||"");
     }
 
-    return '<div class="acc-item">'+
+    return '<div class="acc-item" data-cdoc-uid="'+esc(c.uid)+'">'+
       '<div class="acc-head" style="cursor:default">'+
       '<strong>'+esc(c.name)+'</strong>'+
       '<span class="hint">'+esc(c.email)+'</span>'+
@@ -2268,10 +2274,12 @@ function renderCommitteeDocs(){
       row("身分證字號",d.idNumber?esc(d.idNumber):na)+
       row("戶籍地址",d.householdAddr?esc(d.householdAddr):na)+
       row("匯款帳戶",account)+
-      (hasFile(d.passbook)
-        ?'<button class="btn btn-sm cdoc-file" data-uid="'+
-          esc(c.uid)+'">檢視存簿封面</button>'
-        :'<span class="hint">尚未上傳存簿封面</span>')+
+      '<div class="actions">'+
+      (passbook?'<button type="button" class="btn btn-sm cdoc-file">檢視存簿封面</button>':"")+
+      '<button type="button" class="btn btn-sm" data-pick-passbook'+(upload?" disabled":"")+'>'+
+      (passbook?"取代存簿封面":"上傳存簿封面")+'</button>'+
+      '<input type="file" data-upload-passbook accept=".pdf,.jpg,.jpeg,.png" hidden>'+
+      '<span class="msg" data-passbook-status role="status">'+esc(upload?.text||"")+'</span></div>'+
       '</div></div>';
   }).join("");
 }
@@ -2351,6 +2359,11 @@ committeeDocForm.addEventListener("submit",async e=>{
 });
 
 $("#cdocsHost").addEventListener("click",async e=>{
+  const pick=e.target.closest("[data-pick-passbook]");
+  if(pick){
+    $("[data-upload-passbook]",pick.closest("[data-cdoc-uid]")).click();
+    return;
+  }
   const editButton=e.target.closest("[data-edit-committee-doc]");
   if(editButton){
     const member=COMMITTEE.find(c=>c.uid===editButton.dataset.editCommitteeDoc);
@@ -2375,13 +2388,58 @@ $("#cdocsHost").addEventListener("click",async e=>{
   const b=e.target.closest(".cdoc-file");
   if(!b)return;
 
-  const d=CDOCS[b.dataset.uid]||{};
+  const d=CDOCS[b.closest("[data-cdoc-uid]").dataset.cdocUid]||{};
   const u=await urlOf(d.passbook);
 
   if(u){
     window.open(safeUrl(u),"_blank","noopener");
   }else{
     alert("無法取得檔案連結。");
+  }
+});
+
+$("#cdocsHost").addEventListener("change",async e=>{
+  const input=e.target.closest("[data-upload-passbook]");
+  const file=input?.files[0];
+  if(!file)return;
+  const uid=input.closest("[data-cdoc-uid]").dataset.cdocUid;
+  input.value="";
+  if(passbookUploads.has(uid)||!COMMITTEE.some(c=>c.uid===uid))return;
+
+  const row=()=>$("#cdocsHost [data-cdoc-uid="+CSS.escape(uid)+"]");
+  const setStatus=(text,state)=>{
+    const current=row();
+    if(!current)return;
+    const status=$("[data-passbook-status]",current);
+    status.textContent=text;
+    status.className="msg"+(state?" "+state:"");
+  };
+  const upload={text:"上傳中…"};
+  passbookUploads.set(uid,upload);
+  $("[data-pick-passbook]",row()).disabled=true;
+  setStatus(upload.text);
+  try{
+    const passbook=await uploadCommitteePassbook({
+      db,storage,uid,file,expected:CDOCS[uid]?.passbook,
+      onProgress:percent=>{
+        upload.text="上傳中… "+percent+"%";
+        setStatus(upload.text);
+      }
+    });
+    CDOCS[uid]={...CDOCS[uid],passbook};
+    passbookUploads.delete(uid);
+    renderCommitteeDocs();
+    setStatus("已儲存存簿封面。","ok");
+  }catch(error){
+    const message=error.code==="storage/unauthorized"
+      ?"Storage 拒絕上傳，請確認管理員代傳規則已發布。"
+      :error.code==="permission-denied"
+        ?"Firestore 拒絕儲存，請確認管理員可寫入委員資料。"
+        :error.message||error.code;
+    setStatus("上傳失敗："+message,"err");
+  }finally{
+    passbookUploads.delete(uid);
+    if(row())$("[data-pick-passbook]",row()).disabled=false;
   }
 });
 
@@ -4285,7 +4343,7 @@ if("serviceWorker" in navigator){
 
   document.addEventListener("click",function(e){
     var b=e.target.closest("button.btn");
-    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc]"))return;
+    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc],[data-pick-passbook]"))return;
 
     lastBtn=b;
     b.classList.add("btn-loading");

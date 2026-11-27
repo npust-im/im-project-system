@@ -243,6 +243,7 @@ html,body{overflow-x:hidden}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 
 <script src="firebase-config.js"></script>
+<script src="committee-passbook.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -616,35 +617,37 @@ function renderDocs(){
     '<div style="margin-top:4px"><button class="btn btn-primary" id="saveDocs">儲存資料</button><span class="msg ok" id="docsMsg" style="margin-left:10px"></span></div>';
 }
 function extOf(name){ const m=String(name||"").toLowerCase().match(/\.[a-z0-9]+$/); return m?m[0]:""; }
+let isUploadingPassbook=false;
 $("#docsArea").addEventListener("change",async e=>{
   const radio=e.target.closest('input[name="payType"]');
   if(radio){ const isPost=radio.value==="post"; $("#postFields").classList.toggle("hidden",!isPost); $("#bankFields").classList.toggle("hidden",isPost); return; }
-  const inp=e.target.closest('input[type=file][data-doc]'); if(!inp)return;
+  const inp=e.target.closest('input[type=file][data-doc="passbook"]'); if(!inp)return;
   const file=inp.files&&inp.files[0]; if(!file)return;
-  const key=inp.dataset.doc;
-  const stateEl=$('[data-doc-state="'+key+'"]'); const prog=stateEl.querySelector(".prog");
+  inp.value="";
+  const uid=MY_UID;
+  if(!uid||isUploadingPassbook)return;
+  const stateEl=$('[data-doc-state="passbook"]'); const prog=stateEl.querySelector(".prog");
   const showErr=m=>{ prog.style.display=""; prog.style.color="var(--danger)"; prog.textContent=m; };
-  const ext=extOf(file.name);
-  if(![".jpg",".jpeg",".png",".pdf"].includes(ext)){ showErr("格式須為 JPG／PNG／PDF。"); inp.value=""; return; }
-  if(file.size>=50*1024*1024){ showErr("檔案超過 50MB。"); inp.value=""; return; }
-  const path="committee/"+MY_UID+"/"+key+"_"+Date.now()+ext;
+  isUploadingPassbook=true;
+  inp.disabled=true;
   prog.style.display=""; prog.style.color="var(--accent)"; prog.textContent="上傳中… 0%";
   try{
-    const ref=storage.ref(path);
-    const task=ref.put(file,{contentType:file.type||"application/octet-stream"});
-    task.on("state_changed",s=>{ prog.textContent="上傳中… "+Math.round(s.bytesTransferred/s.totalBytes*100)+"%"; });
-    await task;
-    const url=await ref.getDownloadURL();
-    const old=myDocs[key];
-    myDocs[key]={name:file.name,path:path,url:url,size:file.size,at:Date.now()};
-    await db.doc("committeeDocs/"+MY_UID).set({[key]:myDocs[key],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-    if(old&&old.path&&old.path!==path){ try{ await storage.ref(old.path).delete(); }catch(_){}}
+    const passbook=await uploadCommitteePassbook({
+      db,storage,uid,file,expected:myDocs.passbook,
+      onProgress:percent=>{prog.textContent="上傳中… "+percent+"%";}
+    });
+    if(MY_UID!==uid)return;
+    myDocs.passbook=passbook;
     // 保留已輸入但尚未儲存的文字欄，並就地更新存簿列（不重繪整個表單）
     captureDocInputs();
-    stateEl.innerHTML='<a class="fname" href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener">'+esc(file.name)+'</a> <span style="color:var(--accent);font-size:12px">已上傳 ✓</span>';
-    const lbl=inp.closest("label"); if(lbl && lbl.lastChild && lbl.lastChild.nodeType===3){ lbl.lastChild.nodeValue="重新上傳"; }
+    const currentState=$('[data-doc-state="passbook"]');
+    if(currentState){
+      currentState.innerHTML='<a class="fname" href="'+esc(safeUrl(passbook.url))+'" target="_blank" rel="noopener">'+esc(file.name)+'</a> <span style="color:var(--accent);font-size:12px">已上傳 ✓</span><span class="prog" style="display:none"></span>';
+      const lbl=$('#docsArea input[data-doc="passbook"]')?.closest("label");
+      if(lbl?.lastChild?.nodeType===3)lbl.lastChild.nodeValue="重新上傳";
+    }
   }catch(err){ showErr("上傳失敗："+(err.code||err.message)); }
-  finally{ inp.value=""; }
+  finally{ isUploadingPassbook=false; inp.disabled=false; }
 });
 $("#docsArea").addEventListener("click",async e=>{
   if(!e.target.closest("#saveDocs"))return;
