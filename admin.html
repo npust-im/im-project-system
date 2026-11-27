@@ -578,6 +578,22 @@ table.stab .na{color:#b9c2c8}
         <span class="msg" id="cAccMsg"></span>
       </div>
       <div id="committeeAccList"></div>
+      <dialog class="card" id="committeePasswordDialog" aria-labelledby="committeePasswordTitle">
+        <form id="committeePasswordForm">
+          <h2 id="committeePasswordTitle">重設校外委員密碼</h2>
+          <p class="hint" id="committeePasswordPerson"></p>
+          <label for="committeeNewPassword">新密碼（至少 6 碼）</label>
+          <input id="committeeNewPassword" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
+          <label for="committeeConfirmPassword">確認新密碼</label>
+          <input id="committeeConfirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
+          <p class="hint">儲存後新密碼立即生效，由系辦通知委員。</p>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">確認重設</button>
+            <button class="btn" type="button" id="cancelCommitteePassword">取消</button>
+          </div>
+          <p class="msg" id="committeePasswordMsg" role="status"></p>
+        </form>
+      </dialog>
     </section>
 
     <section class="panel">
@@ -711,6 +727,7 @@ table.stab .na{color:#b9c2c8}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="firebase-config.js"></script>
@@ -2134,12 +2151,54 @@ function renderAccList(hostId,rows){
     '<span class="ac-email">'+esc(u.email||"")+'</span>'+
     '<span class="spacer"></span>'+
     '<button class="btn btn-sm" data-act="save-name">儲存姓名</button>'+
-    '<button class="btn btn-sm" data-act="reset-pw">重設密碼</button>'+
+    '<button class="btn btn-sm" data-act="reset-pw">'+
+    (hostId==="committeeAccList"?"設定新密碼":"重設密碼")+'</button>'+
     '<button class="btn btn-sm btn-danger" data-act="del-acc">刪除</button>'+
     '<span class="msg" data-msg style="flex-basis:100%"></span>'+
     '</div>'
   ).join("");
 }
+
+const committeePasswordDialog=$("#committeePasswordDialog");
+const committeePasswordForm=$("#committeePasswordForm");
+let committeePasswordEdit=null;
+
+$("#cancelCommitteePassword").onclick=()=>committeePasswordDialog.close();
+committeePasswordDialog.addEventListener("cancel",e=>{
+  if(committeePasswordEdit?.saving)e.preventDefault();
+});
+committeePasswordDialog.addEventListener("close",()=>{
+  committeePasswordEdit=null;
+  committeePasswordForm.reset();
+  $("#committeePasswordPerson").textContent="";
+  $("#committeePasswordMsg").textContent="";
+});
+committeePasswordForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const edit=committeePasswordEdit;
+  if(!edit||edit.saving)return;
+  const password=$("#committeeNewPassword").value;
+  if(password!==$("#committeeConfirmPassword").value){
+    flash("committeePasswordMsg","兩次輸入的新密碼不一致。",false);
+    return;
+  }
+
+  const buttons=$$("button",committeePasswordForm);
+  edit.saving=true;
+  buttons.forEach(button=>{button.disabled=true;});
+  try{
+    const reset=firebase.app().functions("us-central1").httpsCallable("resetCommitteePassword");
+    const result=await reset({uid:edit.uid,password});
+    if(result.data?.updated!==true)throw new Error("未收到重設成功的回覆。");
+    committeePasswordDialog.close();
+    flash("cAccMsg","已重設委員密碼。");
+  }catch(err){
+    flash("committeePasswordMsg","重設失敗："+(err.message||err.code),false);
+  }finally{
+    edit.saving=false;
+    buttons.forEach(button=>{button.disabled=false;});
+  }
+});
 
 document.addEventListener("click",async e=>{
   const row=e.target.closest(".accrow");
@@ -2165,6 +2224,13 @@ document.addEventListener("click",async e=>{
       msg.className="msg err";
     }
   }else if(e.target.closest("[data-act=reset-pw]")){
+    if(row.closest("#committeeAccList")){
+      committeePasswordEdit={uid,saving:false};
+      $("#committeePasswordPerson").textContent=$(".ac-name",row).value+"（"+email+"）";
+      committeePasswordDialog.showModal();
+      return;
+    }
+
     if(!email){
       msg.textContent="此帳號無電子郵件。";
       msg.className="msg err";
@@ -4285,7 +4351,7 @@ if("serviceWorker" in navigator){
 
   document.addEventListener("click",function(e){
     var b=e.target.closest("button.btn");
-    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc]"))return;
+    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc],#committeeAccList [data-act=reset-pw]"))return;
 
     lastBtn=b;
     b.classList.add("btn-loading");
