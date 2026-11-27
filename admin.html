@@ -52,6 +52,9 @@ a{color:inherit}
 .center{min-height:70vh;display:grid;place-items:center;padding:40px 20px}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:28px}
 .card h1{font-family:"Noto Serif TC",serif;font-size:22px;margin:0 0 4px}
+dialog.card{max-width:540px;width:calc(100% - 32px);color:var(--ink);max-height:calc(100dvh - 32px)}
+dialog::backdrop{background:#10222e66}
+dialog h2{margin:0;font-size:19px}
 .sub,.hint{color:var(--muted);font-size:13px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 input,select,textarea{max-width:100%;min-width:0}
@@ -429,6 +432,12 @@ table.stab .na{color:#b9c2c8}
   </div>
 
   <div class="tabpane" data-pane="student">
+    <nav class="subtabs" id="studentSubtabs" aria-label="學生子分頁">
+      <button type="button" class="subtab on" data-student-tab="settings" aria-pressed="true" aria-controls="studentSettings">登錄與上傳設定</button>
+      <button type="button" class="subtab" data-student-tab="current" aria-pressed="false" aria-controls="studentRoster">應屆分組與帳號</button>
+      <button type="button" class="subtab" data-student-tab="next" aria-pressed="false" aria-controls="studentRoster">下屆分組與帳號</button>
+    </nav>
+    <div id="studentSettings">
     <section class="panel">
       <div class="panel-head"><h2>登錄與上傳設定</h2></div>
 
@@ -505,26 +514,23 @@ table.stab .na{color:#b9c2c8}
       </div>
     </section>
 
+    </div>
+    <div id="studentRoster" class="hidden">
     <section class="panel">
       <div class="panel-head">
-        <h2>分組與指導老師</h2>
+        <h2 id="studentGroupsTitle">應屆分組與指導老師</h2>
         <button class="btn btn-sm" id="xlsxGroups">下載 Excel</button>
       </div>
       <div class="gsummary" id="gsummary"></div>
       <div class="score-controls">
         <input type="text" id="groupSearch" placeholder="搜尋組別／姓名／題目／指導老師">
-        <select id="cohortFilter" style="max-width:160px">
-          <option value="all">全部屆別</option>
-          <option value="current">僅應屆競賽</option>
-          <option value="next">僅下屆</option>
-        </select>
         <button class="btn btn-sm" id="expandAll">展開全部</button>
         <button class="btn btn-sm" id="collapseAll">收合全部</button>
       </div>
       <div class="score-controls">
         <span class="hint">批次操作目前顯示的組別：</span>
-        <button class="btn btn-sm" id="batchCur">全設應屆</button>
-        <button class="btn btn-sm" id="batchNext">全設下屆</button>
+        <button class="btn btn-sm hidden" id="batchCur">移至應屆</button>
+        <button class="btn btn-sm" id="batchNext">移至下屆</button>
         <button class="btn btn-sm" id="batchNo">依序自動編號</button>
         <span class="msg" id="batchMsg"></span>
       </div>
@@ -536,14 +542,11 @@ table.stab .na{color:#b9c2c8}
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>組長帳號</h2></div>
-      <div class="seg" id="leaderCohortSeg">
-        <button class="on" data-lc="all">全部</button>
-        <button data-lc="current">應屆</button>
-        <button data-lc="next">下屆</button>
-      </div>
+      <div class="panel-head"><h2 id="studentLeadersTitle">應屆組長帳號</h2></div>
       <div id="leaderHost"></div>
+      <p class="empty-note hidden" id="leaderEmpty">此屆尚無組長帳號。</p>
     </section>
+    </div>
   </div>
 
   <div class="tabpane" data-pane="teacher">
@@ -586,6 +589,36 @@ table.stab .na{color:#b9c2c8}
         </div>
       </div>
       <div id="cdocsHost"></div>
+      <dialog class="card" id="committeeDocDialog" aria-labelledby="committeeDocTitle">
+        <form id="committeeDocForm">
+          <h2 id="committeeDocTitle">編輯委員個人資料</h2>
+          <p class="hint" id="committeeDocPerson"></p>
+          <div class="grid2">
+            <div><label for="cdIdNumber">身分證字號</label><input id="cdIdNumber" name="idNumber" type="text" autocomplete="off"></div>
+            <div><label for="cdHouseholdAddr">戶籍地址</label><input id="cdHouseholdAddr" name="householdAddr" type="text" autocomplete="off"></div>
+          </div>
+          <label for="cdPayType">匯款方式</label>
+          <select id="cdPayType" name="payType">
+            <option value="">未設定</option>
+            <option value="post">郵局</option>
+            <option value="bank">銀行</option>
+          </select>
+          <div id="cdPostFields" class="hidden">
+            <label for="cdPostAccount">郵局帳號</label><input id="cdPostAccount" name="postAccount" type="text" inputmode="numeric" autocomplete="off">
+          </div>
+          <div id="cdBankFields" class="grid2 hidden">
+            <div><label for="cdBankCode">銀行代碼</label><input id="cdBankCode" name="bankCode" type="text" inputmode="numeric" autocomplete="off"></div>
+            <div><label for="cdBankBranch">分行</label><input id="cdBankBranch" name="bankBranch" type="text" autocomplete="off"></div>
+            <div class="full"><label for="cdBankAccount">銀行帳號</label><input id="cdBankAccount" name="bankAccount" type="text" inputmode="numeric" autocomplete="off"></div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">儲存資料</button>
+            <button class="btn" type="button" id="cancelCommitteeDoc">取消</button>
+          </div>
+          <p class="msg" id="committeeDocMsg" role="status"></p>
+        </form>
+      </dialog>
+      <p class="msg" id="committeeDocsListMsg" role="status"></p>
     </section>
   </div>
 
@@ -1769,12 +1802,15 @@ $("#saveUploads").onclick=async()=>{
       return Number.isFinite(t)?t:0;
     };
 
+    const nextCohort=$("#fNextCohort").checked;
     await db.doc("settings/registration").set({
       open:$("#fRegOpen").checked,
-      nextCohort:$("#fNextCohort").checked,
+      nextCohort,
       regStart:$("#fRegStart").value||"",
       regDeadline:$("#fRegDeadline").value||""
     },{merge:true});
+    leaderPendingCohort=nextCohort?"next":"current";
+    filterLeaders();
 
     const patch={};
 
@@ -2224,7 +2260,10 @@ function renderCommitteeDocs(){
     return '<div class="acc-item">'+
       '<div class="acc-head" style="cursor:default">'+
       '<strong>'+esc(c.name)+'</strong>'+
-      '<span class="hint">'+esc(c.email)+'</span></div>'+
+      '<span class="hint">'+esc(c.email)+'</span>'+
+      '<span class="spacer"></span>'+
+      '<button type="button" class="btn btn-sm" data-edit-committee-doc="'+
+      esc(c.uid)+'">編輯資料</button></div>'+
       '<div style="padding:0 14px 14px">'+
       row("身分證字號",d.idNumber?esc(d.idNumber):na)+
       row("戶籍地址",d.householdAddr?esc(d.householdAddr):na)+
@@ -2239,7 +2278,100 @@ function renderCommitteeDocs(){
 
 $("#reloadCDocs").onclick=()=>loadCommitteeDocs();
 
+const committeeDocDialog=$("#committeeDocDialog");
+const committeeDocForm=$("#committeeDocForm");
+const committeePayFields=["payType","postAccount","bankCode","bankBranch","bankAccount"];
+const committeeDocValues=["idNumber","householdAddr",...committeePayFields];
+let committeeDocEdit=null;
+
+function showCommitteePayFields(){
+  const pay=$("#cdPayType").value;
+  $("#cdPostFields").classList.toggle("hidden",pay!=="post");
+  $("#cdBankFields").classList.toggle("hidden",pay!=="bank");
+}
+
+$("#cdPayType").onchange=showCommitteePayFields;
+$("#cancelCommitteeDoc").onclick=()=>committeeDocDialog.close();
+committeeDocDialog.addEventListener("cancel",e=>{
+  if(committeeDocEdit?.saving)e.preventDefault();
+});
+committeeDocDialog.addEventListener("close",()=>{
+  committeeDocEdit=null;
+  committeeDocForm.reset();
+  $("#committeeDocPerson").textContent="";
+  $("#committeeDocMsg").textContent="";
+});
+
+committeeDocForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const edit=committeeDocEdit;
+  if(!edit||edit.saving)return;
+
+  const fields=new FormData(committeeDocForm);
+  const value=key=>fields.get(key).trim();
+  const desired={idNumber:value("idNumber"),householdAddr:value("householdAddr")};
+  const pay=value("payType");
+  const activeFields=pay==="post"?["postAccount"]:pay==="bank"?["bankCode","bankBranch","bankAccount"]:[];
+  if(pay!==edit.initial.payType||activeFields.some(key=>value(key)!==edit.initial[key])){
+    desired.payType=pay;
+    for(const key of committeePayFields.slice(1)){
+      desired[key]=activeFields.includes(key)?value(key):"";
+    }
+  }
+  const changed=Object.keys(desired).filter(key=>desired[key]!==edit.initial[key]);
+  if(!changed.length){
+    committeeDocDialog.close();
+    return;
+  }
+
+  const buttons=$$("button",committeeDocForm);
+  edit.saving=true;
+  buttons.forEach(button=>{button.disabled=true;});
+  try{
+    const ref=db.doc("committeeDocs/"+edit.uid);
+    const patch=Object.fromEntries(changed.map(key=>[key,desired[key]]));
+    const checkedFields=Object.hasOwn(desired,"payType")?[...new Set([...changed,...committeePayFields])]:changed;
+    CDOCS[edit.uid]=await db.runTransaction(async tx=>{
+      const latest=(await tx.get(ref)).data()||{};
+      if(checkedFields.some(key=>String(latest[key]??"")!==edit.initial[key])){
+        throw new Error("資料已有更新，請關閉後重新開啟編輯。");
+      }
+      tx.set(ref,{...patch,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return {...latest,...patch};
+    });
+    committeeDocDialog.close();
+    renderCommitteeDocs();
+    flash("committeeDocsListMsg","已儲存委員個人資料。");
+  }catch(err){
+    flash("committeeDocMsg","儲存失敗："+(err.code||err.message),false);
+  }finally{
+    edit.saving=false;
+    buttons.forEach(button=>{button.disabled=false;});
+  }
+});
+
 $("#cdocsHost").addEventListener("click",async e=>{
+  const editButton=e.target.closest("[data-edit-committee-doc]");
+  if(editButton){
+    const member=COMMITTEE.find(c=>c.uid===editButton.dataset.editCommitteeDoc);
+    if(!member||editButton.disabled||committeeDocDialog.open)return;
+    editButton.disabled=true;
+    try{
+      const latest=(await db.doc("committeeDocs/"+member.uid).get({source:"server"})).data()||{};
+      if(committeeDocDialog.open||!auth.currentUser)return;
+      const initial=Object.fromEntries(committeeDocValues.map(key=>[key,String(latest[key]??"")]));
+      committeeDocEdit={uid:member.uid,initial,saving:false};
+      for(const key of committeeDocValues)committeeDocForm.elements[key].value=initial[key];
+      $("#committeeDocPerson").textContent=member.name+"（"+member.email+"）";
+      showCommitteePayFields();
+      committeeDocDialog.showModal();
+    }catch(err){
+      flash("committeeDocsListMsg","無法載入委員資料："+(err.code||err.message),false);
+    }finally{
+      editButton.disabled=false;
+    }
+    return;
+  }
   const b=e.target.closest(".cdoc-file");
   if(!b)return;
 
@@ -2308,17 +2440,9 @@ async function loadGroups(){
   GROUPMAP={};
   groups.forEach(g=>GROUPMAP[g.id]=g);
 
-  const cur=groups.filter(isCurrentCohort);
-  const next=groups.length-cur.length;
-  const sub=k=>cur.filter(g=>g.submitted&&g.submitted[k]).length;
-
-  $("#gsummary").textContent=
-    "共 "+groups.length+" 組（應屆 "+cur.length+"、下屆 "+next+"）。"+
-    "已登錄指導老師 "+groups.filter(g=>g.advisorUid).length+" 組。"+
-    "應屆繳交：第一次 "+sub("r1")+"、第二次 "+sub("r2")+"、第三次 "+sub("r3")+"。";
-
   if(!groups.length){
-    $("#groupsHost").innerHTML='<p class="empty-note">尚無分組資料。</p>';
+    $("#groupsHost").replaceChildren();
+    filterGroups();
     renderCommitteeTables();
     return;
   }
@@ -2407,25 +2531,58 @@ async function loadGroups(){
   renderCommitteeTables();
 }
 
+let studentCohort="current";
+let leaderPendingCohort="current";
+
+function groupsInStudentCohort(){
+  return Object.values(GROUPMAP).filter(g=>isCurrentCohort(g)===(studentCohort==="current"));
+}
+
+$("#studentSubtabs").addEventListener("click",e=>{
+  const tab=e.target.closest("[data-student-tab]");
+  if(!tab)return;
+  const pane=tab.dataset.studentTab;
+  const settings=pane==="settings";
+  $$("#studentSubtabs .subtab").forEach(button=>{
+    const selected=button===tab;
+    button.classList.toggle("on",selected);
+    button.setAttribute("aria-pressed",String(selected));
+  });
+  $("#studentSettings").classList.toggle("hidden",!settings);
+  $("#studentRoster").classList.toggle("hidden",settings);
+  if(settings)return;
+  if(studentCohort!==pane)$("#groupSearch").value="";
+  studentCohort=pane;
+  const label=pane==="next"?"下屆":"應屆";
+  $("#studentGroupsTitle").textContent=label+"分組與指導老師";
+  $("#studentLeadersTitle").textContent=label+"組長帳號";
+  $("#batchCur").classList.toggle("hidden",pane==="current");
+  $("#batchNext").classList.toggle("hidden",pane==="next");
+  $("#batchMsg").textContent="";
+  $("#asgMsg").textContent="";
+  filterGroups();
+  filterLeaders();
+});
+
 function filterGroups(){
   const q=$("#groupSearch").value.trim().toLowerCase();
-  const cf=$("#cohortFilter").value;
-
   $$("#groupsHost .acc-item").forEach(x=>{
-    const okQ=!q||(x.dataset.search||"").includes(q);
-    const okC=cf==="all"||x.dataset.cohort===cf;
-    x.style.display=okQ&&okC?"":"none";
+    const visible=x.dataset.cohort===studentCohort&&x.dataset.search.includes(q);
+    x.classList.toggle("hidden",!visible);
   });
+  const groups=groupsInStudentCohort();
+  const sub=round=>groups.filter(g=>g.submitted?.[round]).length;
+  $("#gsummary").textContent="共 "+groups.length+" 組。已登錄指導老師 "+
+    groups.filter(g=>g.advisorUid).length+" 組。繳交組數（第一、二、三次） "+
+    [sub("r1"),sub("r2"),sub("r3")].join("／")+"。"+
+    (groups.length&&!visibleGids().length?" 沒有符合搜尋的組別。":"");
 }
 
 $("#groupSearch").oninput=filterGroups;
-$("#cohortFilter").onchange=filterGroups;
-$("#reloadGroups").onclick=()=>loadGroups();
+$("#reloadGroups").onclick=()=>Promise.all([loadGroups(),loadLeaders()]);
 
 function visibleGids(){
-  return $$("#groupsHost .acc-item")
-    .filter(x=>x.style.display!=="none")
-    .map(x=>x.dataset.id);
+  return $$("#groupsHost .acc-item:not(.hidden)").map(x=>x.dataset.id);
 }
 
 async function batchSetCohort(cohort){
@@ -2508,13 +2665,11 @@ $("#batchNo").onclick=async()=>{
 };
 
 $("#expandAll").onclick=()=>{
-  $$("#groupsHost .acc-item").forEach(x=>{
-    if(x.style.display!=="none")x.classList.add("open");
-  });
+  $$("#groupsHost .acc-item:not(.hidden)").forEach(x=>x.classList.add("open"));
 };
 
 $("#collapseAll").onclick=()=>{
-  $$("#groupsHost .acc-item").forEach(x=>x.classList.remove("open"));
+  $$("#groupsHost .acc-item:not(.hidden)").forEach(x=>x.classList.remove("open"));
 };
 
 $("#groupsHost").addEventListener("click",async e=>{
@@ -2575,7 +2730,7 @@ $("#groupsHost").addEventListener("click",async e=>{
       },{merge:true});
 
       flash("asgMsg","已儲存。");
-      await loadGroups();
+      await Promise.all([loadGroups(),loadLeaders()]);
     }catch(err){
       flash("asgMsg","儲存失敗："+(err.code||err.message),false);
     }
@@ -2600,12 +2755,7 @@ $("#groupsHost").addEventListener("click",async e=>{
 });
 
 $("#xlsxGroups").onclick=()=>{
-  const cf=$("#cohortFilter").value;
-
-  let list=Object.values(GROUPMAP);
-
-  if(cf==="current")list=list.filter(isCurrentCohort);
-  else if(cf==="next")list=list.filter(g=>!isCurrentCohort(g));
+  const list=groupsInStudentCohort();
 
   list.sort((a,b)=>String(a.groupNo||"").localeCompare(String(b.groupNo||"")));
 
@@ -2641,15 +2791,17 @@ $("#xlsxGroups").onclick=()=>{
     ];
   });
 
-  const name=cf==="current"?"應屆":cf==="next"?"下屆":"全部";
+  const name=studentCohort==="current"?"應屆":"下屆";
   xlsxDownload([[name,[head,...rows]]],"分組名單_"+name+".xlsx");
 };
 
 async function loadLeaders(){
-  const [us,gs]=await Promise.all([
+  const [us,gs,registration]=await Promise.all([
     db.collection("users").where("role","==","student").get(),
-    db.collection("groups").get()
+    db.collection("groups").get(),
+    db.doc("settings/registration").get()
   ]);
+  leaderPendingCohort=registration.data()?.nextCohort===true?"next":"current";
 
   const groups={};
   gs.docs.forEach(d=>groups[d.id]=d.data());
@@ -2678,30 +2830,20 @@ async function loadLeaders(){
       '<button class="btn btn-sm" data-act="reset-pw">寄送密碼重設信</button>'+
       '<button class="btn btn-sm btn-danger" data-act="del-acc-leader">刪除</button>'+
       '<span class="msg" data-msg style="flex-basis:100%"></span></div>';
-  }).join("")||'<p class="empty-note">尚無組長帳號。</p>';
+  }).join("");
 
   filterLeaders();
 }
 
 function filterLeaders(){
-  const b=$("#leaderCohortSeg button.on");
-  const value=b?b.dataset.lc:"all";
-
+  let hasLeaders=false;
   $$("#leaderHost .accrow").forEach(row=>{
-    row.style.display=value==="all"||row.dataset.cohort===value?"":"none";
+    const visible=(row.dataset.cohort||leaderPendingCohort)===studentCohort;
+    row.classList.toggle("hidden",!visible);
+    hasLeaders=hasLeaders||visible;
   });
+  $("#leaderEmpty").classList.toggle("hidden",hasLeaders);
 }
-
-$("#leaderCohortSeg").addEventListener("click",e=>{
-  const b=e.target.closest("button");
-  if(!b)return;
-
-  $$("#leaderCohortSeg button").forEach(x=>{
-    x.classList.toggle("on",x===b);
-  });
-
-  filterLeaders();
-});
 
 $("#leaderHost").addEventListener("click",async e=>{
   const row=e.target.closest(".accrow");
@@ -4143,7 +4285,7 @@ if("serviceWorker" in navigator){
 
   document.addEventListener("click",function(e){
     var b=e.target.closest("button.btn");
-    if(!b||b.disabled)return;
+    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc]"))return;
 
     lastBtn=b;
     b.classList.add("btn-loading");
