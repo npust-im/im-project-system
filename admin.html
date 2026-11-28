@@ -3803,7 +3803,16 @@ $("#fillFromRank").onclick=()=>{
   let n=Number.parseInt($("#topN").value,10);
   if(!n||n<1)n=Math.ceil(rows.length/2);
 
-  state.finalists.groups=rows.slice(0,n).map(r=>({
+  const compareGroupNo=new Intl.Collator("zh-Hant",{numeric:true}).compare;
+  const finalists=rows.slice(0,n).sort((a,b)=>{
+    const left=String(a.groupNo??"").trim();
+    const right=String(b.groupNo??"").trim();
+    if(!left)return right?1:0;
+    if(!right)return -1;
+    return compareGroupNo(left,right);
+  });
+
+  state.finalists.groups=finalists.map(r=>({
     gid:r.gid,
     no:r.groupNo,
     title:r.topic,
@@ -3814,7 +3823,7 @@ $("#fillFromRank").onclick=()=>{
   }));
 
   renderFinalists();
-  flash("finalMsg","已帶入，請確認後儲存名單並勾選發布。");
+  flash("finalMsg","已帶入並依組別編號排序，請確認後儲存名單。");
 };
 
 function scoreTable(hostId,columns,rows){
@@ -4343,7 +4352,7 @@ if("serviceWorker" in navigator){
 
   document.addEventListener("click",function(e){
     var b=e.target.closest("button.btn");
-    if(!b||b.disabled||b.closest("dialog")||b.matches("[data-edit-committee-doc],[data-pick-passbook]"))return;
+    if(!b||b.disabled||b.closest("dialog")||b.matches("#fillFromRank,[data-edit-committee-doc],[data-pick-passbook]"))return;
 
     lastBtn=b;
     b.classList.add("btn-loading");
